@@ -1,0 +1,20 @@
+<html><head><title>502 Bad Gateway</title><style>body{overflow-x:hidden!important} *{box-sizing:border-box} img{max-width:100%!important;height:auto} .site-header,.header-wrapper,.top-bar,.header-inner{max-width:100%!important;width:100%!important}</style><script>
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!window.jQuery) return;
+        // Swallow errors in trigger/on so nav href clicks always fire
+        ['trigger','on','ready'].forEach(function(fn) {
+            var _orig = jQuery.fn[fn];
+            if (!_orig) return;
+            jQuery.fn[fn] = function() {
+                try { return _orig.apply(this, arguments); }
+                catch(e) { return this; }
+            };
+        });
+    });
+})();
+</script></head>
+<body style="overflow: auto;">
+<center><h1>502 Bad Gateway</h1></center>
+<hr/><center>nginx</center>
+<div style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">Offline static copy — commissaries.com</div></body></html>
