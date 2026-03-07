@@ -919,9 +919,9 @@ var __gigyaConf = {
     onGigyaServiceReady: function () { 
 		$(document).ready(function(){
 			gigya.accounts.showScreenSet({
-						screenSet:'Default-RegistrationLogin'},
-						containerID:'screensetContainer'
-			);});		
+						screenSet:'Default-RegistrationLogin',
+						containerID:'screensetContainer'});
+		});		
         gigya.accounts.addEventHandlers({
             onLogin: function(r) {
                 // User is logged in
