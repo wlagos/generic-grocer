@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAP CDC Screensets — Developer Demo</title>
+
+  <!--
+    ═══════════════════════════════════════════════════════════════
+    SAP CDC (Gigya) Web SDK Loader
+    ═══════════════════════════════════════════════════════════════
+    The Web SDK is loaded asynchronously via a script tag.
+    Replace YOUR_API_KEY with the API key from your SAP CDC Console:
+    https://console.gigya.com → Site Dashboard → API Key
+
+    The src URL follows the pattern:
+      https://cdns.gigya.com/js/gigya.js?apikey=<YOUR_API_KEY>
+
+    Data-center-specific URLs (use the one matching your CDC site):
+      US:  https://cdns.gigya.com/js/gigya.js?apikey=...
+      EU:  https://cdns.eu1.gigya.com/js/gigya.js?apikey=...
+      AU:  https://cdns.au1.gigya.com/js/gigya.js?apikey=...
+      RU:  https://cdns.ru1.gigya.com/js/gigya.js?apikey=...
+
+    Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+          8b8d6fffe113457094a17701f63e3d6a/416d906b70b21014bbc5a10ce4041860.html
+    ═══════════════════════════════════════════════════════════════
+  -->
+  <script
+    type="text/javascript"
+    src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw""
+    async>
+  </script>
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   Helvetica, Arial, sans-serif;
+      background: #f4f6f9;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ─── Header / Nav ─────────────────────────────────────────── */
+    header {
+      background: #0a2342;
+      color: #fff;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    }
+
+    header .brand {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: #e8edf2;
+    }
+
+    header .brand span {
+      color: #f0ab00; /* SAP gold */
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    nav a {
+      color: #c9d6e3;
+      text-decoration: none;
+      font-size: .9rem;
+      font-weight: 500;
+      padding: .35rem .7rem;
+      border-radius: 4px;
+      transition: background .2s, color .2s;
+      cursor: pointer;
+    }
+
+    nav a:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+    nav a.primary {
+      background: #f0ab00;
+      color: #0a2342;
+      font-weight: 700;
+    }
+
+    nav a.primary:hover { background: #e09a00; }
+
+    /* ─── Main content ──────────────────────────────────────────── */
+    main {
+      max-width: 860px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .hero {
+      background: #fff;
+      border: 1px solid #dde3ec;
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #0a2342;
+      margin-bottom: .6rem;
+    }
+
+    .hero p {
+      color: #5a6577;
+      font-size: .95rem;
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ─── Screenset container ───────────────────────────────────── */
+    /*
+      This is the DOM element that SAP CDC renders the screenset INTO
+      when using the containerID option (embedded/inline mode).
+      If you prefer a modal/popup, omit containerID from showScreenSet()
+      and CDC will render a floating overlay instead.
+
+      Docs on containerID:
+      https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+      8b8d6fffe113457094a17701f63e3d6a/413a5b7170b21014bbc5a10ce4041860.html
+    */
+    #screenset-container {
+      background: #fff;
+      border: 1px solid #dde3ec;
+      border-radius: 8px;
+      padding: 2rem;
+      min-height: 80px;
+    }
+
+    #screenset-container:empty { display: none; }
+
+    /* ─── Logged-in welcome strip ───────────────────────────────── */
+    #welcome-strip {
+      display: none; /* shown via JS after login */
+      background: #eaf6ec;
+      border: 1px solid #a8d5b0;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      font-size: .95rem;
+      color: #2e6b3e;
+      display: none;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    #welcome-strip strong { font-weight: 700; }
+
+    /* ─── Dev note panel ────────────────────────────────────────── */
+    .dev-note {
+      background: #fffbea;
+      border-left: 4px solid #f0ab00;
+      border-radius: 0 6px 6px 0;
+      padding: 1rem 1.25rem;
+      margin-top: 2rem;
+      font-size: .85rem;
+      color: #5a4a00;
+      line-height: 1.6;
+    }
+
+    .dev-note code {
+      background: #fff3cd;
+      padding: .1em .35em;
+      border-radius: 3px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .82rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       HEADER / NAVIGATION
+       Auth links are toggled by JS:
+         - Logged OUT → "Login" + "Register" visible
+         - Logged IN  → "My Account" + "Logout" visible, others hidden
+       ═══════════════════════════════════════════════════════════ -->
+  <header>
+    <div class="brand"><span>SAP</span> CDC — Screensets Demo</div>
+
+    <nav id="nav-auth">
+      <!--
+        data-action attributes are read by the click handler below.
+        This keeps the HTML declarative and the JS logic centralised.
+      -->
+      <a id="nav-login"      data-action="login"      href="#">Login</a>
+      <a id="nav-register"   data-action="register"   href="#" class="primary">Register</a>
+      <a id="nav-myaccount"  data-action="profile"    href="#" style="display:none;">My Account</a>
+      <a id="nav-logout"     data-action="logout"     href="#" style="display:none;">Logout</a>
+    </nav>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════════════════════ -->
+  <main>
+
+    <!-- Logged-in welcome message (hidden until login) -->
+    <div id="welcome-strip" role="status" aria-live="polite">
+      ✅ Welcome back, <strong id="welcome-name">User</strong>!
+      You are now signed in.
+    </div>
+
+    <!-- Hero copy -->
+    <section class="hero">
+      <h1>SAP Customer Data Cloud — Screensets Integration</h1>
+      <p>
+        Developer reference page demonstrating <strong>Login</strong>,
+        <strong>Registration</strong>, and <strong>Profile Update</strong>
+        flows using the out-of-the-box CDC Screensets (Default-RegistrationLogin
+        &amp; Default-ProfileUpdate).
+        <br><br>
+        Click <em>Login</em> or <em>Register</em> in the header to begin.
+      </p>
+    </section>
+
+    <!--
+      CDC Screenset render target.
+      SAP CDC injects the screenset HTML into this element when
+      containerID: 'screenset-container' is passed to showScreenSet().
+      Remove containerID to use modal/popup mode instead.
+    -->
+    <div id="screenset-container" role="region" aria-label="Authentication"></div>
+
+    <!-- Developer guidance note -->
+    <div class="dev-note">
+      <strong>🔧 Developer Notes</strong><br>
+      Replace <code>YOUR_API_KEY</code> in the <code>&lt;script&gt;</code> tag with your
+      API key from the
+      <a href="https://console.gigya.com" target="_blank" rel="noopener">SAP CDC Console</a>.
+      The default screen-set IDs used here are <code>Default-RegistrationLogin</code> and
+      <code>Default-ProfileUpdate</code> — customise these in the
+      <strong>UI Builder</strong> inside the CDC Console.
+      See the annotated JS below for all configurable parameters.
+    </div>
+
+  </main>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SAP CDC SCREENSETS — JAVASCRIPT IMPLEMENTATION
+       ═══════════════════════════════════════════════════════════
+
+       Architecture overview
+       ─────────────────────
+       1. onGigyaServiceReady  — global callback invoked by the CDC
+          Web SDK once it has fully loaded. ALL Gigya API calls must
+          be made inside (or after) this callback.
+          Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+                8b8d6fffe113457094a17701f63e3d6a/416d906b70b21014bbc5a10ce4041860.html
+
+       2. accounts.addEventHandlers — registers GLOBAL listeners for
+          login / logout events. Fires regardless of which screenset
+          triggered the login (login form, social login, SSO, etc.).
+          Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+                8b8d6fffe113457094a17701f63e3d6a/4134e14f70b21014bbc5a10ce4041860.html
+
+       3. accounts.showScreenSet  — renders a specific screenset into
+          a container element (inline) or as a modal popup.
+          Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+                8b8d6fffe113457094a17701f63e3d6a/413a5b7170b21014bbc5a10ce4041860.html
+
+       4. accounts.getAccountInfo — checks for an existing session on
+          page load so returning users are recognised without re-login.
+          Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+                8b8d6fffe113457094a17701f63e3d6a/41398d3d70b21014bbc5a10ce4041860.html
+
+       5. accounts.logout         — terminates the current session.
+          Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+                8b8d6fffe113457094a17701f63e3d6a/41451b4870b21014bbc5a10ce4041860.html
+       ═══════════════════════════════════════════════════════════ -->
+  <script>
+
+    // ─────────────────────────────────────────────────────────────
+    // CONFIGURATION
+    // Change these values to match your CDC site setup.
+    // ─────────────────────────────────────────────────────────────
+
+    var CDC_CONFIG = {
+
+      // The screen-set ID for Login & Registration flows.
+      // Default value from CDC Console: "Default-RegistrationLogin"
+      // To use a custom screen-set, create it in the UI Builder and
+      // replace this value with your custom screen-set ID.
+      // Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+      //       8b8d6fffe113457094a17701f63e3d6a/4137e8b070b21014bbc5a10ce4041860.html
+      registrationLoginScreenSet : "Default-RegistrationLogin",
+
+      // The screen-set ID for Profile Update / My Account flow.
+      // Default value: "Default-ProfileUpdate"
+      profileUpdateScreenSet : "Default-ProfileUpdate",
+
+      // The ID of the DOM element where screensets render inline.
+      // Set to null (or omit containerID in showScreenSet calls) to
+      // use CDC's built-in modal/popup overlay instead.
+      containerId : "screenset-container",
+
+      // Device type hint passed to the screenset renderer.
+      // Options: "desktop" | "mobile" | "auto"
+      // "auto" lets CDC detect based on viewport width.
+      deviceType : "auto",
+
+      // Language for the screenset UI.
+      // Supported codes: en, de, fr, es, it, ja, zh-cn, pt-br, etc.
+      // Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+      //       8b8d6fffe113457094a17701f63e3d6a/413a5b7170b21014bbc5a10ce4041860.html
+      lang : "en"
+
+    };
+
+
+    // ─────────────────────────────────────────────────────────────
+    // UI HELPERS
+    // DOM manipulation kept separate from CDC logic for clarity.
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Switch the header nav into the LOGGED-IN state.
+     * Hides Login/Register links; shows My Account/Logout.
+     *
+     * @param {object} account - The CDC account object returned by
+     *   onLogin or getAccountInfo. Contains .profile, .UID, etc.
+     */
+    function setLoggedInUI(account) {
+
+      // Hide the auth links
+      document.getElementById("nav-login").style.display    = "none";
+      document.getElementById("nav-register").style.display = "none";
+
+      // Show the authenticated links
+      document.getElementById("nav-myaccount").style.display = "";
+      document.getElementById("nav-logout").style.display    = "";
+
+      // Show welcome strip with the user's first name (or email fallback)
+      var name = (account.profile && account.profile.firstName)
+                    ? account.profile.firstName
+                    : (account.profile && account.profile.email)
+                      ? account.profile.email
+                      : "User";
+
+      document.getElementById("welcome-name").textContent = name;
+
+      var strip = document.getElementById("welcome-strip");
+      strip.style.display = "flex";
+
+      // Clear any screenset still rendered in the container
+      document.getElementById(CDC_CONFIG.containerId).innerHTML = "";
+    }
+
+    /**
+     * Switch the header nav into the LOGGED-OUT state.
+     * Restores Login/Register; hides My Account/Logout.
+     */
+    function setLoggedOutUI() {
+
+      document.getElementById("nav-login").style.display    = "";
+      document.getElementById("nav-register").style.display = "";
+
+      document.getElementById("nav-myaccount").style.display = "none";
+      document.getElementById("nav-logout").style.display    = "none";
+
+      document.getElementById("welcome-strip").style.display = "none";
+
+      // Clear the screenset container
+      document.getElementById(CDC_CONFIG.containerId).innerHTML = "";
+    }
+
+
+    // ─────────────────────────────────────────────────────────────
+    // SCREENSET LAUNCHERS
+    // Each function calls gigya.accounts.showScreenSet with the
+    // appropriate startScreen value and shared event callbacks.
+    // ─────────────────────────────────────────────────────────────
+
+    /**
+     * Open the LOGIN screen of the Default-RegistrationLogin screenset.
+     *
+     * startScreen "gigya-login-screen" is the default first screen
+     * of the Registration-Login screenset. Other built-in screen IDs:
+     *   gigya-register-screen       — Registration form
+     *   gigya-complete-registration-screen — Post-reg profile completion
+     *   gigya-forgot-password-screen — Forgot password
+     *
+     * Docs on startScreen:
+     * https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+     * 8b8d6fffe113457094a17701f63e3d6a/413a5b7170b21014bbc5a10ce4041860.html
+     */
+    function showLogin() {
+      gigya.accounts.showScreenSet({
+
+        // ── Required ──────────────────────────────────────────────
+        screenSet   : CDC_CONFIG.registrationLoginScreenSet,
+        startScreen : "gigya-login-screen",
+
+        // ── Rendering ─────────────────────────────────────────────
+        // Omit containerID to use a modal popup overlay instead.
+        containerID : CDC_CONFIG.containerId,
+        deviceType  : CDC_CONFIG.deviceType,
+        lang        : CDC_CONFIG.lang,
+
+        // ── Lifecycle callbacks ───────────────────────────────────
+        // These fire for THIS specific showScreenSet call only.
+        // For global (page-level) listeners use addEventHandlers().
+
+        onAfterScreenLoad : function(event) {
+          // Fired after each screen within the set is rendered.
+          // Useful for analytics, A/B testing, or DOM manipulation.
+          // event.currentScreen contains the screen ID just loaded.
+          console.log("[CDC] Screen loaded:", event.currentScreen);
+        },
+
+        onAfterSubmit : function(event) {
+          // Fired after a form inside the screenset is submitted
+          // and the server responds successfully.
+          // event.screen = the screen that was submitted.
+          console.log("[CDC] Form submitted on screen:", event.screen);
+        },
+
+        onError : function(event) {
+          // Fired when CDC returns an error (e.g. wrong password).
+          // event.errorCode and event.errorMessage describe the issue.
+          // Full error code list:
+          // https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+          // 8b8d6fffe113457094a17701f63e3d6a/416426a070b21014bbc5a10ce4041860.html
+          console.error("[CDC] Error", event.errorCode, "-", event.errorMessage);
+        },
+
+        onHide : function(event) {
+          // Fired when the screenset is dismissed (closed/hidden).
+          // event.reason = "finished" | "canceled" | "errorInAPI"
+          console.log("[CDC] Screenset hidden. Reason:", event.reason);
+        },
+
+        // onLogin fires when this screenset triggers a successful login.
+        // The GLOBAL addEventHandlers onLogin (registered below) also fires.
+        // Both are valid; use addEventHandlers for page-level state updates.
+        onLogin : function(event) {
+          console.log("[CDC] onLogin (screenset-local):", event.UID);
+        }
+
+      });
+    }
+
+
+    /**
+     * Open the REGISTRATION screen of the Default-RegistrationLogin screenset.
+     * Identical to showLogin() but startScreen points to the register form.
+     */
+    function showRegister() {
+      gigya.accounts.showScreenSet({
+
+        screenSet   : CDC_CONFIG.registrationLoginScreenSet,
+        startScreen : "gigya-register-screen",   // ← only difference vs login
+        containerID : CDC_CONFIG.containerId,
+        deviceType  : CDC_CONFIG.deviceType,
+        lang        : CDC_CONFIG.lang,
+
+        onAfterScreenLoad : function(event) {
+          console.log("[CDC] Screen loaded:", event.currentScreen);
+        },
+
+        onError : function(event) {
+          console.error("[CDC] Error", event.errorCode, "-", event.errorMessage);
+        },
+
+        onHide : function(event) {
+          console.log("[CDC] Screenset hidden. Reason:", event.reason);
+        }
+
+      });
+    }
+
+
+    /**
+     * Open the PROFILE UPDATE screenset (My Account).
+     * Uses the separate Default-ProfileUpdate screenset which contains
+     * screens like gigya-update-profile-screen and gigya-change-password-screen.
+     *
+     * This screenset requires the user to be logged in.
+     * CDC will handle the auth check and redirect to login if needed.
+     *
+     * Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+     *       8b8d6fffe113457094a17701f63e3d6a/4137e8b070b21014bbc5a10ce4041860.html
+     */
+    function showProfile() {
+      gigya.accounts.showScreenSet({
+
+        screenSet   : CDC_CONFIG.profileUpdateScreenSet,
+        containerID : CDC_CONFIG.containerId,
+        deviceType  : CDC_CONFIG.deviceType,
+        lang        : CDC_CONFIG.lang,
+
+        onAfterScreenLoad : function(event) {
+          console.log("[CDC] Profile screen loaded:", event.currentScreen);
+        },
+
+        onAfterSubmit : function(event) {
+          console.log("[CDC] Profile updated on screen:", event.screen);
+        },
+
+        onError : function(event) {
+          console.error("[CDC] Profile error", event.errorCode, "-", event.errorMessage);
+        }
+
+      });
+    }
+
+
+    // ─────────────────────────────────────────────────────────────
+    // NAV CLICK HANDLER
+    // Single delegated listener on the nav — reads data-action.
+    // ─────────────────────────────────────────────────────────────
+
+    document.getElementById("nav-auth").addEventListener("click", function(e) {
+      var link = e.target.closest("a[data-action]");
+      if (!link) return;
+      e.preventDefault();
+
+      var action = link.getAttribute("data-action");
+
+      switch (action) {
+
+        case "login":
+          showLogin();
+          break;
+
+        case "register":
+          showRegister();
+          break;
+
+        case "profile":
+          showProfile();
+          break;
+
+        case "logout":
+          // gigya.accounts.logout terminates the session server-side
+          // and clears all local cookies/storage set by the Web SDK.
+          // The onLogout global handler (registered below) fires after.
+          // Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+          //       8b8d6fffe113457094a17701f63e3d6a/41451b4870b21014bbc5a10ce4041860.html
+          gigya.accounts.logout({
+            callback : function(response) {
+              if (response.errorCode === 0) {
+                // errorCode 0 = success
+                setLoggedOutUI();
+                console.log("[CDC] Logged out successfully.");
+              } else {
+                console.error("[CDC] Logout error:", response.errorMessage);
+              }
+            }
+          });
+          break;
+      }
+    });
+
+
+    // ─────────────────────────────────────────────────────────────
+    // onGigyaServiceReady
+    // ─────────────────────────────────────────────────────────────
+    // This global function is called automatically by the CDC Web SDK
+    // once the SDK has fully initialised. It is the correct and only
+    // safe place to call any gigya.* API methods on page load.
+    //
+    // WARNING: Do NOT call gigya.* methods outside this callback or
+    // before it fires — the SDK may not yet be loaded.
+    //
+    // Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+    //       8b8d6fffe113457094a17701f63e3d6a/416d906b70b21014bbc5a10ce4041860.html
+    // ─────────────────────────────────────────────────────────────
+
+    function onGigyaServiceReady() {
+      console.log("[CDC] Web SDK ready.");
+
+      // ── 1. Register GLOBAL event handlers ───────────────────────
+      //
+      // addEventHandlers listens for auth events fired by ANY source:
+      // screensets, social login, SSO, SDK calls — not just the
+      // showScreenSet calls above. Register these once per page load.
+      //
+      // Available global events:
+      //   onLogin             — user signed in
+      //   onLogout            — user signed out
+      //   onConnectionAdded   — social account linked
+      //   onConnectionRemoved — social account unlinked
+      //
+      // Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+      //       8b8d6fffe113457094a17701f63e3d6a/4134e14f70b21014bbc5a10ce4041860.html
+
+      gigya.accounts.addEventHandlers({
+
+        onLogin : function(event) {
+          // event.UID          — CDC unique user identifier
+          // event.UIDSignature — cryptographic signature (verify server-side!)
+          // event.profile      — { firstName, lastName, email, … }
+          // event.data         — custom schema data fields
+          //
+          // IMPORTANT: Always verify UIDSignature on your backend before
+          // creating a server session. Never trust client-side UID alone.
+          // Server-side verification docs:
+          // https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+          // 8b8d6fffe113457094a17701f63e3d6a/416557e570b21014bbc5a10ce4041860.html
+
+          console.log("[CDC] Global onLogin — UID:", event.UID);
+          setLoggedInUI(event);
+        },
+
+        onLogout : function() {
+          // Fired after any logout, including session expiry.
+          console.log("[CDC] Global onLogout.");
+          setLoggedOutUI();
+        }
+
+      });
+
+
+      // ── 2. Check for an existing session on page load ────────────
+      //
+      // getAccountInfo returns the current user's account data if a
+      // valid session cookie is present (returning visitor / SSO).
+      // This keeps the user logged-in across page refreshes without
+      // requiring them to log in again.
+      //
+      // Fields returned: UID, profile, data, preferences, etc.
+      // Docs: https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
+      //       8b8d6fffe113457094a17701f63e3d6a/41398d3d70b21014bbc5a10ce4041860.html
+
+      gigya.accounts.getAccountInfo({
+
+        // include additional data objects in the response
+        // Options: "profile", "data", "preferences", "subscriptions",
+        //          "groups", "id_token"
+        include : "profile,data",
+
+        callback : function(response) {
+          if (response.errorCode === 0) {
+            // errorCode 0 = valid session found — user is already logged in
+            console.log("[CDC] Existing session found for UID:", response.UID);
+            setLoggedInUI(response);
+          } else {
+            // errorCode 403005 = no valid session (user is logged out)
+            // Other codes may indicate network or config issues.
+            console.log("[CDC] No active session (errorCode:", response.errorCode + ")");
+          }
+        }
+
+      });
+
+    } // end onGigyaServiceReady
+
+  </script>
+
+</body>
+</html>
