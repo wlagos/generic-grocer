@@ -6660,7 +6660,10 @@
         var __gigyaConf = {
             onGigyaServiceReady: function () {
                 $(document).ready(function () {
-                  
+                     gigya.accounts.showScreenSet({
+                        screenSet: 'wlagos-RegistrationLogin',
+                        containerID: 'screensetContainer'
+                    });
                 });
                 gigya.accounts.addEventHandlers({
                     onLogin: function (r) {
