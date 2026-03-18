@@ -1,4 +1,8 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com */
+
+.special-title {
+    font-family: "Oswald", sans-serif;
+}
 .create-account-section {
   max-width: 480px;
   margin: 40px auto;
