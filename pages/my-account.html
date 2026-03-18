@@ -938,9 +938,9 @@ var __gigyaConf = {
         });
         gigya.accounts.session.verify({callback:function(response) {
                 if(response.errorCode == 0) {
-                        gigya.accounts.showScreenSet({screenSet:'mpaturu-ProfileUpdate'});
+                       // gigya.accounts.showScreenSet({screenSet:'mpaturu-ProfileUpdate'});
                 } else {
-                        gigya.accounts.showScreenSet({screenSet:'mpaturu-RegistrationLogin'});
+                     //   gigya.accounts.showScreenSet({screenSet:'mpaturu-RegistrationLogin'});
                 }
         }});
 	}
