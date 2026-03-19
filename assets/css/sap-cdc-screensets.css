@@ -1,13 +1,11 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com */
 
-.gigya-header,
-.gigya-screen-title {
-  display: none !important;
+#gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title{
+font-family: "Oswald", sans-serif !important;
+  color:red !important;
 }
 
-.special-title {
-    font-family: "Oswald", sans-serif;
-}
+
 .create-account-section {
   max-width: 480px;
   margin: 40px auto;
