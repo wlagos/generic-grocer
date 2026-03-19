@@ -8,6 +8,7 @@ font-family: "Oswald", sans-serif !important;
     font-weight: normal !important;
     text-rendering: optimizeLegibility !important;
     font-style: normal !important;
+   text-size-adjust: 100% !important;
 }
 
 
