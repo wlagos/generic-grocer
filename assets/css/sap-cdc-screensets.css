@@ -15,11 +15,5 @@ font-family: "Oswald", sans-serif !important;
 }
 
 
-[title="Login"],
-[aria-label="Login"],
-[data-caption="Login"] {
-  display: none !important;
-}
-
 
 
