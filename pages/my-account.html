@@ -6663,7 +6663,19 @@
                 $(document).ready(function () {
                      gigya.accounts.showScreenSet({
                         screenSet: 'mpaturu-RegistrationLogin',
-                        containerID: 'screensetContainer'
+						  startScreen: "mpaturu-gigya-login-screen",
+                        containerID: 'screensetContainer',
+						 
+						   onAfterScreenLoad: function (event) {
+      // Only on login screen:
+      if (event.currentScreen === 'gigya-login-screen') {
+        var root = document.getElementById(event.containerID) || document.body;
+        // Try common selectors; adjust if your markup differs
+        var title = root.querySelector('.gigya-header, .gigya-screen-title, h2.gigya-screen-title');
+        if (title) { title.style.display = 'none'; }
+      }
+    }
+							
                     });
                 });
                 gigya.accounts.addEventHandlers({
