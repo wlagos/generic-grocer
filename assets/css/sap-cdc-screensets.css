@@ -18,8 +18,8 @@ font-family: "Oswald", sans-serif !important;
 .screensetContainer {
     margin-top:0px !important;
 } 
-.screensetContainer_content {
-     margin-top:0px !important;
+.gigya-screen.portrait {
+padding-top:20px !important;
 }
 
 
