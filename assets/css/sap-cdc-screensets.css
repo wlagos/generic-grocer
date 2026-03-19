@@ -3,6 +3,12 @@
 #gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title{
 font-family: "Oswald", sans-serif !important;
   color:red !important;
+   margin-bottom: 10px;
+    font-size: 30px !important;
+    text-transform: uppercase !important;
+    font-weight: normal !important;
+    text-rendering: optimizeLegibility !important;
+    font-style: normal !important;
 }
 
 
