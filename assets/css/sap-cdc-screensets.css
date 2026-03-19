@@ -1,5 +1,10 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com */
 
+.gigya-header,
+.gigya-screen-title {
+  display: none !important;
+}
+
 .special-title {
     font-family: "Oswald", sans-serif;
 }
