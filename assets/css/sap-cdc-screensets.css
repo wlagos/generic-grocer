@@ -15,9 +15,11 @@ font-family: "Oswald", sans-serif !important;
 }
 
 
-.gigya-screen-caption,
-.gigya-header,
-.gigya-screen-title {
-    display: none !important;
+[title="Login"],
+[aria-label="Login"],
+[data-caption="Login"] {
+  display: none !important;
 }
+
+
 
