@@ -15,4 +15,11 @@ font-family: "Oswald", sans-serif !important;
 }
 
 
+[title="Login1"],
+[aria-label="Login1"],
+[data-caption="Login1"] {
+  display: none !important;
+}
+
+
 
