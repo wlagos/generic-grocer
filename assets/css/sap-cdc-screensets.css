@@ -1,6 +1,8 @@
-/* Create Account Section Styles - Inspired by shop.commissaries.com */
+/* Create Account Section Styles - Inspired by shop.commissaries.com
+#gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title
+*/
 
-#gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title{
+.special-title_two{
 font-family: "Oswald", sans-serif !important;
     margin-top: 0px !important;
    margin-bottom: 10px !important;
