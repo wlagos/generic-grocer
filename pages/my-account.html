@@ -6726,33 +6726,6 @@
 					}
 
 				},
-				onBeforeSubmit: function (e) {
-					// Default Gigya email field is "loginID"; use "email" if that's your custom name
-					const emailInput =
-						document.querySelector('input[name="loginID"]') ||
-						document.querySelector('input[name="email"]');
-
-					if (!emailInput) return;
-
-					const val = (emailInput.value || '').trim();
-
-					// Block @mil.com — swap to /@[^@\s]+\.mil$/i to block ANY .mil TLDs
-					if (/@mil\.com$/i.test(val)) {
-						// Clear any previous email errors to avoid duplicates
-						e.validationErrors = (e.validationErrors || []).filter(
-							err => err.fieldName !== emailInput.name
-						);
-
-						// Push a standard field-level validation error.
-						// CDC will paint the default red message near the field.
-						e.validationErrors.push({
-							fieldName: emailInput.name,           // "loginID" or "email"
-							message: 'E-mail address is invalid.' // same text as the default
-						});
-
-						return false; // cancel submit & render the field error with default styling
-					}
-				},
 				onAfterScreenLoad: function (event) {
 					const root = document.getElementById(event.containerID) || document.body;
 					//***
