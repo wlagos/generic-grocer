@@ -6699,17 +6699,36 @@
 				containerID: 'screensetContainer',
 				// Run after Gigya performs its normal field validation
 				onBeforeSubmit: function (e) {
-				    var emailInput = e.formData.loginID || e.formData.email;
+				    var emailInput =  e.formData.email;
     if (!emailInput) return;
 
     // Block @mil.com or replace with /@[^@\s]+\.mil$/i to block any .mil
-    if (/@mil\.com$/i.test(emailInput)) {
-        e.validationErrors = e.validationErrors || [];
-        e.validationErrors.push({
-            fieldName: "email",
-            message: "E-mail address is invalid."
-        });
-        return false;
+const isBlocked = /@mil\.com$/i.test(emailInput); 
+  // If you prefer to block ANY .mil TLD, use: /@[^@\s]+\.mil$/i
+
+  if (isBlocked) {
+    // Get the Screen‑Set element ID (renderer uses this to place the error correctly)
+    const elementID =document.querySelector('input[name="email"]'.getAttribute('data-screenset-element-id') ||
+      null; // null-safe; some themes rely purely on fieldName
+
+    // Deduplicate any prior email errors
+    e.validationErrors = (e.validationErrors || []).filter(
+      err => err.fieldName !== ('email')
+    );
+
+    // Push an anchored, field-level error for the screen renderer
+    e.validationErrors.push({
+      fieldName: 'email',  // "loginID" in most CDC setups
+      message: 'E-mail address is invalid.',    // keep same text for consistency
+      // Anchor to the actual UI element so the theme paints the red message
+      elementID: elementID
+    });
+
+    // Some themes only render errors if you explicitly ask to show them:
+    e.showValidationErrors = true; // harmless if unsupported
+
+    return false; // cancel submit and let CDC draw the default error UI
+  }
     }
 
 				},
