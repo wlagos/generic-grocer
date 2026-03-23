@@ -6698,7 +6698,7 @@
 				startScreen: startScreen,
 				containerID: 'screensetContainer',
 				// Run after Gigya performs its normal field validation
-				onBeforeValidation: function (e) {
+				onBeforeSubmit: function (e) {
 					// Default Gigya email field is "loginID"; use "email" if that's your custom name
 					const emailInput =
 						document.querySelector('input[name="loginID"]') ||
