@@ -6729,6 +6729,30 @@
       }
     }, true);
 		  //***
+		     // Choose your rule:
+    // Block @mil.com exactly:
+    const isBlocked = (email) => /@mil\.com$/i.test((email || '').trim());
+    // Or, block ANY .mil TLD (e.g., x@army.mil, x@navy.mil):
+    // const isBlocked = (email) => /@[^@\s]+\.mil$/i.test((email || '').trim());
+
+    container.addEventListener('focusout', function (evt) {
+      const t = evt.target;
+      if (!t || (t.name !== 'loginID' && t.name !== 'email')) return;
+      const val = (t.value || '').trim();
+
+      if (isBlocked(val)) {
+        // Override validity with the same message the user already sees
+        if (typeof t.setCustomValidity === 'function') {
+          t.setCustomValidity('E-mail address is invalid.');
+          // Try to show the message immediately (some themes render this)
+          if (typeof t.reportValidity === 'function') t.reportValidity();
+        }
+      } else {
+        // Clear the override when value is acceptable
+        if (typeof t.setCustomValidity === 'function') t.setCustomValidity('');
+      }
+    }, true);
+		  //***
         // Hide captions based on current screen
         if (event.currentScreen === 'mpaturu-gigya-login-screen') {
       //    hideCaptionIfMatches(root, ['login']);
