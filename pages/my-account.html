@@ -6705,11 +6705,14 @@
         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
           hideCaptionIfMatches(root, ['register', 'create account']);
 			
-   
-   const lastNameInput = document.querySelector('input[name="profile.lastName"]');
-    if (lastNameInput) {
-      lastNameInput.setAttribute('maxlength', '1');
-    }
+
+    const lastNameInput = document.querySelector('input[name="profile.lastName"]');
+    if (!lastNameInput) return;
+
+    lastNameInput.addEventListener('blur', function () {
+      lastNameInput.value = (lastNameInput.value || '').slice(0, 1);
+    });
+
 
 
         }
