@@ -1,13 +1,13 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com
 #gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title
 */
-label.gigya-composite-control.gigya-composite-control-label.Label_bold{
+#gigya-login-form label.gigya-composite-control.gigya-composite-control-label.Label_bold{
  font-weight:700 !important;
 }
-label.gigya-composite-control.gigya-composite-control-label.Label-Normal{
+#gigya-login-form label.gigya-composite-control.gigya-composite-control-label.Label-Normal{
     font-weight:500 !important;
 }
-label.gigya-composite-control.gigya-composite-control-label.Label-Normal-Bottom-Line{
+#gigya-login-form label.gigya-composite-control.gigya-composite-control-label.Label-Normal-Bottom-Line{
     font-weight:500 !important;
     margin-bottom:0px;
     border-bottom: 1px solid #ccc !important; 
