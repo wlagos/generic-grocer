@@ -6697,33 +6697,53 @@
       containerID: 'screensetContainer',
       onAfterScreenLoad: function (event) {
         const root = document.getElementById(event.containerID) || document.body;
+//***
+		      var container = document.getElementById('screensetContainer');
+    if (!container) return;
 
+    // Helper to enforce a single character
+    function clampToOneChar(val) {
+      return (val || '').slice(0, 1); // keep only first character
+      // If you want only letters and uppercase:
+      // const letter = (val.match(/[A-Za-z]/) || [''])[0];
+      // return letter.toUpperCase();
+    }
+
+    // Use focusout because it bubbles; add capture so we intercept reliably
+    function onFocusOut(evt) {
+      var target = evt.target;
+      // Make sure we're handling the Last Name field
+      if (target && target.name === 'profile.lastName') {
+        target.value = clampToOneChar(target.value);
+      }
+    }
+
+    // Delegate from the container for resilience against re-renders
+    container.addEventListener('focusout', onFocusOut, true); // capture=true
+
+    // Optional: also clamp as the user types (for immediate UX)
+    container.addEventListener('input', function (evt) {
+      var target = evt.target;
+      if (target && target.name === 'profile.lastName') {
+        target.value = clampToOneChar(target.value);
+      }
+    }, true);
+		  //***
         // Hide captions based on current screen
         if (event.currentScreen === 'mpaturu-gigya-login-screen') {
-          hideCaptionIfMatches(root, ['login']);
+      //    hideCaptionIfMatches(root, ['login']);
         }
         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
-          hideCaptionIfMatches(root, ['register', 'create account']);
-			
-
-    const lastNameInput = document.querySelector('input[name="profile.lastName"]');
-    if (!lastNameInput) return;
-
-    lastNameInput.addEventListener('blur', function () {
-      lastNameInput.value = (lastNameInput.value || '').slice(0, 1);
-    });
-
-
-
+        //  hideCaptionIfMatches(root, ['register', 'create account']);
         }
 
         // Re-apply hiding if CDC re-renders parts of the DOM
         const mo = new MutationObserver(() => {
           if (event.currentScreen === 'mpaturu-gigya-login-screen') {
-            hideCaptionIfMatches(root, ['login']);
+        //    hideCaptionIfMatches(root, ['login']);
           }
           if (event.currentScreen === 'mpaturu-gigya-register-screen') {
-            hideCaptionIfMatches(root, ['register', 'create account']);
+        //    hideCaptionIfMatches(root, ['register', 'create account']);
           }
         });
         mo.observe(root, { childList: true, subtree: true });
