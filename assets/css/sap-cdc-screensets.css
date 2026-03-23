@@ -7,7 +7,11 @@ label.gigya-composite-control.gigya-composite-control-label.Label_bold{
 label.gigya-composite-control.gigya-composite-control-label.Label-Normal{
     font-weight:500 !important;
 }
+label.gigya-composite-control.gigya-composite-control-label.Label-Normal-Bottom-Line{
+    font-weight:500 !important;
+    margin-bottom:20px;
     
+}    
 #gigya-login-form label.gigya-composite-control.gigya-composite-control-label.Required-Label{
     display: block;
     text-align: right !important;
