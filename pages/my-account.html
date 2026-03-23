@@ -6698,35 +6698,60 @@
 				startScreen: startScreen,
 				containerID: 'screensetContainer',
 				// Run after Gigya performs its normal field validation
-				onAfterValidation: function (e) {
+				onBeforeValidation: function (e) {
+					// Default Gigya email field is "loginID"; use "email" if that's your custom name
 					const emailInput =
 						document.querySelector('input[name="loginID"]') ||
 						document.querySelector('input[name="email"]');
 
 					if (!emailInput) return;
 
-					const email = (emailInput.value || '').trim();
+					const val = (emailInput.value || '').trim();
 
-					// Block @mil.com (use /@[^@\s]+\.mil$/i if you want to block ANY .mil TLD)
-					const isMilDotCom = /@mil\.com$/i.test(email);
-					if (isMilDotCom) {
-						// Remove any existing email-related errors to avoid duplicates
+					// Block @mil.com — swap to /@[^@\s]+\.mil$/i to block ANY .mil TLDs
+					if (/@mil\.com$/i.test(val)) {
+						// Clear any previous email errors to avoid duplicates
 						e.validationErrors = (e.validationErrors || []).filter(
 							err => err.fieldName !== emailInput.name
 						);
 
-						// Push a field-level validation error.
-						// Using the same text aligns with the default "E-mail address is invalid." message.
+						// Push a standard field-level validation error.
+						// CDC will paint the default red message near the field.
 						e.validationErrors.push({
-							fieldName: emailInput.name,            // "loginID" or "email"
-							message: 'E-mail address is invalid.'  // use your localization string if needed
+							fieldName: emailInput.name,           // "loginID" or "email"
+							message: 'E-mail address is invalid.' // same text as the default
 						});
 
-						// Returning false cancels the flow and instructs CDC to paint the field errors
-						return false;
+						return false; // cancel submit & render the field error with default styling
 					}
 
-					// If not blocked, allow any previously set custom errors to clear naturally
+				},
+				onBeforeSubmit: function (e) {
+					// Default Gigya email field is "loginID"; use "email" if that's your custom name
+					const emailInput =
+						document.querySelector('input[name="loginID"]') ||
+						document.querySelector('input[name="email"]');
+
+					if (!emailInput) return;
+
+					const val = (emailInput.value || '').trim();
+
+					// Block @mil.com — swap to /@[^@\s]+\.mil$/i to block ANY .mil TLDs
+					if (/@mil\.com$/i.test(val)) {
+						// Clear any previous email errors to avoid duplicates
+						e.validationErrors = (e.validationErrors || []).filter(
+							err => err.fieldName !== emailInput.name
+						);
+
+						// Push a standard field-level validation error.
+						// CDC will paint the default red message near the field.
+						e.validationErrors.push({
+							fieldName: emailInput.name,           // "loginID" or "email"
+							message: 'E-mail address is invalid.' // same text as the default
+						});
+
+						return false; // cancel submit & render the field error with default styling
+					}
 				},
 				onAfterScreenLoad: function (event) {
 					const root = document.getElementById(event.containerID) || document.body;
