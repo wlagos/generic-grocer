@@ -5,8 +5,9 @@
     display: block;
     text-align: right !important;
     font-weight:100 !important;
+    font-size: 12px !important;
 }
-#gigya-login-form h2.gigya-composite-control.gigya-composite-control-header.special-title-two{
+#gigya-login-form h2.gigya-composite-control.gigya-composite-control-header.special-title{
 font-family: "Oswald", sans-serif !important;
     margin-top: 0px !important;
    margin-bottom: 10px !important;
