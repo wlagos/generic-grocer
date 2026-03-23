@@ -11,7 +11,13 @@ label.gigya-composite-control.gigya-composite-control-label.Label-Normal-Bottom-
     font-weight:500 !important;
     margin-bottom:0px;
     border-bottom: 1px solid #ccc !important; 
-}    
+}   
+#gigya-login-form a.gigya-composite-control.gigya-composite-control-link.Href-CreateAccount{
+     padding: 4px;
+    display: block;
+    margin-top: 0px;
+    margin-bottom: 5px;
+}
 #gigya-login-form label.gigya-composite-control.gigya-composite-control-label.Required-Label{
     display: block;
     text-align: right !important;
@@ -29,7 +35,7 @@ font-family: "Oswald", sans-serif !important;
     font-style: normal !important;
    text-size-adjust: 100% !important;
    font-height:44.8px !important;
-  margin-bottom: 18px !important;
+  margin-bottom: 14px !important;
   text-align: center !important;
 }
 #gigya-login-form label.gigya-composite-control.gigya-composite-control-label.special-title-firsttime{
