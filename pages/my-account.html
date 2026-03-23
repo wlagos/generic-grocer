@@ -6708,9 +6708,7 @@ const isBlocked = /@mil\.com$/i.test(emailInput);
 
   if (isBlocked) {
     // Get the Screen‑Set element ID (renderer uses this to place the error correctly)
-    const elementID =document.querySelector('input[name="email"]'.getAttribute('data-screenset-element-id') ||
-      null; // null-safe; some themes rely purely on fieldName
-
+    const elementID = document.querySelector('input[name="email"]'.getAttribute('data-screenset-element-id') || null;
     // Deduplicate any prior email errors
     e.validationErrors = (e.validationErrors || []).filter(
       err => err.fieldName !== ('email')
