@@ -6657,63 +6657,104 @@
     <div
         style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
         Offline static copy — commissaries.com</div>
- <script>
-        var __gigyaConf = {
-            onGigyaServiceReady: function () {
-                $(document).ready(function () {
-                    gigya.accounts.showScreenSet({
-                        screenSet: 'mpaturu-RegistrationLogin',
-                        startScreen: "mpaturu-gigya-login-screen",
-                        containerID: 'screensetContainer',
-                        onAfterScreenLoad: function (event) {
-                            if (event.currentScreen !== 'mpaturu-gigya-login-screen') return;
+<script>
+  // Map URL hash to your screen IDs
+  function getStartScreenFromHash() {
+    const hash = (window.location.hash || '').toLowerCase();
+    if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
+      return 'mpaturu-gigya-register-screen';
+    }
+    // Default to login
+    return 'mpaturu-gigya-login-screen';
+  }
 
-                            var root = document.getElementById(event.containerID) || document.body;
+  // Utility: hide caption/title if it matches certain words
+  function hideCaptionIfMatches(root, words) {
+    const selectors = [
+      '#screensetContainer_content_caption',
+      '.gigya-header',
+      '.gigya-screen-title',
+      'h2.gigya-screen-title'
+    ];
+    const nodes = root.querySelectorAll(selectors.join(','));
+    const pattern = new RegExp(words.join('|'), 'i'); // case-insensitive
 
-                            function hideLoginCaption() {
-                                var caption = root.querySelector('#screensetContainer_content_caption');
-                                if (caption && /login/i.test((caption.textContent || '').trim())) {
-                                    caption.style.display = 'none';
-                                    caption.style.margin = '0';
-                                    caption.style.padding = '0';
-                                }
-                                var title = root.querySelector('.mpaturu-gigya-header, .mpaturu-gigya-screen-title, h2.mpaturu-gigya-screen-title');
-                                if (title && /login/i.test((title.textContent || '').trim())) {
-                                    title.style.display = 'none';
-                                    title.style.margin = '0';
-                                    title.style.padding = '0';
-                                }
-                            }
+    nodes.forEach(el => {
+      const text = (el.textContent || '').trim();
+      if (pattern.test(text)) {
+        el.style.display = 'none';
+        el.style.margin = '0';
+        el.style.padding = '0';
+      }
+    });
+  }
 
-                            // Initial pass
-                            hideLoginCaption();
+  // Render the screen-set with a given start screen
+  function renderAuthScreen(startScreen) {
+    gigya.accounts.showScreenSet({
+      screenSet: 'mpaturu-RegistrationLogin',
+      startScreen: startScreen,
+      containerID: 'screensetContainer',
+      onAfterScreenLoad: function (event) {
+        const root = document.getElementById(event.containerID) || document.body;
 
-                            // Observe changes within the container
-                            var mo = new MutationObserver(hideLoginCaption);
-                            mo.observe(root, { childList: true, subtree: true });
-                        }
-                    });
-                });
-                gigya.accounts.addEventHandlers({
-                    onLogin: function (r) {
-                        // User is logged in
-                    },
-                    onLogout: function (r) {
-                        // User is logged out
-                    }
-                });
-                gigya.accounts.session.verify({
-                    callback: function (response) {
-                        if (response.errorCode == 0) {
-                            //gigya.accounts.showScreenSet({screenSet:'Default-ProfileUpdate'});
-                        } else {
-                            //gigya.accounts.showScreenSet({screenSet:'Default-RegistrationLogin'});
-                        }
-                    }
-                });
-            }
-        };
-    </script>
+        // Hide captions based on current screen
+        if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+          hideCaptionIfMatches(root, ['login']);
+        }
+        if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+          hideCaptionIfMatches(root, ['register', 'create account']);
+        }
+
+        // Re-apply hiding if CDC re-renders parts of the DOM
+        const mo = new MutationObserver(() => {
+          if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+            hideCaptionIfMatches(root, ['login']);
+          }
+          if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+            hideCaptionIfMatches(root, ['register', 'create account']);
+          }
+        });
+        mo.observe(root, { childList: true, subtree: true });
+      }
+    });
+  }
+
+  // Gigya bootstrap config
+  var __gigyaConf = {
+    onGigyaServiceReady: function () {
+      // Initial render based on the hash
+      renderAuthScreen(getStartScreenFromHash());
+
+      // Allow switching screens by changing the hash (no reload)
+      window.addEventListener('hashchange', function () {
+        renderAuthScreen(getStartScreenFromHash());
+      });
+
+      // Session events (optional)
+      gigya.accounts.addEventHandlers({
+        onLogin: function (r) {
+          // User is logged in
+        },
+        onLogout: function (r) {
+          // User is logged out
+        }
+      });
+
+      // Verify session (optional)
+      gigya.accounts.session.verify({
+        callback: function (response) {
+          if (response.errorCode == 0) {
+            // Already logged in; you could show a profile/update screen here
+            // gigya.accounts.showScreenSet({ screenSet:'Default-ProfileUpdate', containerID:'screensetContainer' });
+          } else {
+            // Not logged in; hash already decides which start screen to render
+          }
+        }
+      });
+    }
+  };
+</script>
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
 
 </body>
