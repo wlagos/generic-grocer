@@ -6729,29 +6729,35 @@
       }
     }, true);
 		  //***
-		     // Choose your rule:
-    // Block @mil.com exactly:
-    const isBlocked = (email) => /@mil\.com$/i.test((email || '').trim());
-    // Or, block ANY .mil TLD (e.g., x@army.mil, x@navy.mil):
-    // const isBlocked = (email) => /@[^@\s]+\.mil$/i.test((email || '').trim());
+	
 
-    container.addEventListener('focusout', function (evt) {
-      const t = evt.target;
-      if (!t || (t.name !== 'loginID' && t.name !== 'email')) return;
-      const val = (t.value || '').trim();
+    const emailInput =
+      document.querySelector('input[name="loginID"]') ||
+      document.querySelector('input[name="email"]');
 
-      if (isBlocked(val)) {
-        // Override validity with the same message the user already sees
-        if (typeof t.setCustomValidity === 'function') {
-          t.setCustomValidity('E-mail address is invalid.');
-          // Try to show the message immediately (some themes render this)
-          if (typeof t.reportValidity === 'function') t.reportValidity();
-        }
-      } else {
-        // Clear the override when value is acceptable
-        if (typeof t.setCustomValidity === 'function') t.setCustomValidity('');
-      }
-    }, true);
+    if (!emailInput) return;
+
+    const email = (emailInput.value || '').trim();
+
+    // Block @mil.com (use /@[^@\s]+\.mil$/i if you want to block ANY .mil TLD)
+    const isMilDotCom = /@mil\.com$/i.test(email);
+    if (isMilDotCom) {
+      // Remove any existing email-related errors to avoid duplicates
+      event.validationErrors = (event.validationErrors || []).filter(
+        err => err.fieldName !== emailInput.name
+      );
+
+      // Push a field-level validation error.
+      // Using the same text aligns with the default "E-mail address is invalid." message.
+      event.validationErrors.push({
+        fieldName: emailInput.name,            // "loginID" or "email"
+        message: 'E-mail address is invalid.'  // use your localization string if needed
+      });
+
+      // Returning false cancels the flow and instructs CDC to paint the field errors
+      return false;
+    }
+
 		  //***
         // Hide captions based on current screen
         if (event.currentScreen === 'mpaturu-gigya-login-screen') {
