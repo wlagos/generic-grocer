@@ -6698,16 +6698,51 @@
 				startScreen: startScreen,
 				containerID: 'screensetContainer',
 				// Run after Gigya performs its normal field validation
-				   onBeforeValidation: function (event) {
-   console.log("onBeforeValidation");
+		 onBeforeSubmit: function (e) {
+    // 1) Read the email being submitted (system field is typically "loginID")
+    const emailVal = (e.formData.loginID || e.formData.email || '').trim();
 
-        var email = gigya.jsEventHandler.getEventField('email');
-        if (email && email.toLowerCase().endsWith('@mil.com')) {
-            gigya.jsEventHandler.setEventField('error', 'Email addresses with @mil.com are not allowed. Please use a different email.');
-            return false;
-        }
-        return true;
-    },
+    // 2) Your validation rule (example: block any .mil TLD)
+    //    Change to /@mil\.com$/i to block only "@mil.com"
+    if (!/@[^@\s]+\.mil$/i.test(emailVal)) {
+      return; // allow submit, no error
+    }
+
+    // 3) Select the email input element that is on this screen
+    const container = document.getElementById('screensetContainer');
+    const emailEl =
+      container?.querySelector('input[name="loginID"]') ||
+      container?.querySelector('input[name="email"]');
+
+    // 4) Resolve the Screen-Set elementID (anchor for error placement)
+    const elementID =
+      emailEl?.closest('[data-screenset-element-id]')?.getAttribute('data-screenset-element-id') ||
+      emailEl?.getAttribute('data-screenset-element-id') ||
+      emailEl?.id || null;
+
+    // 5) Push a field-level error and cancel the submit so CDC renders it
+    // IMPORTANT: fieldName should be "loginID" in registration flows
+    e.validationErrors = (e.validationErrors || []).filter(err => err.fieldName !== 'loginID');
+    e.validationErrors.push({
+      fieldName: 'loginID',                 // <- system field name for email
+      message: 'E-mail address is invalid.',// default text
+      elementID: elementID                  // <- where to paint the message
+    });
+
+    e.showValidationErrors = true;          // ask renderer to show field errors (helps on some themes)
+
+    // Optional: nudge validation cycle so the UI updates immediately
+    try { emailEl?.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+
+    // Optional: move focus to the field for a better UX
+    try {
+      emailEl?.focus({ preventScroll: true });
+      emailEl?.setSelectionRange(0, emailEl.value.length);
+    } catch () {}
+
+    return false; // CDC will paint the red error UI and keep the user on the form
+  },
+
    
 				onAfterScreenLoad: function (event) {
 					const root = document.getElementById(event.containerID) || document.body;
