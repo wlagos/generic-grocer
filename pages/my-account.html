@@ -6740,9 +6740,10 @@
                     // ---- Step 1: Client-side format validation ----
                     function validateFormat() {
                         const value = (emailInput.value || '').trim();
-
-
-                        if (!emailRegex.test(value)) {
+	                    var emailLower = emailInput.toLowerCase();
+					    var isBlocked = emailLower.indexOf('@mil.com') !== -1;
+					
+                        if (isBlocked) {
                             showError('Please enter a valid email address.', { code: 'invalid_format' });
                             showAvailability('', true);
                             return { ok: false, value };
