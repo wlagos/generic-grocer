@@ -6698,36 +6698,7 @@
 				startScreen: startScreen,
 				containerID: 'screensetContainer',
 				// Run after Gigya performs its normal field validation
-				onBeforeSubmit: function (e) {
-					var emailInput = e.formData.email;
-						console.log('onBeforeSubmit called with email:', emailInput);
-						if (!emailInput) return true;
-
-						// Block @mil.com or replace with /@[^@\s]+\.mil$/i to block any .mil
-						var emailLower = emailInput.toLowerCase();
-						var isBlocked = emailLower.indexOf('@mil.com') !== -1;
-						console.log('Email check - isBlocked:', isBlocked);
-
-						if (isBlocked) {
-							console.log('Blocking @mil.com email');
-						
-
-							// Deduplicate any prior email errors
-							e.validationErrors = (e.validationErrors || []).filter(
-								err => err.fieldName !== 'email'
-							);
-
-							// Push an anchored, field-level error for the screen renderer
-							e.validationErrors.push({
-								fieldName: 'email',
-								message: 'Email addresses with @mil.com are not allowed. Please use a different email.',
-								elementID: elementID
-							});
-
-							e.showValidationErrors = true;
-							return false; // cancel submit and keep user on form
-						}
-						return true;},
+				
 				onAfterScreenLoad: function (event) {
 					const root = document.getElementById(event.containerID) || document.body;
 					//***
