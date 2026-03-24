@@ -6740,7 +6740,7 @@
                     // ---- Step 1: Client-side format validation ----
                     function validateFormat() {
                         const value = (emailInput.value || '').trim();
-	                    var emailLower = emailInput.toLowerCase();
+	                    var emailLower = value.toLowerCase();
 					    var isBlocked = emailLower.indexOf('@mil.com') !== -1;
 					
                         if (isBlocked) {
