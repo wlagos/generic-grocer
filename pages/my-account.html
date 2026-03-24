@@ -6704,7 +6704,7 @@
 
                     // 2) Your validation rule (example: block any .mil TLD)
                     //    Change to /@mil\.com$/i to block only "@mil.com"
-                    if (!/@[^@\s]+\.mil$/i.test(emailVal)) {
+                    if (/@[^@\s]+\.mil$/i.test(emailVal)) {
                         return; // allow submit, no error
                     }
 
