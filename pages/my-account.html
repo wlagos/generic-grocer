@@ -6745,8 +6745,8 @@
 					
                         if (isBlocked) {
                             showError('Please enter a valid email address.', { code: 'invalid_format' });
-                            showAvailability('', true);
-                            return { ok: false, value };
+                          
+                            return false;
                         }
 
                         // Format OK
