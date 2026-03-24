@@ -6710,14 +6710,9 @@
 
 					if (isBlocked) {
 						console.log('Blocking @mil.com email');
-						return {
-							errorCode: 400009,
-							errorMessage: 'Email addresses with @mil.com are not allowed. Please use a different email.',
-							fieldErrors: [{
-								name: 'email',
-								errorMessage: 'Email addresses with @mil.com are not allowed.'
-							}]
-						};
+						e.preventDefault();
+						gigya.accounts.addErrorMessage('Email addresses with @mil.com are not allowed. Please use a different email.');
+						return false;
 					}
 					return true;
 				},
