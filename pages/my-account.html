@@ -6712,7 +6712,7 @@
                     let debounceTimer = null;
                     let currentCheckController = null; // AbortController for fetch
                     let lastCheckedValue = '';         // track value to avoid stale updates
-
+                    validateFormat();
                     // ---- Helpers: UI state ----
                     function showError(message, options = {}) {
                         errorSpan.textContent = message || '';
