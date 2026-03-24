@@ -6700,38 +6700,60 @@
                 // Run after Gigya performs its normal field validation
                 onBeforeSubmit: function (e) {
                     // 1) Read the email being submitted (system field is typically "loginID")
-                    const emailVal = (e.formData.loginID || e.formData.email || '').trim();
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
 
-                    // 2) Your validation rule (example: block any .mil TLD)
-                    //    Change to /@mil\.com$/i to block only "@mil.com"
-                    if (/@[^@\s]+\.mil$/i.test(emailVal)) {
-                        return; // allow submit, no error
+
+                    // Pragmatic email regex for UI validation
+                    const emailRegex = /@mil\.com$/;
+
+
+                    // Debounce & race-control state
+                    let debounceTimer = null;
+                    let currentCheckController = null; // AbortController for fetch
+                    let lastCheckedValue = '';         // track value to avoid stale updates
+
+                    // ---- Helpers: UI state ----
+                    function showError(message, options = {}) {
+                        errorSpan.textContent = message || '';
+                        errorSpan.style.display = message ? 'inline' : 'none';
+
+                        emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+
+                        // Gigya classes
+                        emailInput.classList.toggle('gigya-invalid', !!message);
+                        emailInput.classList.toggle('gigya-valid', !message);
+
+                        if (options.code) {
+                            emailInput.setAttribute('data-invalid-error-code', String(options.code));
+                        } else {
+                            emailInput.removeAttribute('data-invalid-error-code');
+                        }
                     }
 
-                    // 3) Select the email input element that is on this screen
-                    const container = document.getElementById('screensetContainer');
-                    const emailEl =
-                        container?.querySelector('input[name="loginID"]') ||
-                        container?.querySelector('input[name="email"]');
 
-                    // 4) Resolve the Screen-Set elementID (anchor for error placement)
-                    const elementID =
-                        emailEl?.closest('[data-screenset-element-id]')?.getAttribute('data-screenset-element-id') ||
-                        emailEl?.getAttribute('data-screenset-element-id') ||
-                        emailEl?.id || null;
 
-                    // 5) Push a field-level error and cancel the submit so CDC renders it
-                    // IMPORTANT: fieldName should be "loginID" in registration flows
-                    e.validationErrors = (e.validationErrors || []).filter(err => err.fieldName !== 'loginID');
-                    e.validationErrors.push({
-                        fieldName: 'loginID',                 // <- system field name for email
-                        message: 'E-mail address is invalid.',// default text
-                        elementID: elementID                  // <- where to paint the message
-                    });
+                    function clearFeedback() {
+                        showError('');
+                    }
 
-                   // e.showValidationErrors = true;          // ask renderer to show field errors (helps on some themes)
+                    // ---- Step 1: Client-side format validation ----
+                    function validateFormat() {
+                        const value = (emailInput.value || '').trim();
 
-              
+
+                        if (!emailRegex.test(value)) {
+                            showError('Please enter a valid email address.', { code: 'invalid_format' });
+                            showAvailability('', true);
+                            return { ok: false, value };
+                        }
+
+                        // Format OK
+                        showError('');
+                        return { ok: true, value };
+                    }
+
+
 
                     return false; // CDC will paint the red error UI and keep the user on the form
                 },
