@@ -6707,15 +6707,8 @@
 					// If you prefer to block ANY .mil TLD, use: /@[^@\s]+\.mil$/i
 
 					if (isBlocked) {
-						return {
-							errorCode: 400009,
-			
-							errorMessage: 'Military (.mil) email addresses are not allowed. Please use a different email.',
-							fieldErrors: [{
-								name: 'email',
-								errorMessage: 'Military (.mil) email addresses are not allowed.'
-							}]
-						};
+						gigya.accounts.showErrorMessage("Not allow @mil.com emails");
+						return false;
 					}
 					return true;
 				},
