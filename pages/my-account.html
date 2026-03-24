@@ -6700,15 +6700,24 @@
 				// Run after Gigya performs its normal field validation
 				onBeforeSubmit: function (e) {
 					var emailInput = e.formData.email;
-					if (!emailInput) return;
+					console.log('onBeforeSubmit called with email:', emailInput);
+					if (!emailInput) return true;
 
-					// Block @mil.com or replace with /@[^@\s]+\.mil$/i to block any .mil
-					const isBlocked = /@mil\.com$/i.test(emailInput);
-					// If you prefer to block ANY .mil TLD, use: /@[^@\s]+\.mil$/i
+					// Check if email contains @mil.com (case-insensitive)
+					var emailLower = emailInput.toLowerCase();
+					var isBlocked = emailLower.indexOf('@mil.com') !== -1;
+					console.log('Email check - isBlocked:', isBlocked);
 
 					if (isBlocked) {
-						gigya.accounts.showErrorMessage("Not allow @mil.com emails");
-						return false;
+						console.log('Blocking @mil.com email');
+						return {
+							errorCode: 400009,
+							errorMessage: 'Email addresses with @mil.com are not allowed. Please use a different email.',
+							fieldErrors: [{
+								name: 'email',
+								errorMessage: 'Email addresses with @mil.com are not allowed.'
+							}]
+						};
 					}
 					return true;
 				},
