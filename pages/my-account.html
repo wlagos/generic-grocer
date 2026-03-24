@@ -6700,7 +6700,7 @@
 				// Run after Gigya performs its normal field validation
 				   onBeforeValidation: function (event) {
    console.log("onBeforeValidation");
-   console.log(email.toLowerCase());
+
         var email = gigya.jsEventHandler.getEventField('email');
         if (email && email.toLowerCase().endsWith('@mil.com')) {
             gigya.jsEventHandler.setEventField('error', 'Email addresses with @mil.com are not allowed. Please use a different email.');
