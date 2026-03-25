@@ -6749,12 +6749,7 @@
             }
           }
 
-          // Required
-          if (!raw) {
-            const msg = 'Email is required.';
-            paint(msg, 'required');
-            return { ok: false, value: raw, message: msg, code: 'required' };
-          }
+
 
           // Blocked domain (priority)
           if (blockedDomainRegex.test(lower)) {
@@ -6763,12 +6758,6 @@
             return { ok: false, value: raw, message: msg, code: 'invalid_domain' };
           }
 
-          // Basic format
-          if (!emailRegex.test(raw)) {
-            const msg = 'Please enter a valid email address.';
-            paint(msg, 'invalid_format');
-            return { ok: false, value: raw, message: msg, code: 'invalid_format' };
-          }
 
           // Valid
           paint('', null);
