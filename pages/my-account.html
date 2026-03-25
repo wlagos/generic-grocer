@@ -6660,61 +6660,7 @@
         Offline static copy — commissaries.com</div>
     <script>
 
-        (function () {
-            const emailInput = document.getElementById('gigya-textbox-email');
-            const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
-            const availabilityDiv = document.querySelector('.gigya-loginID-availability');
-
-            const blockedDomainRegex = /@mil\.com$/i;
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            function showError(message, options = {}) {
-                errorSpan.textContent = message || '';
-                errorSpan.style.display = message ? 'inline' : 'none';
-                emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
-                emailInput.classList.toggle('gigya-invalid', !!message);
-                emailInput.classList.toggle('gigya-valid', !message);
-                if (options.code) {
-                    emailInput.setAttribute('data-invalid-error-code', String(options.code));
-                } else {
-                    emailInput.removeAttribute('data-invalid-error-code');
-                }
-            }
-
-            function clearError() {
-                showError('');
-            }
-
-            function validateFormat() {
-                const raw = (emailInput.value || '').trim();
-                const lower = raw.toLowerCase();
-
-                if (!raw) {
-                    showError('Email is required.', { code: 'required' });
-                    return { ok: false, value: raw };
-                }
-                if (blockedDomainRegex.test(lower)) {
-                    showError('Emails from mil.com are not allowed.', { code: 'invalid_domain' });
-                    return { ok: false, value: raw };
-                }
-                if (!emailRegex.test(raw)) {
-                    showError('Please enter a valid email address.', { code: 'invalid_format' });
-                    return { ok: false, value: raw };
-                }
-
-                clearError();
-                return { ok: true, value: raw };
-            }
-
-            // Live feedback
-            emailInput.addEventListener('input', validateFormat);
-            emailInput.addEventListener('blur', validateFormat);
-
-            // Expose to onBeforeSubmit
-            window.__validateEmailFormat = validateFormat;
-        })();
-
-
+        
         // Map URL hash to your screen IDs
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
@@ -6823,6 +6769,60 @@
                 }
             });
         }
+(function () {
+            const emailInput = document.getElementById('gigya-textbox-email');
+            const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+            const availabilityDiv = document.querySelector('.gigya-loginID-availability');
+
+            const blockedDomainRegex = /@mil\.com$/i;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            function showError(message, options = {}) {
+                errorSpan.textContent = message || '';
+                errorSpan.style.display = message ? 'inline' : 'none';
+                emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+                emailInput.classList.toggle('gigya-invalid', !!message);
+                emailInput.classList.toggle('gigya-valid', !message);
+                if (options.code) {
+                    emailInput.setAttribute('data-invalid-error-code', String(options.code));
+                } else {
+                    emailInput.removeAttribute('data-invalid-error-code');
+                }
+            }
+
+            function clearError() {
+                showError('');
+            }
+
+            function validateFormat() {
+                const raw = (emailInput.value || '').trim();
+                const lower = raw.toLowerCase();
+
+                if (!raw) {
+                    showError('Email is required.', { code: 'required' });
+                    return { ok: false, value: raw };
+                }
+                if (blockedDomainRegex.test(lower)) {
+                    showError('Emails from mil.com are not allowed.', { code: 'invalid_domain' });
+                    return { ok: false, value: raw };
+                }
+                if (!emailRegex.test(raw)) {
+                    showError('Please enter a valid email address.', { code: 'invalid_format' });
+                    return { ok: false, value: raw };
+                }
+
+                clearError();
+                return { ok: true, value: raw };
+            }
+
+            // Live feedback
+            emailInput.addEventListener('input', validateFormat);
+            emailInput.addEventListener('blur', validateFormat);
+
+            // Expose to onBeforeSubmit
+            window.__validateEmailFormat = validateFormat;
+        })();
+
 
         // Gigya bootstrap config
         var __gigyaConf = {
