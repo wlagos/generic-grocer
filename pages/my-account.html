@@ -6660,6 +6660,61 @@
         Offline static copy — commissaries.com</div>
     <script>
 
+        (function () {
+            const emailInput = document.getElementById('gigya-textbox-email');
+            const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+            const availabilityDiv = document.querySelector('.gigya-loginID-availability');
+
+            const blockedDomainRegex = /@mil\.com$/i;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            function showError(message, options = {}) {
+                errorSpan.textContent = message || '';
+                errorSpan.style.display = message ? 'inline' : 'none';
+                emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+                emailInput.classList.toggle('gigya-invalid', !!message);
+                emailInput.classList.toggle('gigya-valid', !message);
+                if (options.code) {
+                    emailInput.setAttribute('data-invalid-error-code', String(options.code));
+                } else {
+                    emailInput.removeAttribute('data-invalid-error-code');
+                }
+            }
+
+            function clearError() {
+                showError('');
+            }
+
+            function validateFormat() {
+                const raw = (emailInput.value || '').trim();
+                const lower = raw.toLowerCase();
+
+                if (!raw) {
+                    showError('Email is required.', { code: 'required' });
+                    return { ok: false, value: raw };
+                }
+                if (blockedDomainRegex.test(lower)) {
+                    showError('Emails from mil.com are not allowed.', { code: 'invalid_domain' });
+                    return { ok: false, value: raw };
+                }
+                if (!emailRegex.test(raw)) {
+                    showError('Please enter a valid email address.', { code: 'invalid_format' });
+                    return { ok: false, value: raw };
+                }
+
+                clearError();
+                return { ok: true, value: raw };
+            }
+
+            // Live feedback
+            emailInput.addEventListener('input', validateFormat);
+            emailInput.addEventListener('blur', validateFormat);
+
+            // Expose to onBeforeSubmit
+            window.__validateEmailFormat = validateFormat;
+        })();
+
+
         // Map URL hash to your screen IDs
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
@@ -6699,86 +6754,20 @@
                 containerID: 'screensetContainer',
                 // Run after Gigya performs its normal field validation
                 onBeforeSubmit: function (e) {
-
                     const emailInput = document.getElementById('gigya-textbox-email');
-                    const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
-                    const availabilityDiv = document.querySelector('.gigya-loginID-availability');
 
-                    // Block emails ending with @mil.com (case-insensitive)
-                    const blockedDomainRegex = /@mil\.com$/i;
-                    // Basic UI email pattern (good enough for client-side checks)
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    // Run the shared validator
+                    const result = (window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true });
 
-                    // ---- UI helpers ----
-                    function showError(message, options = {}) {
-                        errorSpan.textContent = message || '';
-                        errorSpan.style.display = message ? 'inline' : 'none';
-
-                        // Accessibility + Gigya classes
-                        emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
-                        emailInput.classList.toggle('gigya-invalid', !!message);
-                        emailInput.classList.toggle('gigya-valid', !message);
-
-                        if (options.code) {
-                            emailInput.setAttribute('data-invalid-error-code', String(options.code));
-                        } else {
-                            emailInput.removeAttribute('data-invalid-error-code');
-                        }
+                    if (!result.ok) {
+                        // Showed the error already; keep user on this screen
+                        setTimeout(() => emailInput.focus(), 0);
+                        return false;   // ⛔ blocks navigation on first click
                     }
 
-                    function clearFeedback() {
-                        showError('');
-                        // Optional: clear availability hint area if present
-                        if (availabilityDiv) {
-                            availabilityDiv.textContent = '';
-                            availabilityDiv.style.display = 'none';
-                        }
-                    }
-
-                    // ---- Format validation (required + email + block @mil.com) ----
-                    function validateFormat() {
-                        const raw = (emailInput.value || '').trim();
-                        const lower = raw.toLowerCase();
-
-                        if (!raw) {
-                            showError('Email is required.', { code: 'required' });
-                            return { ok: false, value: raw };
-                        }
-                        if (blockedDomainRegex.test(lower)) {
-                            showError('Please enter a valid email address.', { code: 'invalid_domain' });
-                            return { ok: false, value: raw };
-                        }
-                        if (!emailRegex.test(raw)) {
-                            showError('Please enter a valid email address.', { code: 'invalid_format' });
-                            return { ok: false, value: raw };
-                        }
-
-                        // All good
-                        showError('');
-                        return { ok: true, value: raw };
-                    }
-
-                    // ---- Wire events ----
-                    emailInput.addEventListener('input', () => {
-                        // Live feedback while typing
-                        validateFormat();
-                    });
-
-                    emailInput.addEventListener('blur', () => {
-                        // Confirm on blur too
-                        validateFormat();
-                    });
-
-                    // Initialize UI
-                    clearFeedback();
-
-                    // Expose the validator for onBeforeSubmit to reuse
-                    window.__validateEmailFormat = validateFormat;
-                    window.__paintEmailError = showError;
-
+                    // No errors → allow CDC to proceed
+                    return true;      // ✅ goes to next screen
                 },
-
-
                 onAfterScreenLoad: function (event) {
                     const root = document.getElementById(event.containerID) || document.body;
                     //***
