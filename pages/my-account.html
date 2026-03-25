@@ -6701,17 +6701,22 @@
 
                 // ✅ Use your existing gates; unchanged except for minor alignment
                 onBeforeValidation: function (e) {
-                    const emailInput = document.getElementById('gigya-textbox-email');
-                    if (!emailInput) return true;
+                    // Clear prior errors each run
+                    e.validationErrors = [];
+                    e.showValidationErrors = false;
 
-                    const val = (emailInput.value || '').trim().toLowerCase();
+                    const emailInput = document.getElementById('gigya-textbox-email') || document.querySelector('input[name="email"]');
+                    const emailValue = (e.formData && e.formData.email) || (emailInput && emailInput.value) || '';
+                    if (!emailValue) return true;
+
+                    const val = String(emailValue).trim().toLowerCase();
                     const isMil = /@mil\.com$/i.test(val);
 
                     if (isMil) {
                         const message = 'Emails from mil.com are not allowed.';
-                        e.validationErrors = e.validationErrors || [];
                         e.validationErrors.push({ fieldName: 'loginID', message, errorCode: 'invalid_domain' });
                         e.validationErrors.push({ fieldName: 'email', message, errorCode: 'invalid_domain' });
+                        e.showValidationErrors = true;
 
                         // Paint inline immediately
                         const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
@@ -6719,9 +6724,22 @@
                             errorSpan.textContent = message;
                             errorSpan.style.display = 'inline';
                         }
-                        emailInput.setAttribute('aria-invalid', 'true');
-                        emailInput.classList.add('gigya-invalid');
-                        emailInput.classList.remove('gigya-valid');
+                        if (emailInput) {
+                            emailInput.setAttribute('aria-invalid', 'true');
+                            emailInput.classList.add('gigya-invalid');
+                            emailInput.classList.remove('gigya-valid');
+                        }
+
+                        return false;
+                    }
+
+                    if (emailInput) {
+                        emailInput.removeAttribute('aria-invalid');
+                        emailInput.classList.remove('gigya-invalid');
+                        emailInput.classList.add('gigya-valid');
+                    }
+
+                    return true;
 
                         // Also set browser bubble now (useful if the user presses submit immediately)
                         emailInput.setCustomValidity(message);
