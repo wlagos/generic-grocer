@@ -6660,7 +6660,6 @@
         Offline static copy — commissaries.com</div>
     <script>
 
-
         // Map URL hash to your screen IDs
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
@@ -6698,106 +6697,96 @@
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
-
-                // Runs right before CDC submits; must return true/false synchronously
+                // Run after Gigya performs its normal field validation
                 onBeforeSubmit: function (e) {
-                    const result = (window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true });
+                    // 1) Read the email being submitted (system field is typically "loginID")
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
 
-                    if (!result.ok) {
-                        // Tell CDC exactly which field error to show; prevents its default format message
-                        e.validationErrors = e.validationErrors || [];
-                        e.validationErrors.push({
-                            fieldName: 'email',
-                            message: result.message || 'Please enter a valid email address.',
-                            errorCode: result.code || 'invalid_format' // optional
-                        });
 
-                        // Keep user on the same screen
-                        const emailInput = document.getElementById('gigya-textbox-email');
-                        if (emailInput) setTimeout(() => emailInput.focus(), 0);
-                        return false;
-                    }
+                    // Pragmatic email regex for UI validation
+                    const emailRegex = /@mil\.com$/;
 
-                    return true; // proceed
-                },
 
-                onAfterScreenLoad: function (event) {
-                    // Only wire validators on screens that have the email field
-                    const screensWithEmail = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
-                    if (screensWithEmail.includes(event.currentScreen)) {
-                        window.__validateEmailFormat = function () {
-                            const emailInput = document.getElementById('gigya-textbox-email');
-                            const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
-                            if (!emailInput || !errorSpan) return { ok: true };
+                    // Debounce & race-control state
+                    let debounceTimer = null;
+                    let currentCheckController = null; // AbortController for fetch
+                    let lastCheckedValue = '';         // track value to avoid stale updates
+                    validateFormat();
+                    // ---- Helpers: UI state ----
+                    function showError(message, options = {}) {
+                        errorSpan.textContent = message || '';
+                        errorSpan.style.display = message ? 'inline' : 'none';
 
-                            const blockedDomainRegex = /@mil\.com$/i;
-                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
 
-                            const raw = (emailInput.value || '').trim();
-                            const lower = raw.toLowerCase();
+                        // Gigya classes
+                        emailInput.classList.toggle('gigya-invalid', !!message);
+                        emailInput.classList.toggle('gigya-valid', !message);
 
-                            function paint(message, code) {
-                                errorSpan.textContent = message || '';
-                                errorSpan.style.display = message ? 'inline' : 'none';
-                                emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
-                                emailInput.classList.toggle('gigya-invalid', !!message);
-                                emailInput.classList.toggle('gigya-valid', !message);
-                                if (code) {
-                                    emailInput.setAttribute('data-invalid-error-code', String(code));
-                                } else {
-                                    emailInput.removeAttribute('data-invalid-error-code');
-                                }
-                            }
-
-                            // Required
-                            if (!raw) {
-                                const msg = 'Email is required.';
-                                paint(msg, 'required');
-                                return { ok: false, value: raw, message: msg, code: 'required' };
-                            }
-
-                            // Blocked domain (priority)
-                            if (blockedDomainRegex.test(lower)) {
-                                const msg = 'Emails from mil.com are not allowed.';
-                                paint(msg, 'invalid_domain');
-                                return { ok: false, value: raw, message: msg, code: 'invalid_domain' };
-                            }
-
-                            // Basic format
-                            if (!emailRegex.test(raw)) {
-                                const msg = 'Please enter a valid email address.';
-                                paint(msg, 'invalid_format');
-                                return { ok: false, value: raw, message: msg, code: 'invalid_format' };
-                            }
-
-                            // Valid
-                            paint('', null);
-                            return { ok: true, value: raw, message: '', code: null };
-                        };
-
-                        // Live feedback
-                        const emailInput = document.getElementById('gigya-textbox-email');
-                        if (emailInput) {
-                            const validate = () => window.__validateEmailFormat && window.__validateEmailFormat();
-                            emailInput.addEventListener('input', validate);
-                            emailInput.addEventListener('blur', validate);
+                        if (options.code) {
+                            emailInput.setAttribute('data-invalid-error-code', String(options.code));
+                        } else {
+                            emailInput.removeAttribute('data-invalid-error-code');
                         }
                     }
 
-                    // --- The rest of your onAfterScreenLoad logic (unchanged) ---
-                    const container = document.getElementById('screensetContainer');
+
+
+                    function clearFeedback() {
+                        showError('');
+                    }
+
+                    // ---- Step 1: Client-side format validation ----
+                    function validateFormat() {
+                        const value = (emailInput.value || '').trim();
+	                    var emailLower = value.toLowerCase();
+					    var isBlocked = emailLower.indexOf('@mil.com') !== -1;
+					
+                        if (isBlocked) {
+                            showError('Please enter a valid email address.', { code: 'invalid_format' });
+                          
+                            return false;
+                        }
+
+                        // Format OK
+                        showError('');
+                        return { ok: true, value };
+                    }
+
+
+
+                    return false; // CDC will paint the red error UI and keep the user on the form
+                },
+
+
+                onAfterScreenLoad: function (event) {
+                    const root = document.getElementById(event.containerID) || document.body;
+                    //***
+                    var container = document.getElementById('screensetContainer');
                     if (!container) return;
 
-                    function clampToOneChar(val) { return (val || '').slice(0, 1); }
+                    // Helper to enforce a single character
+                    function clampToOneChar(val) {
+                        return (val || '').slice(0, 1); // keep only first character
+                        // If you want only letters and uppercase:
+                        // const letter = (val.match(/[A-Za-z]/) || [''])[0];
+                        // return letter.toUpperCase();
+                    }
 
+                    // Use focusout because it bubbles; add capture so we intercept reliably
                     function onFocusOut(evt) {
                         var target = evt.target;
+                        // Make sure we're handling the Last Name field
                         if (target && target.name === 'profile.lastName') {
                             target.value = clampToOneChar(target.value);
                         }
                     }
 
-                    container.addEventListener('focusout', onFocusOut, true);
+                    // Delegate from the container for resilience against re-renders
+                    container.addEventListener('focusout', onFocusOut, true); // capture=true
+
+                    // Optional: also clamp as the user types (for immediate UX)
                     container.addEventListener('input', function (evt) {
                         var target = evt.target;
                         if (target && target.name === 'profile.lastName') {
@@ -6805,8 +6794,22 @@
                         }
                     }, true);
 
+                    // Hide captions based on current screen
+                    if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                        //    hideCaptionIfMatches(root, ['login']);
+                    }
+                    if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                        //  hideCaptionIfMatches(root, ['register', 'create account']);
+                    }
+
+                    // Re-apply hiding if CDC re-renders parts of the DOM
                     const mo = new MutationObserver(() => {
-                        // (Your caption hide logic placeholders)
+                        if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                            //    hideCaptionIfMatches(root, ['login']);
+                        }
+                        if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                            //    hideCaptionIfMatches(root, ['register', 'create account']);
+                        }
                     });
                     mo.observe(root, { childList: true, subtree: true });
                 }
