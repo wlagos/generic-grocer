@@ -6699,28 +6699,23 @@
                 containerID: 'screensetContainer',
                 // Run after Gigya performs its normal field validation
                 onBeforeSubmit: function (e) {
-                    // 1) Read the email being submitted (system field is typically "loginID")
+
                     const emailInput = document.getElementById('gigya-textbox-email');
                     const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+                    const availabilityDiv = document.querySelector('.gigya-loginID-availability');
 
+                    // Block emails ending with @mil.com (case-insensitive)
+                    const blockedDomainRegex = /@mil\.com$/i;
+                    // Basic UI email pattern (good enough for client-side checks)
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-                    // Pragmatic email regex for UI validation
-                    const emailRegex = /@mil\.com$/;
-
-
-                    // Debounce & race-control state
-                    let debounceTimer = null;
-                    let currentCheckController = null; // AbortController for fetch
-                    let lastCheckedValue = '';         // track value to avoid stale updates
-                    validateFormat();
-                    // ---- Helpers: UI state ----
+                    // ---- UI helpers ----
                     function showError(message, options = {}) {
                         errorSpan.textContent = message || '';
                         errorSpan.style.display = message ? 'inline' : 'none';
 
+                        // Accessibility + Gigya classes
                         emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
-
-                        // Gigya classes
                         emailInput.classList.toggle('gigya-invalid', !!message);
                         emailInput.classList.toggle('gigya-valid', !message);
 
@@ -6731,32 +6726,56 @@
                         }
                     }
 
-
-
                     function clearFeedback() {
                         showError('');
+                        // Optional: clear availability hint area if present
+                        if (availabilityDiv) {
+                            availabilityDiv.textContent = '';
+                            availabilityDiv.style.display = 'none';
+                        }
                     }
 
-                    // ---- Step 1: Client-side format validation ----
+                    // ---- Format validation (required + email + block @mil.com) ----
                     function validateFormat() {
-                        const value = (emailInput.value || '').trim();
-	                    var emailLower = value.toLowerCase();
-					    var isBlocked = emailLower.indexOf('@mil.com') !== -1;
-					
-                        if (isBlocked) {
+                        const raw = (emailInput.value || '').trim();
+                        const lower = raw.toLowerCase();
+
+                        if (!raw) {
+                            showError('Email is required.', { code: 'required' });
+                            return { ok: false, value: raw };
+                        }
+                        if (blockedDomainRegex.test(lower)) {
+                            showError('Please enter a valid email address.', { code: 'invalid_domain' });
+                            return { ok: false, value: raw };
+                        }
+                        if (!emailRegex.test(raw)) {
                             showError('Please enter a valid email address.', { code: 'invalid_format' });
-                          
-                            return false;
+                            return { ok: false, value: raw };
                         }
 
-                        // Format OK
+                        // All good
                         showError('');
-                        return { ok: true, value };
+                        return { ok: true, value: raw };
                     }
 
+                    // ---- Wire events ----
+                    emailInput.addEventListener('input', () => {
+                        // Live feedback while typing
+                        validateFormat();
+                    });
 
+                    emailInput.addEventListener('blur', () => {
+                        // Confirm on blur too
+                        validateFormat();
+                    });
 
-                    return false; // CDC will paint the red error UI and keep the user on the form
+                    // Initialize UI
+                    clearFeedback();
+
+                    // Expose the validator for onBeforeSubmit to reuse
+                    window.__validateEmailFormat = validateFormat;
+                    window.__paintEmailError = showError;
+
                 },
 
 
