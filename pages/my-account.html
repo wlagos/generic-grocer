@@ -6661,7 +6661,7 @@
     <script>
 
 
-        // Map URL hash to your screen IDs 17
+        // Map URL hash to your screen IDs 19
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
             if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
@@ -6701,6 +6701,7 @@
 
                 // ✅ Use your existing gates; unchanged except for minor alignment
                 onBeforeValidation: function (e) {
+                    console.log('onBeforeValidation', e);
                     // Clear prior errors each run
                     e.validationErrors = [];
                     e.showValidationErrors = false;
@@ -6743,6 +6744,7 @@
                 },
 
                 onAfterValidation: function (e) {
+                    console.log('onAfterValidation', e);
                     const emailInput = document.getElementById('gigya-textbox-email');
                     const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
                     if (!emailInput || !errorSpan) return;
@@ -6771,6 +6773,7 @@
                 },
 
                 onBeforeSubmit: function (e) {
+                    console.log('onBeforeSubmit', e);
                     // Run the shared validator (paints inline and returns {ok, message, code})
                     const result = (window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true });
 
