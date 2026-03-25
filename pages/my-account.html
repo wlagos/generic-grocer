@@ -6661,7 +6661,7 @@
     <script>
 
 
-        // Map URL hash to your screen IDs 13
+        // Map URL hash to your screen IDs 14
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
             if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
@@ -6693,165 +6693,216 @@
         }
 
         // Render the screen-set with a given start screen
-     function renderAuthScreen(startScreen) {
-  gigya.accounts.showScreenSet({
-    screenSet: 'mpaturu-RegistrationLogin',
-    startScreen: startScreen,
-    containerID: 'screensetContainer',
+        function renderAuthScreen(startScreen) {
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-RegistrationLogin',
+                startScreen: startScreen,
+                containerID: 'screensetContainer',
 
-    // BEFORE CDC runs: inject our message and prevent CDC's default
-    onBeforeValidation: function (e) {
-      const emailInput = document.getElementById('gigya-textbox-email');
-      const errorSpan  = document.getElementById('gigya-error-msg-gigya-register-form-email');
-      if (!emailInput || !errorSpan) return true;
+                // ✅ Use your existing gates; unchanged except for minor alignment
+                onBeforeValidation: function (e) {
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    if (!emailInput) return true;
 
-      const { message, code } = getEmailError(emailInput.value);
+                    const val = (emailInput.value || '').trim().toLowerCase();
+                    const isMil = /@mil\.com$/i.test(val);
 
-      if (message) {
-        setInlineError(emailInput, errorSpan, message, code);
-        emailInput.setCustomValidity(message); // override browser bubble
+                    if (isMil) {
+                        const message = 'Emails from mil.com are not allowed.';
+                        e.validationErrors = e.validationErrors || [];
+                        e.validationErrors.push({ fieldName: 'loginID', message, errorCode: 'invalid_domain' });
+                        e.validationErrors.push({ fieldName: 'email', message, errorCode: 'invalid_domain' });
 
-        e.validationErrors = [
-          { fieldName: 'loginID', message, errorCode: code },
-          { fieldName: 'email',   message, errorCode: code }
-        ];
+                        // Paint inline immediately
+                        const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+                        if (errorSpan) {
+                            errorSpan.textContent = message;
+                            errorSpan.style.display = 'inline';
+                        }
+                        emailInput.setAttribute('aria-invalid', 'true');
+                        emailInput.classList.add('gigya-invalid');
+                        emailInput.classList.remove('gigya-valid');
 
-        return false; // stop CDC's default "Email address is invalid"
-      } else {
-        // ✅ Valid → clear everything
-        clearInlineError(emailInput, errorSpan);
-        emailInput.setCustomValidity('');
-        // Important: clear CDC errors from previous attempt
-        e.validationErrors = [];
-        return true;
-      }
-    },
+                        // Also set browser bubble now (useful if the user presses submit immediately)
+                        emailInput.setCustomValidity(message);
 
-    // AFTER CDC validates: safety net to standardize message if needed
-    onAfterValidation: function (e) {
-      const emailInput = document.getElementById('gigya-textbox-email');
-      const errorSpan  = document.getElementById('gigya-error-msg-gigya-register-form-email');
-      if (!emailInput || !errorSpan) return;
+                        return false; // prevent CDC default message
+                    }
 
-      const { message, code } = getEmailError(emailInput.value);
+                    // Clear any previous custom bubble if not mil.com
+                    emailInput.setCustomValidity('');
 
-      if (message) {
-        setInlineError(emailInput, errorSpan, message, code);
-        emailInput.setCustomValidity(message);
-        if (Array.isArray(e.validationErrors)) {
-          e.validationErrors = e.validationErrors.map(err =>
-            (err.fieldName === 'loginID' || err.fieldName === 'email')
-              ? { ...err, message, errorCode: code }
-              : err
-          );
+                    return true;
+                },
+
+                onAfterValidation: function (e) {
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+                    if (!emailInput || !errorSpan) return;
+
+                    const val = (emailInput.value || '').trim().toLowerCase();
+                    const isMil = /@mil\.com$/i.test(val);
+                    if (!isMil) return;
+
+                    const message = 'Emails from mil.com are not allowed.';
+                    if (Array.isArray(e.validationErrors)) {
+                        e.validationErrors.forEach(err => {
+                            if (err.fieldName === 'loginID' || err.fieldName === 'email') {
+                                err.message = message;
+                                err.errorCode = 'invalid_domain';
+                            }
+                        });
+                    }
+
+                    // Paint inline + keep bubble aligned
+                    errorSpan.textContent = message;
+                    errorSpan.style.display = 'inline';
+                    emailInput.setAttribute('aria-invalid', 'true');
+                    emailInput.classList.add('gigya-invalid');
+                    emailInput.classList.remove('gigya-valid');
+                    emailInput.setCustomValidity(message);
+                },
+
+                onBeforeSubmit: function (e) {
+                    // Run the shared validator (paints inline and returns {ok, message, code})
+                    const result = (window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true });
+
+                    if (!result.ok) {
+                        // Push into CDC pipeline for consistency
+                        e.validationErrors = e.validationErrors || [];
+                        e.validationErrors.push({ fieldName: 'loginID', message: result.message, errorCode: result.code });
+                        e.validationErrors.push({ fieldName: 'email', message: result.message, errorCode: result.code });
+
+                        // Set browser bubble to the same text and show it
+                        const emailInput = document.getElementById('gigya-textbox-email');
+                        if (emailInput) {
+                            emailInput.setCustomValidity(result.message || 'Please enter a valid email address.');
+                            // Trigger the browser bubble immediately (especially Safari/Firefox)
+                            // This also prevents navigation by failing HTML5 validity.
+                            emailInput.reportValidity();
+                            setTimeout(() => emailInput.focus(), 0);
+                        }
+
+                        return false; // ⛔ stays on the current screen
+                    }
+
+                    // Clear bubble before allowing submit
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    if (emailInput) emailInput.setCustomValidity('');
+                    return true;
+                },
+
+                onAfterScreenLoad: function (event) {
+                    const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
+                    if (screensWithLoginID.includes(event.currentScreen)) {
+                        // Shared validator that also paints inline span
+                        window.__validateEmailFormat = function () {
+                            const emailInput = document.getElementById('gigya-textbox-email');
+                            const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+                            if (!emailInput || !errorSpan) return { ok: true };
+
+                            const blockedDomainRegex = /@mil\.com$/i;
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                            const raw = (emailInput.value || '').trim();
+                            const lower = raw.toLowerCase();
+
+                            function paint(message, code) {
+                                errorSpan.textContent = message || '';
+                                errorSpan.style.display = message ? 'inline' : 'none';
+                                emailInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+                                emailInput.classList.toggle('gigya-invalid', !!message);
+                                emailInput.classList.toggle('gigya-valid', !message);
+
+                                // Keep the browser bubble aligned in real time (optional)
+                                if (message) {
+                                    emailInput.setCustomValidity(message);
+                                } else {
+                                    emailInput.setCustomValidity('');
+                                }
+
+                                if (code) {
+                                    emailInput.setAttribute('data-invalid-error-code', String(code));
+                                } else {
+                                    emailInput.removeAttribute('data-invalid-error-code');
+                                }
+                            }
+
+                            if (!raw) {
+                                const msg = 'Email is required.';
+                                paint(msg, 'required');
+                                return { ok: false, value: raw, message: msg, code: 'required' };
+                            }
+
+                            if (blockedDomainRegex.test(lower)) {
+                                const msg = 'Emails from mil.com are not allowed.';
+                                paint(msg, 'invalid_domain');
+                                return { ok: false, value: raw, message: msg, code: 'invalid_domain' };
+                            }
+
+                            // Basic email format (kept to match browser expectations)
+                            if (!emailRegex.test(raw)) {
+                                const msg = 'Please enter a valid email address.';
+                                paint(msg, 'invalid_format');
+                                return { ok: false, value: raw, message: msg, code: 'invalid_format' };
+                            }
+
+                            paint('', null);
+                            return { ok: true, value: raw, message: '', code: null };
+                        };
+
+                        // **Browser bubble override wiring**
+                        const emailInput = document.getElementById('gigya-textbox-email');
+                        if (emailInput) {
+                            // Clear bubble as the user types
+                            emailInput.addEventListener('input', () => {
+                                emailInput.setCustomValidity('');
+                            });
+
+                            // On blur, set the bubble message based on current value
+                            emailInput.addEventListener('blur', () => {
+                                const res = window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true };
+                                // __validateEmailFormat already set custom validity via paint()
+                                // If you prefer only setting on invalid, you can skip this blur handler.
+                            });
+
+                            // When the browser decides the field is invalid, replace the bubble text
+                            emailInput.addEventListener('invalid', (ev) => {
+                                const res = window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true };
+                                if (!res.ok) {
+                                    emailInput.setCustomValidity(res.message || 'Please enter a valid email address.');
+                                } else {
+                                    emailInput.setCustomValidity('');
+                                }
+                            });
+                        }
+                    }
+
+                    // --- Keep your existing lastName clamp, observers, etc. below ---
+                    const root = document.getElementById(event.containerID) || document.body;
+                    const container = document.getElementById('screensetContainer');
+                    if (!container) return;
+
+                    function clampToOneChar(val) { return (val || '').slice(0, 1); }
+                    function onFocusOut(evt) {
+                        var target = evt.target;
+                        if (target && target.name === 'profile.lastName') {
+                            target.value = clampToOneChar(target.value);
+                        }
+                    }
+                    container.addEventListener('focusout', onFocusOut, true);
+                    container.addEventListener('input', function (evt) {
+                        var target = evt.target;
+                        if (target && target.name === 'profile.lastName') {
+                            target.value = clampToOneChar(target.value);
+                        }
+                    }, true);
+                    const mo = new MutationObserver(() => { /* your caption hide logic */ });
+                    mo.observe(root, { childList: true, subtree: true });
+                }
+            });
         }
-      } else {
-        clearInlineError(emailInput, errorSpan);
-        emailInput.setCustomValidity('');
-        e.validationErrors = []; // ensure CDC has no lingering errors
-      }
-    },
 
-    // FINAL gate: block or allow submit synchronously
-    onBeforeSubmit: function (e) {
-      const emailInput = document.getElementById('gigya-textbox-email');
-      const errorSpan  = document.getElementById('gigya-error-msg-gigya-register-form-email');
-      if (!emailInput || !errorSpan) return true;
-
-      const { message, code } = getEmailError(emailInput.value);
-
-      if (message) {
-        setInlineError(emailInput, errorSpan, message, code);
-        emailInput.setCustomValidity(message);
-        // Show the browser bubble immediately (useful on Safari/Firefox)
-        emailInput.reportValidity();
-
-        e.validationErrors = [
-          { fieldName: 'loginID', message, errorCode: code },
-          { fieldName: 'email',   message, errorCode: code }
-        ];
-
-        setTimeout(() => emailInput.focus(), 0);
-        return false; // ⛔ stays on screen
-      } else {
-        // ✅ Valid → clear all error channels and allow submit
-        clearInlineError(emailInput, errorSpan);
-        emailInput.setCustomValidity('');
-        e.validationErrors = [];
-        return true;
-      }
-    },
-
-    onAfterScreenLoad: function (event) {
-      // Define the helpers after the screen renders (elements exist)
-      window.getEmailError = function (rawValue) {
-        const val = (rawValue || '').trim();
-        const lower = val.toLowerCase();
-        const blockedDomainRegex = /@mil\.com$/i;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!val) return { message: 'Email is required.', code: 'required' };
-        if (blockedDomainRegex.test(lower)) return { message: 'Emails from mil.com are not allowed.', code: 'invalid_domain' };
-        if (!emailRegex.test(val)) return { message: 'Please enter a valid email address.', code: 'invalid_format' };
-        return { message: '', code: null };
-      };
-
-      window.setInlineError = function (inputEl, spanEl, message, code) {
-        spanEl.textContent = message || '';
-        spanEl.style.display = message ? 'inline' : 'none';
-        inputEl.setAttribute('aria-invalid', message ? 'true' : 'false');
-        inputEl.classList.toggle('gigya-invalid', !!message);
-        inputEl.classList.toggle('gigya-valid', !message);
-        if (code) inputEl.setAttribute('data-invalid-error-code', String(code));
-        else inputEl.removeAttribute('data-invalid-error-code');
-      };
-
-      window.clearInlineError = function (inputEl, spanEl) {
-        spanEl.textContent = '';
-        spanEl.style.display = 'none';
-        inputEl.setAttribute('aria-invalid', 'false');
-        inputEl.classList.remove('gigya-invalid');
-        inputEl.classList.add('gigya-valid');
-        inputEl.removeAttribute('data-invalid-error-code');
-      };
-
-      // Live feedback wiring
-      const emailInput = document.getElementById('gigya-textbox-email');
-      const errorSpan  = document.getElementById('gigya-error-msg-gigya-register-form-email');
-      if (emailInput && errorSpan) {
-        const validateAndPaint = () => {
-          const { message, code } = getEmailError(emailInput.value);
-          if (message) {
-            setInlineError(emailInput, errorSpan, message, code);
-            emailInput.setCustomValidity(message);  // keep bubble aligned
-          } else {
-            clearInlineError(emailInput, errorSpan);
-            emailInput.setCustomValidity('');       // clear bubble when valid
-          }
-        };
-
-        // Clear bubble as the user types; re-compute and paint
-        emailInput.addEventListener('input', () => {
-          emailInput.setCustomValidity('');
-          validateAndPaint();
-        });
-
-        // On blur, repaint + set bubble to current message
-        emailInput.addEventListener('blur', () => {
-          validateAndPaint();
-        });
-
-        // When the browser fires 'invalid', replace bubble with our message
-        emailInput.addEventListener('invalid', () => {
-          const { message } = getEmailError(emailInput.value);
-          emailInput.setCustomValidity(message || 'Please enter a valid email address.');
-        });
-      }
-
-      // Keep your additional onAfterScreenLoad logic (lastName clamp, observers, etc.)...
-    }
-  });
-}
         // Gigya bootstrap config
         var __gigyaConf = {
             onGigyaServiceReady: function () {
