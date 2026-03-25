@@ -6661,7 +6661,7 @@
     <script>
 
 
-        // Map URL hash to your screen IDs v1
+        // Map URL hash to your screen IDs v2
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
             if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
@@ -6701,11 +6701,12 @@
 
                 // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
+
                     const emailInput = document.getElementById('gigya-textbox-email');
                     const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
                     if (!emailInput || !errorSpan) return true;
 
-                    // Always read the freshest value
+                    // Read the freshest value (CDC sometimes populates e.formData)
                     const currentVal =
                         (e.formData && (e.formData.loginID || e.formData.email)) ??
                         emailInput.value;
@@ -6713,24 +6714,30 @@
                     const { message, code } = getEmailError(currentVal);
 
                     if (message) {
-                        // Paint inline + set browser bubble
+                        // Paint inline + set bubble text
                         setInlineError(emailInput, errorSpan, message, code);
                         emailInput.setCustomValidity(message);
-                        emailInput.reportValidity(); // show bubble immediately
-                        // Sync CDC errors (target both keys to be safe)
+
+                        // Show bubble immediately (programmatically)
+                        emailInput.reportValidity();
+
+                        // Keep CDC in sync so it knows field is invalid
                         e.validationErrors = [
                             { fieldName: 'loginID', message, errorCode: code },
                             { fieldName: 'email', message, errorCode: code }
                         ];
+
                         setTimeout(() => emailInput.focus(), 0);
-                        return false; // ⛔ stay on screen
+                        return false; // ⛔ stays on current screen
                     }
 
-                    // ✅ Valid → clear everything and proceed
+                    // ✅ Valid → clear bubble + CDC errors and proceed
                     clearInlineError(emailInput, errorSpan);
                     emailInput.setCustomValidity('');
-                    e.validationErrors = []; // fully reset CDC errors
+                    e.validationErrors = []; // IMPORTANT: clear lingering CDC errors
+
                     return true;
+
                 },
 
                 // After the screen renders: define helpers and wire live feedback
@@ -6771,6 +6778,14 @@
                     };
 
                     const emailInput = document.getElementById('gigya-textbox-email');
+                    if (emailInput) {
+                        const form = emailInput.closest('form');
+                        if (form) {
+                            // Prevent native HTML5 validation from intercepting submit
+                            form.setAttribute('novalidate', '');
+                        }
+                    }
+
                     const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
                     if (emailInput && errorSpan) {
                         const repaint = () => {
