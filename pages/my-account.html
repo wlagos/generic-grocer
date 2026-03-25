@@ -6742,20 +6742,19 @@
                     if (!emailInput || !errorSpan) return;
 
                     const val = (emailInput.value || '').trim().toLowerCase();
-                    const isMil = /@mil\.com$/i.test(val);
-                    if (!isMil) return;
+                    if (!/@mil\.com$/i.test(val)) return;
 
-                    const message = 'Emails from mil.com are not allowed.';
+                    const msg = 'Emails from mil.com are not allowed.';
                     if (Array.isArray(e.validationErrors)) {
                         e.validationErrors.forEach(err => {
                             if (err.fieldName === 'loginID' || err.fieldName === 'email') {
-                                err.message = message;
+                                err.message = msg;
                                 err.errorCode = 'invalid_domain';
                             }
                         });
                     }
 
-                    errorSpan.textContent = message;
+                    errorSpan.textContent = msg;
                     errorSpan.style.display = 'inline';
                     emailInput.setAttribute('aria-invalid', 'true');
                     emailInput.classList.add('gigya-invalid');
