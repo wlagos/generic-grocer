@@ -6699,37 +6699,107 @@
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
 
-                // Runs right before CDC submits; must return true/false synchronously
-                onBeforeSubmit: function (e) {
-                    const res = (window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true });
+                /**
+                 * 1) BEFORE CDC validation: enforce mil.com policy and inject our message.
+                 * Returning false here stops CDC's default validation cycle in some versions.
+                 * If your environment ignores the return value, CDC will still validate,
+                 * which is why we also add onAfterValidation below as a guard.
+                 */
+                onBeforeValidation: function (e) {
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    if (!emailInput) return true; // proceed if field not present
 
-                    if (!res.ok) {
-                        // Make sure CDC shows OUR message
+                    const val = (emailInput.value || '').trim().toLowerCase();
+                    const isMil = /@mil\.com$/i.test(val);
+
+                    if (isMil) {
+                        // Ensure CDC shows OUR message for both possible field keys
                         e.validationErrors = e.validationErrors || [];
+                        const message = 'Emails from mil.com are not allowed.';
 
-                        // Push for 'email' (your markup)
                         e.validationErrors.push({
                             fieldName: 'email',
-                            message: res.message || 'Please enter a valid email address.',
-                            errorCode: res.code || 'invalid_format'
+                            message,
+                            errorCode: 'invalid_domain'
                         });
-
-                        // ALSO push for 'loginID' (CDC system field in many screen-sets)
                         e.validationErrors.push({
                             fieldName: 'loginID',
-                            message: res.message || 'Please enter a valid email address.',
-                            errorCode: res.code || 'invalid_format'
+                            message,
+                            errorCode: 'invalid_domain'
                         });
 
-                        // Paint and block
-                        const emailInput = document.getElementById('gigya-textbox-email');
-                        if (emailInput) setTimeout(() => emailInput.focus(), 0);
+                        // Paint immediately so the user sees it right away
+                        const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+                        if (errorSpan) {
+                            errorSpan.textContent = message;
+                            errorSpan.style.display = 'inline';
+                        }
+                        emailInput.setAttribute('aria-invalid', 'true');
+                        emailInput.classList.add('gigya-invalid');
+                        emailInput.classList.remove('gigya-valid');
+
+                        // Block CDC's default validators (prevents "Email address is invalid" from overwriting)
                         return false;
                     }
 
-                    return true;
-                }, onAfterScreenLoad: function (event) {
-                    // Only wire validators on screens that have the email field
+                    return true; // allow CDC validation to proceed normally
+                },
+
+                /**
+                 * 2) AFTER CDC validation: normalize message if CDC still set its own.
+                 * This guarantees consistent messaging.
+                 */
+                onAfterValidation: function (e) {
+                    const emailInput = document.getElementById('gigya-textbox-email');
+                    const errorSpan = document.getElementById('gigya-error-msg-gigya-register-form-email');
+                    if (!emailInput || !errorSpan) return;
+
+                    const val = (emailInput.value || '').trim().toLowerCase();
+                    const isMil = /@mil\.com$/i.test(val);
+                    if (!isMil) return;
+
+                    const message = 'Emails from mil.com are not allowed.';
+                    if (Array.isArray(e.validationErrors)) {
+                        e.validationErrors.forEach(err => {
+                            if (err.fieldName === 'email' || err.fieldName === 'loginID') {
+                                err.message = message;
+                                err.errorCode = 'invalid_domain';
+                            }
+                        });
+                    }
+
+                    // Ensure UI reflects our message
+                    errorSpan.textContent = message;
+                    errorSpan.style.display = 'inline';
+                    emailInput.setAttribute('aria-invalid', 'true');
+                    emailInput.classList.add('gigya-invalid');
+                    emailInput.classList.remove('gigya-valid');
+                },
+
+                /**
+                 * 3) Final gate just before submit. Uses the shared validator and blocks if needed.
+                 */
+                onBeforeSubmit: function (e) {
+                    const result = (window.__validateEmailFormat ? window.__validateEmailFormat() : { ok: true });
+
+                    if (!result.ok) {
+                        // Push the same message into CDC pipeline to be extra safe
+                        e.validationErrors = e.validationErrors || [];
+                        e.validationErrors.push({ fieldName: 'email', message: result.message, errorCode: result.code });
+                        e.validationErrors.push({ fieldName: 'loginID', message: result.message, errorCode: result.code });
+
+                        const emailInput = document.getElementById('gigya-textbox-email');
+                        if (emailInput) setTimeout(() => emailInput.focus(), 0);
+                        return false; // ⛔ blocks navigation on first click
+                    }
+
+                    return true; // ✅ proceed to next screen
+                },
+
+                /**
+                 * 4) After screen renders: wire live validation and define the shared validator.
+                 */
+                onAfterScreenLoad: function (event) {
                     const screensWithEmail = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
                     if (screensWithEmail.includes(event.currentScreen)) {
                         window.__validateEmailFormat = function () {
@@ -6756,17 +6826,24 @@
                                 }
                             }
 
+                            if (!raw) {
+                                const msg = 'Email is required.';
+                                paint(msg, 'required');
+                                return { ok: false, value: raw, message: msg, code: 'required' };
+                            }
 
-
-                            // Blocked domain (priority)
                             if (blockedDomainRegex.test(lower)) {
                                 const msg = 'Emails from mil.com are not allowed.';
                                 paint(msg, 'invalid_domain');
                                 return { ok: false, value: raw, message: msg, code: 'invalid_domain' };
                             }
 
+                            if (!emailRegex.test(raw)) {
+                                const msg = 'Please enter a valid email address.';
+                                paint(msg, 'invalid_format');
+                                return { ok: false, value: raw, message: msg, code: 'invalid_format' };
+                            }
 
-                            // Valid
                             paint('', null);
                             return { ok: true, value: raw, message: '', code: null };
                         };
@@ -6780,19 +6857,18 @@
                         }
                     }
 
-                    // --- The rest of your onAfterScreenLoad logic (unchanged) ---
+                    // --- Keep your other onAfterScreenLoad logic (lastName clamp, observers, etc.) ---
+                    const root = document.getElementById(event.containerID) || document.body;
                     const container = document.getElementById('screensetContainer');
                     if (!container) return;
 
                     function clampToOneChar(val) { return (val || '').slice(0, 1); }
-
                     function onFocusOut(evt) {
                         var target = evt.target;
                         if (target && target.name === 'profile.lastName') {
                             target.value = clampToOneChar(target.value);
                         }
                     }
-
                     container.addEventListener('focusout', onFocusOut, true);
                     container.addEventListener('input', function (evt) {
                         var target = evt.target;
@@ -6801,9 +6877,7 @@
                         }
                     }, true);
 
-                    const mo = new MutationObserver(() => {
-                        // (Your caption hide logic placeholders)
-                    });
+                    const mo = new MutationObserver(() => { /* your caption hide logic */ });
                     mo.observe(root, { childList: true, subtree: true });
                 }
             });
