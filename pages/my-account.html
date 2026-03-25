@@ -6661,7 +6661,7 @@
     <script>
 
 
-        // Map URL hash to your screen IDs 15
+        // Map URL hash to your screen IDs 16
         function getStartScreenFromHash() {
             const hash = (window.location.hash || '').toLowerCase();
             if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
@@ -6738,17 +6738,6 @@
                         emailInput.classList.remove('gigya-invalid');
                         emailInput.classList.add('gigya-valid');
                     }
-
-                    return true;
-
-                        // Also set browser bubble now (useful if the user presses submit immediately)
-                        emailInput.setCustomValidity(message);
-
-                        return false; // prevent CDC default message
-                    }
-
-                    // Clear any previous custom bubble if not mil.com
-                    emailInput.setCustomValidity('');
 
                     return true;
                 },
