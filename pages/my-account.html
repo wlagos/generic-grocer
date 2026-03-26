@@ -6751,7 +6751,7 @@
                         hideCaptionIfMatches(root, ['login']);
                     }
                     if (event.currentScreen === 'mpaturu-gigya-register-screen') {
-                        hideCaptionIfMatches(root, ['register']);
+                        hideCaptionIfMatches(root, ['register','registration']);
                     }
 
                     // Re-apply hiding if CDC re-renders parts of the DOM
@@ -6760,7 +6760,7 @@
                             hideCaptionIfMatches(root, ['login']);
                         }
                         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
-                            hideCaptionIfMatches(root, ['register']);
+                            hideCaptionIfMatches(root, ['register','registration']);
                         }
                     });
                     mo.observe(root, { childList: true, subtree: true });
