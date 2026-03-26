@@ -6744,7 +6744,26 @@
                 onAfterScreenLoad: function (event) {
                     const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
                     if (!screensWithLoginID.includes(event.currentScreen)) return;
+                    const root = document.getElementById(event.containerID) || document.body;
 
+                    // Hide captions based on current screen
+                    if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                        hideCaptionIfMatches(root, ['login']);
+                    }
+                    if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                        hideCaptionIfMatches(root, ['register', 'create account']);
+                    }
+
+                    // Re-apply hiding if CDC re-renders parts of the DOM
+                    const mo = new MutationObserver(() => {
+                        if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                            hideCaptionIfMatches(root, ['login']);
+                        }
+                        if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                            hideCaptionIfMatches(root, ['register', 'create account']);
+                        }
+                    });
+                    mo.observe(root, { childList: true, subtree: true });
                     // Single source of truth for messages
                     window.getEmailError = function (rawValue) {
                         const val = String(rawValue || '').trim();
@@ -6814,7 +6833,7 @@
                     }
 
                     // --- Keep your existing lastName clamp, observers, etc. below ---
-                    const root = document.getElementById(event.containerID) || document.body;
+                    //const root = document.getElementById(event.containerID) || document.body;
                     const container = document.getElementById('screensetContainer');
                     if (!container) return;
 
