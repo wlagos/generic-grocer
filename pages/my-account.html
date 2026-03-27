@@ -6846,7 +6846,8 @@
 
                     // --- Phone field validation on blur ---
                     const phoneInput = document.querySelector('.gigya-subscriber-phone-number-input') || document.getElementById('gigya-textbox-phone');
-                    const phoneErrorSpan = document.getElementById('gigya-error-msg-gigya-register-form-profile.phones.phone');
+                   // const phoneErrorSpan = document.getElementById('gigya-error-msg-gigya-register-form-profile.phones.phone');
+                    const phoneErrorSpan = document.querySelector('[data-bound-to="profile.phones.number"]');
                     if (phoneInput && phoneErrorSpan) {
                         const repaintPhone = () => {
                             const { message, code } = getPhoneError(phoneInput.value);
