@@ -1,6 +1,10 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com
 #gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title
 */
+span.label-additional-text {
+    font-weight: 500;
+    font-style: italic;
+}
 .gigya-screen .gigya-label-text,
 .gigya-screen .gigya-legend-text {
     font-weight: 600 !important;
