@@ -1,6 +1,12 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com
 #gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title
 */
+#gigya-register-form a.gigya-composite-control.gigya-composite-control-link{
+    display: block;
+    margin: 0px;
+    padding: 0px;
+    margin-bottom: 20px;
+}
 span.label-additional-text {
     font-weight: 500;
     font-style: italic;
