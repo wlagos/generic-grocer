@@ -6777,6 +6777,18 @@
                         return { message: '', code: null };
                     };
 
+                    window.getPhoneError = function (rawValue) {
+                        const val = String(rawValue || '').trim();
+                        // Remove common formatting characters: spaces, hyphens, parentheses, periods, plus sign
+                        const digitsOnly = val.replace(/[\s\-().\+]/g, '');
+                        // US phone: 10 digits, optionally starting with 1
+                        const usPhoneRegex = /^(\+?1)?(\d{10})$/;
+
+                        if (!val) return { message: 'Phone number is required.', code: 'required' };
+                        if (!usPhoneRegex.test(digitsOnly)) return { message: 'Please enter a valid U.S. phone number (10 digits).', code: 'invalid_format' };
+                        return { message: '', code: null };
+                    };
+
                     window.setInlineError = function (inputEl, spanEl, message, code) {
                         spanEl.textContent = message || '';
                         spanEl.style.display = message ? 'inline' : 'none';
@@ -6829,6 +6841,30 @@
                         emailInput.addEventListener('invalid', () => {
                             const { message } = getEmailError(emailInput.value);
                             emailInput.setCustomValidity(message || 'Please enter a valid email address.');
+                        });
+                    }
+
+                    // --- Phone field validation on blur ---
+                    const phoneInput = document.querySelector('input[name="data.phone"]') || document.getElementById('gigya-textbox-phone');
+                    const phoneErrorSpan = document.getElementById('gigya-error-msg-gigya-register-form-data.phone');
+                    if (phoneInput && phoneErrorSpan) {
+                        const repaintPhone = () => {
+                            const { message, code } = getPhoneError(phoneInput.value);
+                            if (message) {
+                                setInlineError(phoneInput, phoneErrorSpan, message, code);
+                                phoneInput.setCustomValidity(message);
+                            } else {
+                                clearInlineError(phoneInput, phoneErrorSpan);
+                                phoneInput.setCustomValidity('');
+                            }
+                        };
+
+                        // Validation on blur
+                        phoneInput.addEventListener('blur', repaintPhone);
+
+                        // Clear validation bubble on input
+                        phoneInput.addEventListener('input', () => {
+                            phoneInput.setCustomValidity('');
                         });
                     }
 
