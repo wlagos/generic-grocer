@@ -6702,7 +6702,6 @@
                 // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
 
-
                     return true;
 
                 },
@@ -6768,6 +6767,9 @@
                    // const phoneErrorSpan = document.getElementById('gigya-error-msg-gigya-register-form-profile.phones.phone');
                     const phoneErrorSpan = document.querySelector('[data-bound-to="profile.phones.number"]');
                     if (phoneInput && phoneErrorSpan) {
+                        // Set maxlength to enforce 10 digits for USA
+                        phoneInput.setAttribute('maxlength', '10');
+                        
                         const repaintPhone = () => {
                             const { message, code } = getPhoneError(phoneInput.value);
                             if (message) {
@@ -6782,8 +6784,20 @@
                         // Validation on blur
                         phoneInput.addEventListener('blur', repaintPhone);
 
-                        // Clear validation bubble on input
-                        phoneInput.addEventListener('input', () => {
+                        // Limit to 10 digits on input and clear validation bubble
+                        phoneInput.addEventListener('input', (evt) => {
+                            let val = evt.target.value;
+                            // Remove any non-digit characters initially entered
+                            val = val.replace(/\D/g, '');
+                            // Remove leading 1 if present (country code)
+                            if (val.startsWith('1') && val.length > 10) {
+                                val = val.substring(1);
+                            }
+                            // Limit to 10 digits
+                            if (val.length > 10) {
+                                val = val.substring(0, 10);
+                            }
+                            evt.target.value = val;
                             phoneInput.setCustomValidity('');
                         });
                     }
