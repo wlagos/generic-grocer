@@ -6720,182 +6720,183 @@
                             });
                         }
                     }
+                },
 
-                    // After the screen renders: define helpers and wire live feedback
-                    onAfterScreenLoad: function (event) {
-                        const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
-                        if (!screensWithLoginID.includes(event.currentScreen)) return;
-                        const root = document.getElementById(event.containerID) || document.body;
+                // After the screen renders: define helpers and wire live feedback
+                onAfterScreenLoad: function (event) {
+                    const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
+                    if (!screensWithLoginID.includes(event.currentScreen)) return;
+                    const root = document.getElementById(event.containerID) || document.body;
 
-                        // Hide captions based on current screen
+                    // Hide captions based on current screen
+                    if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                        hideCaptionIfMatches(root, ['login']);
+                    }
+                    if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                        hideCaptionIfMatches(root, ['register', 'registration']);
+                    }
+
+                    // Re-apply hiding if CDC re-renders parts of the DOM
+                    const mo = new MutationObserver(() => {
                         if (event.currentScreen === 'mpaturu-gigya-login-screen') {
                             hideCaptionIfMatches(root, ['login']);
                         }
                         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                             hideCaptionIfMatches(root, ['register', 'registration']);
                         }
+                    });
+                    mo.observe(root, { childList: true, subtree: true });
+                    // Single source of truth for messages
 
-                        // Re-apply hiding if CDC re-renders parts of the DOM
-                        const mo = new MutationObserver(() => {
-                            if (event.currentScreen === 'mpaturu-gigya-login-screen') {
-                                hideCaptionIfMatches(root, ['login']);
+
+                    window.setInlineError = function (inputEl, spanEl, message, code) {
+                        spanEl.textContent = message || '';
+                        spanEl.style.display = message ? 'inline' : 'none';
+                        inputEl.setAttribute('aria-invalid', message ? 'true' : 'false');
+                        inputEl.classList.toggle('gigya-invalid', !!message);
+                        inputEl.classList.toggle('gigya-valid', !message);
+                        if (code) inputEl.setAttribute('data-invalid-error-code', String(code));
+                        else inputEl.removeAttribute('data-invalid-error-code');
+                    };
+
+                    window.clearInlineError = function (inputEl, spanEl) {
+                        spanEl.textContent = '';
+                        spanEl.style.display = 'none';
+                        inputEl.setAttribute('aria-invalid', 'false');
+                        inputEl.classList.remove('gigya-invalid');
+                        inputEl.classList.add('gigya-valid');
+                        inputEl.removeAttribute('data-invalid-error-code');
+                    };
+                    // --- Phone field validation on blur ---
+                    // Scope to the widget container so IDs don't matter
+                    var widget = document.querySelector('.gigya-phone-number-widget-v2');
+                    if (!widget) return;
+
+                    var ccInput = widget.querySelector('.gigya-country-code-select');          // country code control
+                    var phoneInput = widget.querySelector('.gigya-subscriber-phone-number-input'); // phone input
+
+                    if (!phoneInput || !ccInput) return;
+
+                    // Helper to extract a normalized country code (digits only)
+                    function getCountryCodeFromDOM() {
+                        // The widget often shows e.g. "US (+1)" or "+1" or "1"
+                        var raw = (ccInput.value || '').trim();
+                        var digits = raw.replace(/\D+/g, ''); // keep only numbers
+                        return digits; // e.g., "1" for US
+                    }
+
+                    // Helpers to show/clear errors using Gigya API if available
+                    function setFieldError(fieldName, message) {
+                        if (gigya?.accounts?.setFieldError) {
+                            gigya.accounts.setFieldError({
+                                screenSet: "Default-Registration",
+                                fieldName: fieldName,
+                                message: message
+                            });
+                        } else {
+                            // Fallback inline message
+                            var el = phoneInput;
+                            var id = fieldName.replace(/\W+/g, '_') + '_error';
+                            var msg = document.getElementById(id);
+                            if (!msg) {
+                                msg = document.createElement('div');
+                                msg.id = id;
+                                msg.style.color = '#d32f2f';
+                                msg.style.fontSize = '12px';
+                                msg.style.marginTop = '4px';
+                                el.insertAdjacentElement('afterend', msg);
                             }
-                            if (event.currentScreen === 'mpaturu-gigya-register-screen') {
-                                hideCaptionIfMatches(root, ['register', 'registration']);
-                            }
-                        });
-                        mo.observe(root, { childList: true, subtree: true });
-                        // Single source of truth for messages
+                            msg.textContent = message;
+                        }
+                    }
 
+                    function clearFieldError(fieldName) {
+                        if (gigya?.accounts?.clearFieldError) {
+                            gigya.accounts.clearFieldError({
+                                screenSet: "Default-Registration",
+                                fieldName: fieldName
+                            });
+                        } else if (gigya?.accounts?.setFieldError) {
+                            gigya.accounts.setFieldError({
+                                screenSet: "Default-Registration",
+                                fieldName: fieldName,
+                                message: ""
+                            });
+                        } else {
+                            var id = fieldName.replace(/\W+/g, '_') + '_error';
+                            var msg = document.getElementById(id);
+                            if (msg) msg.remove();
+                        }
+                    }
 
-                        window.setInlineError = function (inputEl, spanEl, message, code) {
-                            spanEl.textContent = message || '';
-                            spanEl.style.display = message ? 'inline' : 'none';
-                            inputEl.setAttribute('aria-invalid', message ? 'true' : 'false');
-                            inputEl.classList.toggle('gigya-invalid', !!message);
-                            inputEl.classList.toggle('gigya-valid', !message);
-                            if (code) inputEl.setAttribute('data-invalid-error-code', String(code));
-                            else inputEl.removeAttribute('data-invalid-error-code');
-                        };
+                    // Validate on blur
+                    phoneInput.addEventListener('blur', function () {
+                        var ccDigits = getCountryCodeFromDOM(); // "1" for US
+                        var isUSA = (ccDigits === '1');
+                        var raw = (phoneInput.value || '').trim();
 
-                        window.clearInlineError = function (inputEl, spanEl) {
-                            spanEl.textContent = '';
-                            spanEl.style.display = 'none';
-                            inputEl.setAttribute('aria-invalid', 'false');
-                            inputEl.classList.remove('gigya-invalid');
-                            inputEl.classList.add('gigya-valid');
-                            inputEl.removeAttribute('data-invalid-error-code');
-                        };
-                        // --- Phone field validation on blur ---
-                        // Scope to the widget container so IDs don't matter
-                        var widget = document.querySelector('.gigya-phone-number-widget-v2');
-                        if (!widget) return;
+                        // Normalize to digits only
+                        var digits = raw.replace(/\D+/g, '');
+                        phoneInput.value = digits;
 
-                        var ccInput = widget.querySelector('.gigya-country-code-select');          // country code control
-                        var phoneInput = widget.querySelector('.gigya-subscriber-phone-number-input'); // phone input
-
-                        if (!phoneInput || !ccInput) return;
-
-                        // Helper to extract a normalized country code (digits only)
-                        function getCountryCodeFromDOM() {
-                            // The widget often shows e.g. "US (+1)" or "+1" or "1"
-                            var raw = (ccInput.value || '').trim();
-                            var digits = raw.replace(/\D+/g, ''); // keep only numbers
-                            return digits; // e.g., "1" for US
+                        // Required check (remove if optional in your flow)
+                        if (!digits) {
+                            setFieldError('profile.phones.number', 'Phone number is required and must contain digits only.');
+                            return;
                         }
 
-                        // Helpers to show/clear errors using Gigya API if available
-                        function setFieldError(fieldName, message) {
-                            if (gigya?.accounts?.setFieldError) {
-                                gigya.accounts.setFieldError({
-                                    screenSet: "Default-Registration",
-                                    fieldName: fieldName,
-                                    message: message
-                                });
-                            } else {
-                                // Fallback inline message
-                                var el = phoneInput;
-                                var id = fieldName.replace(/\W+/g, '_') + '_error';
-                                var msg = document.getElementById(id);
-                                if (!msg) {
-                                    msg = document.createElement('div');
-                                    msg.id = id;
-                                    msg.style.color = '#d32f2f';
-                                    msg.style.fontSize = '12px';
-                                    msg.style.marginTop = '4px';
-                                    el.insertAdjacentElement('afterend', msg);
-                                }
-                                msg.textContent = message;
-                            }
-                        }
-
-                        function clearFieldError(fieldName) {
-                            if (gigya?.accounts?.clearFieldError) {
-                                gigya.accounts.clearFieldError({
-                                    screenSet: "Default-Registration",
-                                    fieldName: fieldName
-                                });
-                            } else if (gigya?.accounts?.setFieldError) {
-                                gigya.accounts.setFieldError({
-                                    screenSet: "Default-Registration",
-                                    fieldName: fieldName,
-                                    message: ""
-                                });
-                            } else {
-                                var id = fieldName.replace(/\W+/g, '_') + '_error';
-                                var msg = document.getElementById(id);
-                                if (msg) msg.remove();
-                            }
-                        }
-
-                        // Validate on blur
-                        phoneInput.addEventListener('blur', function () {
-                            var ccDigits = getCountryCodeFromDOM(); // "1" for US
-                            var isUSA = (ccDigits === '1');
-                            var raw = (phoneInput.value || '').trim();
-
-                            // Normalize to digits only
-                            var digits = raw.replace(/\D+/g, '');
-                            phoneInput.value = digits;
-
-                            // Required check (remove if optional in your flow)
-                            if (!digits) {
-                                setFieldError('profile.phones.number', 'Phone number is required and must contain digits only.');
+                        if (isUSA) {
+                            // US must be exactly 10 digits
+                            if (!/^\d{10}$/.test(digits)) {
+                                setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
                                 return;
                             }
-
-                            if (isUSA) {
-                                // US must be exactly 10 digits
-                                if (!/^\d{10}$/.test(digits)) {
-                                    setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
-                                    return;
-                                }
-                            } else {
-                                // Non-US: digits-only (any length)
-                                if (!/^\d+$/.test(digits)) {
-                                    setFieldError('profile.phones.number', 'Phone number must contain digits only.');
-                                    return;
-                                }
-                            }
-
-                            // Clear error if valid
-                            clearFieldError('profile.phones.number');
-                        });
-
-                        // Optional: live filtering to keep digits only
-                        phoneInput.addEventListener('input', function () {
-                            var digits = this.value.replace(/\D+/g, '');
-                            if (this.value !== digits) this.value = digits;
-
-                            // Quick validity to clear error while typing
-                            var ccDigits = getCountryCodeFromDOM();
-                            var isUSA = (ccDigits === '1');
-                            var valid = digits.length > 0 && (isUSA ? /^\d{10}$/.test(digits) : /^\d+$/.test(digits));
-                            if (valid) clearFieldError('profile.phones.number');
-                        });
-                        // --- Keep your existing lastName clamp, observers, etc. below ---
-                        //const root = document.getElementById(event.containerID) || document.body;
-                        const container = document.getElementById('screensetContainer');
-                        if (!container) return;
-
-                        function clampToOneChar(val) { return (val || '').slice(0, 1); }
-                        function onFocusOut(evt) {
-                            var target = evt.target;
-                            if (target && target.name === 'profile.lastName') {
-                                target.value = clampToOneChar(target.value);
+                        } else {
+                            // Non-US: digits-only (any length)
+                            if (!/^\d+$/.test(digits)) {
+                                setFieldError('profile.phones.number', 'Phone number must contain digits only.');
+                                return;
                             }
                         }
-                        container.addEventListener('focusout', onFocusOut, true);
-                        container.addEventListener('input', function (evt) {
-                            var target = evt.target;
-                            if (target && target.name === 'profile.lastName') {
-                                target.value = clampToOneChar(target.value);
-                            }
-                        }, true);
-                        // const mo = new MutationObserver(() => { /* your caption hide logic */ });
-                        //  mo.observe(root, { childList: true, subtree: true });
+
+                        // Clear error if valid
+                        clearFieldError('profile.phones.number');
+                    });
+
+                    // Optional: live filtering to keep digits only
+                    phoneInput.addEventListener('input', function () {
+                        var digits = this.value.replace(/\D+/g, '');
+                        if (this.value !== digits) this.value = digits;
+
+                        // Quick validity to clear error while typing
+                        var ccDigits = getCountryCodeFromDOM();
+                        var isUSA = (ccDigits === '1');
+                        var valid = digits.length > 0 && (isUSA ? /^\d{10}$/.test(digits) : /^\d+$/.test(digits));
+                        if (valid) clearFieldError('profile.phones.number');
+                    });
+                    // --- Keep your existing lastName clamp, observers, etc. below ---
+                    //const root = document.getElementById(event.containerID) || document.body;
+                    const container = document.getElementById('screensetContainer');
+                    if (!container) return;
+
+                    function clampToOneChar(val) { return (val || '').slice(0, 1); }
+                    function onFocusOut(evt) {
+                        var target = evt.target;
+                        if (target && target.name === 'profile.lastName') {
+                            target.value = clampToOneChar(target.value);
+                        }
                     }
-                });
+                    container.addEventListener('focusout', onFocusOut, true);
+                    container.addEventListener('input', function (evt) {
+                        var target = evt.target;
+                        if (target && target.name === 'profile.lastName') {
+                            target.value = clampToOneChar(target.value);
+                        }
+                    }, true);
+                    // const mo = new MutationObserver(() => { /* your caption hide logic */ });
+                    //  mo.observe(root, { childList: true, subtree: true });
+                }
+            });
         }
 
         // Bootstrap with hashchange (debounced to avoid double render)
