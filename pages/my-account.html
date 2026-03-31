@@ -6699,11 +6699,13 @@
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
 
-                // FINAL gate: block or allow submit
+                 // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
-
+                    var rewardsId = (event.formData["data.rewardsid"] || "").trim();
+                    if (!rewardsId) {
+                        alert("Rewards ID is blank.");
+                    }
                     return true;
-
                 },
 
                 onFieldChanged: function (e) {
