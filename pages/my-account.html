@@ -6706,12 +6706,12 @@
 
                 },
 
-              onFieldChanged: function (e) {
+                     onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
                         var isUSA = (ccDigits === '+1');
                         var phoneInputValue = document.getElementById('gigya-phoneInputLabel-167363755631131230').value ;
-                        if(isUSA=== "+1" && phoneInputValue.length > 10){
+                        if(isUSA && phoneInputValue.length > 10){
                            document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0,10);
                         }
                         document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value ;
