@@ -6706,7 +6706,7 @@
 
                 },
 
-                     onFieldChanged: function (e) {
+                onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
                         var isUSA = (ccDigits === '+1');
@@ -6764,22 +6764,9 @@
                         inputEl.removeAttribute('data-invalid-error-code');
                     };
                     // --- Phone field validation on blur ---
-                    // Scope to the widget container so IDs don't matter
-                    var widget = document.querySelector('.gigya-phone-number-widget-v2');
-                    if (!widget) return;
+                          // country code control
+                    var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230'); // phone input
 
-                    var ccInput = widget.querySelector('.gigya-country-code-select');          // country code control
-                    var phoneInput = widget.querySelector('.gigya-subscriber-phone-number-input'); // phone input
-
-                    if (!phoneInput || !ccInput) return;
-
-                    // Helper to extract a normalized country code (digits only)
-                    function getCountryCodeFromDOM() {
-                        // The widget often shows e.g. "US (+1)" or "+1" or "1"
-                        var raw = (ccInput.value || '').trim();
-                        var digits = raw.replace(/\D+/g, ''); // keep only numbers
-                        return digits; // e.g., "1" for US
-                    }
 
                     // Helpers to show/clear errors using Gigya API if available
                     function setFieldError(fieldName, message) {
@@ -6827,19 +6814,14 @@
 
                     // Validate on blur
                     phoneInput.addEventListener('blur', function () {
-                        var ccDigits = getCountryCodeFromDOM(); // "1" for US
-                        var isUSA = (ccDigits === '1');
+                       
+                        var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
+                        var isUSA = (ccDigits === '+1');
                         var raw = (phoneInput.value || '').trim();
 
                         // Normalize to digits only
                         var digits = raw.replace(/\D+/g, '');
                         phoneInput.value = digits;
-
-                        // Required check (remove if optional in your flow)
-                        if (!digits) {
-                            setFieldError('profile.phones.number', 'Phone number is required and must contain digits only.');
-                            return;
-                        }
 
                         if (isUSA) {
                             // US must be exactly 10 digits
@@ -6857,20 +6839,11 @@
 
                         // Clear error if valid
                         clearFieldError('profile.phones.number');
+                         document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
                     });
 
                     // Optional: live filtering to keep digits only
-                    phoneInput.addEventListener('input', function () {
-                        var digits = this.value.replace(/\D+/g, '');
-                        if (this.value !== digits) this.value = digits;
-
-                        // Quick validity to clear error while typing
-                        var ccDigits = getCountryCodeFromDOM();
-                        var isUSA = (ccDigits === '1');
-                        var valid = digits.length > 0 && (isUSA ? /^\d{10}$/.test(digits) : /^\d+$/.test(digits));
-                        if (valid) clearFieldError('profile.phones.number');
-                    });
-                    // --- Keep your existing lastName clamp, observers, etc. below ---
+                       // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
                     const container = document.getElementById('screensetContainer');
                     if (!container) return;
