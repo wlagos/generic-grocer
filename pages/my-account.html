@@ -6691,7 +6691,29 @@
                 }
             });
         }
+function showToast(msg) {
+  var toast = document.createElement('div');
+  toast.textContent = msg;
 
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = '#323232';
+  toast.style.color = 'white';
+  toast.style.padding = '12px 20px';
+  toast.style.borderRadius = '6px';
+  toast.style.fontSize = '14px';
+  toast.style.zIndex = '99999';
+  toast.style.opacity = '0';
+  toast.style.transition = 'opacity 0.4s';
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => { toast.style.opacity = '1'; }, 10);
+  setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+  setTimeout(() => { toast.remove(); }, 3000);
+}
         // Render the screen-set with a given start screen
         function renderAuthScreen(startScreen) {
             gigya.accounts.showScreenSet({
@@ -6699,11 +6721,11 @@
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
 
-                 // FINAL gate: block or allow submit
+                // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
                     var rewardsId = e.formData['data.rewardsid'];
                     if (!rewardsId) {
-                        alert("Rewards ID is blank.");
+                        showToast("Rewards ID is blank. Continuing…");
                     }
                     return true;
                 },
@@ -6712,11 +6734,10 @@
                     if (e.field === "profile.phones.number") {
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
                         var isUSA = (ccDigits === '+1');
-                        var phoneInputValue = document.getElementById('gigya-phoneInputLabel-167363755631131230').value ;
-                        if(isUSA && phoneInputValue.length > 10){
-                           document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0,10);
+                        var phoneInputValue = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                        if (isUSA && phoneInputValue.length > 10) {
+                            document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
                         }
-                       // document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value ;
                     }
                 },
 
@@ -6766,7 +6787,7 @@
                         inputEl.removeAttribute('data-invalid-error-code');
                     };
                     // --- Phone field validation on blur ---
-                          // country code control
+                    // country code control
                     var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230'); // phone input
 
 
@@ -6816,7 +6837,7 @@
 
                     // Validate on blur
                     phoneInput.addEventListener('blur', function () {
-                       
+
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
                         var isUSA = (ccDigits === '+1');
                         var raw = (phoneInput.value || '').trim();
@@ -6841,11 +6862,11 @@
 
                         // Clear error if valid
                         clearFieldError('profile.phones.number');
-                         document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                        document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
                     });
 
                     // Optional: live filtering to keep digits only
-                       // --- Keep your existing lastName clamp, observers, etc. below ---
+                    // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
                     const container = document.getElementById('screensetContainer');
                     if (!container) return;
