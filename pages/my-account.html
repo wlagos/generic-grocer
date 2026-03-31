@@ -6701,7 +6701,7 @@
 
                  // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
-                    var rewardsId = (event.formData["data.rewardsid"] || "").trim();
+                    var rewardsId = e.formData['data.rewardsid'];
                     if (!rewardsId) {
                         alert("Rewards ID is blank.");
                     }
