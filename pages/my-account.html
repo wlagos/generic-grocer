@@ -703,8 +703,8 @@
                                 <span class="fp-welcome-label">Hi, </span><a class="fp-login-link"
                                     href="my-account.html">Sign In</a><span class="fp-welcome-separator">or</span><a
                                     class="fp-register-link" href="my-account.html#register">Create Account</a>
-                                    <span class="fp-welcome-separator">or</span><a
-                                    class="fp-register-link" href="my-account.html#lite">Lite Account</a>
+                                <span class="fp-welcome-separator">or</span><a class="fp-register-link"
+                                    href="my-account.html#lite">Lite Account</a>
                             </span>
                             <div class="fp-your-account" data-action="account-popover">
                                 <a class="fp-your-account-link" href="my-account.html">My Account</a>
@@ -5619,7 +5619,7 @@
                                         <a class="fp-btn fp-btn-secondary" data-action="create"
                                             href="my-account.html#register">Create Account</a>
                                     </div>
-                                          <div class="col-xs-12 col-sm-6 xs-margin-top">
+                                    <div class="col-xs-12 col-sm-6 xs-margin-top">
                                         <a class="fp-btn fp-btn-secondary" data-action="create"
                                             href="my-account.html#lite">Lite Account</a>
                                     </div>
@@ -6672,9 +6672,12 @@
             const hash = (window.location.hash || '').toLowerCase();
             if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
                 return 'mpaturu-gigya-register-screen';
+            } else if (hash === '#lite') {
+                return 'mpaturu-gigya-subscribe-with-email-screen';
+            } else {
+                // Default to login
+                return 'mpaturu-gigya-login-screen';
             }
-            // Default to login
-            return 'mpaturu-gigya-login-screen';
         }
 
         // Utility: hide caption/title if it matches certain words
