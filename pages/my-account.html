@@ -6742,8 +6742,17 @@
         }
         // Render the screen-set with a given start screen
         function renderAuthScreen(startScreen) {
+//mpaturu-gigya-subscribe-with-email-screen
+          //Screen Set ID: mpaturu-RegistrationLogin
+          const sHash = (window.location.hash || '').toLowerCase();
+            if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
+                screenSet =  'mpaturu-RegistrationLogin';
+            } else if (sHash === '#lite') {
+                screenSet= 'mpaturu-LiteRegistration';
+            }else{    screenSet =  'mpaturu-RegistrationLogin';}
+         
             gigya.accounts.showScreenSet({
-                screenSet: 'mpaturu-RegistrationLogin',
+                screenSet: screenSet,
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
 
@@ -6780,6 +6789,9 @@
                     if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                         hideCaptionIfMatches(root, ['register', 'registration']);
                     }
+                       if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                        hideCaptionIfMatches(root, ['lite']);
+                    }
 
                     // Re-apply hiding if CDC re-renders parts of the DOM
                     const mo = new MutationObserver(() => {
@@ -6789,6 +6801,10 @@
                         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                             hideCaptionIfMatches(root, ['register', 'registration']);
                         }
+                               if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                            hideCaptionIfMatches(root, ['lite']);
+                        }
+                        
                     });
                     mo.observe(root, { childList: true, subtree: true });
                     // Single source of truth for messages
