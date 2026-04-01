@@ -6948,8 +6948,10 @@
             const hash = (window.location.hash || '').toLowerCase();
             if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
                 return 'mpaturu-gigya-register-screen';
-            }
-            return 'mpaturu-gigya-login-screen';
+            } else if (hash === '#lite') {
+                return 'mpaturu-gigya-subscribe-with-email-screen';
+            }else{    return 'mpaturu-gigya-login-screen';}
+        
         }
 
         // Gigya bootstrap config
