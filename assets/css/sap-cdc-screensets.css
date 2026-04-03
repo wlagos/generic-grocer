@@ -1,8 +1,13 @@
 /* Create Account Section Styles - Inspired by shop.commissaries.com
 #gigya-login-form div:nth-child(1) h2.gigya-composite-control.gigya-composite-control-header.special-title
 */
+/* TO ALIGN LEFT TEXT Favorite Topics:*/
 #gigya-subscribe-with-email-form .gigya-composite-control.gigya-composite-control-label{
 display:block !important;
+}
+/* Make check box text font weight
+#gigya-subscribe-with-email-form span.gigya-label-text.gigya-checkbox-text{
+font-weight:400 !important;
 }
 #gigya-subscribe-with-email-form label.gigya-composite-control.gigya-composite-control-label.Label-Normal{
     font-weight:500 !important;
