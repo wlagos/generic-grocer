@@ -7,6 +7,7 @@ display:block !important;
 }
 .small-text {
     font-size: 1rem !important;
+    font-weight: 300 !important;
 }
 .small-text-bold {
     font-weight: 700 !important;
