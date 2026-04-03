@@ -19,9 +19,9 @@ font-weight:400 !important;
     margin-bottom: 20px;
 }
 span.checkbox-additional-text {
-    font-weight: 500 !important;
+    font-weight: 400 !important;
     font-style: italic !important;
-    font-size:13px !mportant;
+    font-size:smaller !mportant;
 }
 span.label-additional-text {
     font-weight: 500 !important;
