@@ -5,6 +5,13 @@
 #gigya-subscribe-with-email-form .gigya-composite-control.gigya-composite-control-label{
 display:block !important;
 }
+.small-text {
+    font-size: 1rem !important;
+}
+.small-text-bold {
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+}
 /* Make check box text font weight*/
 #gigya-subscribe-with-email-form span.gigya-label-text.gigya-checkbox-text{
 font-weight:400 !important;
