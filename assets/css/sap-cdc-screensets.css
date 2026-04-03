@@ -18,10 +18,11 @@ font-weight:400 !important;
     padding: 0px;
     margin-bottom: 20px;
 }
-#gigya-subscribe-with-email-form span.gigya-label-text.gigya-checkbox-text span.checkbox-additional-text{
+#gigya-subscribe-with-email-form span.checkbox-additional-text{
     font-weight: 400 !important;
     font-style: italic !important;
-    font-size:smaller !mportant;
+    font-size:smaller !important;
+    color:red !important;
 }
 span.label-additional-text {
     font-weight: 500 !important;
