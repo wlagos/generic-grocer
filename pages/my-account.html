@@ -6742,22 +6742,22 @@
         }
         // Render the screen-set with a given start screen
         function renderAuthScreen(startScreen) {
-//mpaturu-gigya-subscribe-with-email-screen
-          //Screen Set ID: mpaturu-RegistrationLogin
-          const sHash = (window.location.hash || '').toLowerCase();
+            //mpaturu-gigya-subscribe-with-email-screen
+            //Screen Set ID: mpaturu-RegistrationLogin
+            const sHash = (window.location.hash || '').toLowerCase();
             if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
-                screenSet =  'mpaturu-RegistrationLogin';
+                screenSet = 'mpaturu-RegistrationLogin';
             } else if (sHash === '#lite') {
-                screenSet= 'mpaturu-LiteRegistration';
-            }else{    screenSet =  'mpaturu-RegistrationLogin';}
-         
+                screenSet = 'mpaturu-LiteRegistration';
+            } else { screenSet = 'mpaturu-RegistrationLogin'; }
+
             gigya.accounts.showScreenSet({
                 screenSet: screenSet,
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
 
                 // FINAL gate: block or allow submit
-                    onBeforeSubmit: function (e) {
+                onBeforeSubmit: function (e) {
                     const sHash = (window.location.hash || '').toLowerCase();
                     if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
                         var rewardsId = e.formData['data.rewardsid'];
@@ -6781,19 +6781,18 @@
 
                 // After the screen renders: define helpers and wire live feedback
                 onAfterScreenLoad: function (event) {
-                   // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
-                   // if (!screensWithLoginID.includes(event.currentScreen)) return;
+                    // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
+                    // if (!screensWithLoginID.includes(event.currentScreen)) return;
                     const root = document.getElementById(event.containerID) || document.body;
 
                     // Hide captions based on current screen
                     if (event.currentScreen === 'mpaturu-gigya-login-screen') {
                         hideCaptionIfMatches(root, ['login']);
-                    }
-                    if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                    } if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                         hideCaptionIfMatches(root, ['register', 'registration']);
                     }
-                       if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
-                        hideCaptionIfMatches(root, ['lite','Subscribe with email']);
+                    if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                        hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
                     }
 
                     // Re-apply hiding if CDC re-renders parts of the DOM
@@ -6804,10 +6803,10 @@
                         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                             hideCaptionIfMatches(root, ['register', 'registration']);
                         }
-                               if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
-                            hideCaptionIfMatches(root, ['lite','Subscribe with email']);
+                        if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                            hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
                         }
-                        
+
                     });
                     mo.observe(root, { childList: true, subtree: true });
                     // Single source of truth for messages
@@ -6881,35 +6880,36 @@
                     }
 
                     // Validate on blur
-                    phoneInput.addEventListener('blur', function () {
+                    if (!phoneInput) {
+                        phoneInput.addEventListener('blur', function () {
 
-                        var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
-                        var isUSA = (ccDigits === '+1');
-                        var raw = (phoneInput.value || '').trim();
+                            var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
+                            var isUSA = (ccDigits === '+1');
+                            var raw = (phoneInput.value || '').trim();
 
-                        // Normalize to digits only
-                        var digits = raw.replace(/\D+/g, '');
-                        phoneInput.value = digits;
+                            // Normalize to digits only
+                            var digits = raw.replace(/\D+/g, '');
+                            phoneInput.value = digits;
 
-                        if (isUSA) {
-                            // US must be exactly 10 digits
-                            if (!/^\d{10}$/.test(digits)) {
-                                setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
-                                return;
+                            if (isUSA) {
+                                // US must be exactly 10 digits
+                                if (!/^\d{10}$/.test(digits)) {
+                                    setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
+                                    return;
+                                }
+                            } else {
+                                // Non-US: digits-only (any length)
+                                if (!/^\d+$/.test(digits)) {
+                                    setFieldError('profile.phones.number', 'Phone number must contain digits only.');
+                                    return;
+                                }
                             }
-                        } else {
-                            // Non-US: digits-only (any length)
-                            if (!/^\d+$/.test(digits)) {
-                                setFieldError('profile.phones.number', 'Phone number must contain digits only.');
-                                return;
-                            }
-                        }
 
-                        // Clear error if valid
-                        clearFieldError('profile.phones.number');
-                        document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
-                    });
-
+                            // Clear error if valid
+                            clearFieldError('profile.phones.number');
+                            document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                        });
+                    }
                     // Optional: live filtering to keep digits only
                     // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
@@ -6969,8 +6969,8 @@
                 return 'mpaturu-gigya-register-screen';
             } else if (hash === '#lite') {
                 return 'mpaturu-gigya-subscribe-with-email-screen';
-            }else{    return 'mpaturu-gigya-login-screen';}
-        
+            } else { return 'mpaturu-gigya-login-screen'; }
+
         }
 
         // Gigya bootstrap config
