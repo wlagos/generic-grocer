@@ -6880,7 +6880,7 @@
                     }
 
                     // Validate on blur
-                    if (!phoneInput) {
+                    if (phoneInput!==null) {
                         phoneInput.addEventListener('blur', function () {
 
                             var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
