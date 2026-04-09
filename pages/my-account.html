@@ -6740,6 +6740,73 @@
             // Remove
             setTimeout(() => { toast.remove(); }, 2000);
         }
+        // ---- Helper: post-registration subscription update
+        /**
+        * Update email subscriptions.
+        *
+        * Backward compatible:
+        * - If you pass a single boolean, it updates ONLY 'rewards_card'.
+        * - If you pass an object map, it updates the provided subscriptions.
+        *
+        * @param {boolean|Object} optsOrBool
+        *   - Boolean: updates subscriptions.rewards_card.email.isSubscribed
+        *   - Object: keys are { sales_promotions, healthy_living, food_safety, rewards_card } with boolean values
+        *     Example:
+        *       {
+        *         sales_promotions: true,
+        *         healthy_living: false,
+        *         food_safety: true,
+        *         rewards_card: true
+        *       }
+        * @param {Function} [cb] - optional callback(res)
+        */
+        function updateRewardsEmailSubscription(optsOrBool, cb) {
+            let subsPayload = {};
+
+            if (typeof optsOrBool === 'boolean') {
+                // Backward compatible: single boolean → rewards_card only
+                subsPayload = {
+                    rewards_card: { email: { isSubscribed: optsOrBool } }
+                };
+            } else if (optsOrBool && typeof optsOrBool === 'object') {
+                const opts = optsOrBool;
+
+                // Only include keys that are explicitly boolean to avoid overwriting others
+                if (typeof opts.sales_promotions === 'boolean') {
+                    subsPayload.sales_promotions = { email: { isSubscribed: opts.sales_promotions } };
+                }
+                if (typeof opts.healthy_living === 'boolean') {
+                    subsPayload.healthy_living = { email: { isSubscribed: opts.healthy_living } };
+                }
+                if (typeof opts.food_safety === 'boolean') {
+                    subsPayload.food_safety = { email: { isSubscribed: opts.food_safety } };
+                }
+                if (typeof opts.rewards_card === 'boolean') {
+                    subsPayload.rewards_card = { email: { isSubscribed: opts.rewards_card } };
+                }
+            } else {
+                // Nothing valid provided
+                if (typeof cb === 'function') {
+                    cb({ errorCode: 0, status: 'noop', message: 'No subscription flags provided.' });
+                }
+                return;
+            }
+
+            // If the payload is empty (object mode with no boolean keys), short‑circuit
+            if (Object.keys(subsPayload).length === 0) {
+                if (typeof cb === 'function') {
+                    cb({ errorCode: 0, status: 'noop', message: 'No subscription flags provided.' });
+                }
+                return;
+            }
+
+            gigya.accounts.setAccountInfo({
+                subscriptions: subsPayload,
+                callback: function (res) {
+                    if (typeof cb === 'function') cb(res);
+                }
+            });
+        }
         // Render the screen-set with a given start screen
         function renderAuthScreen(startScreen) {
             //mpaturu-gigya-subscribe-with-email-screen
@@ -6759,6 +6826,15 @@
                 // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
                     const sHash = (window.location.hash || '').toLowerCase();
+                    // ✅ IMPORTANT: For Lite, DO NOT submit subscriptions.* as a form field
+                    if (sHash === '#lite') {
+                        // Remove any dynamic subscriptions field if the screenset bound it
+                        // This prevents error 400024 (dynamic fields not allowed)
+                        delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
+                        delete e.formData['subscriptions.food_safety.email.isSubscribed'];
+                        delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
+                        delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
+                    }
                     if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
                         var rewardsId = e.formData['data.rewardsid'];
                         if (!rewardsId) {
@@ -6768,6 +6844,24 @@
                     return true;
                 },
 
+                // After submit: if Lite registration succeeded, set the subscription via API
+                onAfterSubmit: function (e) {
+                    const sHash = (window.location.hash || '').toLowerCase();
+                    // e.eventName might be 'register', 'registerLite', 'login', etc.
+                    // We care about Lite Registration success
+                    if (sHash === '#lite' && e && e.response && e.response.errorCode === 0) {
+                        // Default behavior for your "Subscribe with email" screen:
+                        // subscribe the user to rewards_card email
+                        updateRewardsEmailSubscription(true, function (upd) {
+                            if (upd.errorCode === 0) {
+                                showToast('Subscribed to Rewards Card emails.');
+                            } else {
+                                console.warn('Subscription update failed:', upd);
+                                showToast('Could not update subscription. Please try later.');
+                            }
+                        });
+                    }
+                },
                 onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -6880,7 +6974,7 @@
                     }
 
                     // Validate on blur
-                    if (phoneInput!==null) {
+                    if (phoneInput !== null) {
                         phoneInput.addEventListener('blur', function () {
 
                             var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -6949,8 +7043,16 @@
                     };
                 })());
 
+
+                // Session events: as a fallback, update subscription right after login if Lite was used
                 gigya.accounts.addEventHandlers({
-                    onLogin: function (r) { /* optional */ },
+                    onLogin: function (r) {
+                        const sHash = (window.location.hash || '').toLowerCase();
+                        if (sHash === '#lite') {
+                            // In case onAfterSubmit didn't fire (some flows), ensure subscription is set
+                            updateRewardsEmailSubscription(true);
+                        }
+                    },
                     onLogout: function (r) { /* optional */ }
                 });
 
@@ -6962,51 +7064,6 @@
             }
         };
 
-        // Helper: choose start screen from hash
-        function getStartScreenFromHash() {
-            const hash = (window.location.hash || '').toLowerCase();
-            if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
-                return 'mpaturu-gigya-register-screen';
-            } else if (hash === '#lite') {
-                return 'mpaturu-gigya-subscribe-with-email-screen';
-            } else { return 'mpaturu-gigya-login-screen'; }
-
-        }
-
-        // Gigya bootstrap config
-        var __gigyaConf = {
-            onGigyaServiceReady: function () {
-                // Initial render based on the hash
-                renderAuthScreen(getStartScreenFromHash());
-
-                // Allow switching screens by changing the hash (no reload)
-                window.addEventListener('hashchange', function () {
-                    renderAuthScreen(getStartScreenFromHash());
-                });
-
-                // Session events (optional)
-                gigya.accounts.addEventHandlers({
-                    onLogin: function (r) {
-                        // User is logged in
-                    },
-                    onLogout: function (r) {
-                        // User is logged out
-                    }
-                });
-
-                // Verify session (optional)
-                gigya.accounts.session.verify({
-                    callback: function (response) {
-                        if (response.errorCode == 0) {
-                            // Already logged in; you could show a profile/update screen here
-                            // gigya.accounts.showScreenSet({ screenSet:'Default-ProfileUpdate', containerID:'screensetContainer' });
-                        } else {
-                            // Not logged in; hash already decides which start screen to render
-                        }
-                    }
-                });
-            }
-        };
     </script>
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
 
