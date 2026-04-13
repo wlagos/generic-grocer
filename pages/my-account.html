@@ -6849,6 +6849,62 @@
                     const sHash = (window.location.hash || '').toLowerCase();
                     // e.eventName might be 'register', 'registerLite', 'login', etc.
                     // We care about Lite Registration success
+                    if (sHash === "login") {
+                        // Only handle failed login/registration submits
+                        const failed = e && e.response && e.response.errorCode !== 0;
+                        if (!failed) return;
+
+                        // Get the server message and validation errors (if any)
+                        const serverMsg = (e.response.errorMessage || '').trim();
+                        const vErrs = Array.isArray(e.response.validationErrors) ? e.response.validationErrors : [];
+
+                        // Your field binding name (the input the user types into for login)
+                        // If you allow username-as-loginID, this is usually 'loginID' in CDC.
+                        const LOGIN_FIELD_NAME = 'loginID';
+                        const ALT_ID_LABEL = 'Alternate ID';
+
+                        // 1) Rewrite the message text for display (toast + form error widget)
+                        let uiMsg = serverMsg;
+                        if (/username/i.test(uiMsg)) {
+                            uiMsg = uiMsg.replace(/username/gi, ALT_ID_LABEL);
+                        }
+
+                        // If CDC is returning a field-level validation error for "username",
+                        // rewrite that too and show it inline on your LOGIN_FIELD_NAME
+                        const usernameErr = vErrs.find(v => /username/i.test(v.fieldName));
+                        if (usernameErr) {
+                            const fieldMsg = (usernameErr.message || serverMsg || 'Invalid value').replace(/username/gi, ALT_ID_LABEL);
+
+                            // Inline field error
+                            try {
+                                gigya.accounts.setFieldError({
+                                    screenSet: e.screenSet || 'mpaturu-RegistrationLogin',
+                                    fieldName: LOGIN_FIELD_NAME,
+                                    message: fieldMsg
+                                });
+                            } catch (err) {
+                                console.warn('setFieldError failed', err);
+                            }
+                        }
+
+                        // 2) Surface the rewritten message (Toast)
+                        showToast(uiMsg || `Invalid ${ALT_ID_LABEL} or password`);
+
+                        // 3) Also update the Form Error widget text if present
+                        //    (CDC populates it; we make sure it says Alternate ID)
+                        try {
+                            const container = document.getElementById(e.containerID);
+                            if (container) {
+                                const formErr = container.querySelector('.gigya-error-msg, .gigya-message, .gigya-error');
+                                if (formErr && formErr.textContent) {
+                                    formErr.textContent = formErr.textContent.replace(/username/gi, ALT_ID_LABEL);
+                                }
+                            }
+                        } catch (err) {
+                            /* no-op */
+                        }
+
+                    }
                     if (sHash === '#lite' && e && e.response && e.response.errorCode === 0) {
                         // Default behavior for your "Subscribe with email" screen:
                         // subscribe the user to rewards_card email
