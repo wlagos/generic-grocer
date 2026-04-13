@@ -6874,9 +6874,12 @@
                         const usernameErr = vErrs.find(v => /username/i.test(v.fieldName));
                         if (usernameErr) {
                             const fieldMsg = (usernameErr.message || serverMsg || 'Invalid value').replace(/username/gi, ALT_ID_LABEL);
-
+      
+                                    setFieldError('loginID', 'Phone number must contain digits only.');
+                                
+                                
                             // Inline field error
-                            try {
+                         /*    try {
                                 gigya.accounts.setFieldError({
                                     screenSet: e.screenSet || 'mpaturu-RegistrationLogin',
                                     fieldName: LOGIN_FIELD_NAME,
@@ -6884,7 +6887,7 @@
                                 });
                             } catch (err) {
                                 console.warn('setFieldError failed', err);
-                            }
+                            } */
                         }
 
                         // 2) Surface the rewritten message (Toast)
@@ -7060,6 +7063,8 @@
                             document.getElementById('loginID').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
                         });
                     }
+                    
+                    
                     // Optional: live filtering to keep digits only
                     // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
