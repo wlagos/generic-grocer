@@ -6849,7 +6849,7 @@
                     const sHash = (window.location.hash || '').toLowerCase();
                     // e.eventName might be 'register', 'registerLite', 'login', etc.
                     // We care about Lite Registration success
-                    if (sHash === "login") {
+                     if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
                         // Only handle failed login/registration submits
                         const failed = e && e.response && e.response.errorCode !== 0;
                         if (!failed) return;
