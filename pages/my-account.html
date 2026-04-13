@@ -6849,7 +6849,7 @@
                     const sHash = (window.location.hash || '').toLowerCase();
                     // e.eventName might be 'register', 'registerLite', 'login', etc.
                     // We care about Lite Registration success
-                     if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
+                    if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
                         // Only handle failed login/registration submits
                         const failed = e && e.response && e.response.errorCode !== 0;
                         if (!failed) return;
@@ -6874,38 +6874,9 @@
                         const usernameErr = vErrs.find(v => /username/i.test(v.fieldName));
                         if (usernameErr) {
                             const fieldMsg = (usernameErr.message || serverMsg || 'Invalid value').replace(/username/gi, ALT_ID_LABEL);
-      
-                                    setFieldError('loginID', 'Phone number must contain digits only.');
-                                
-                                
-                            // Inline field error
-                         /*    try {
-                                gigya.accounts.setFieldError({
-                                    screenSet: e.screenSet || 'mpaturu-RegistrationLogin',
-                                    fieldName: LOGIN_FIELD_NAME,
-                                    message: fieldMsg
-                                });
-                            } catch (err) {
-                                console.warn('setFieldError failed', err);
-                            } */
+                            setFieldError('loginID', formErr.textContent.replace(/username/gi, ALT_ID_LABEL));
                         }
 
-                        // 2) Surface the rewritten message (Toast)
-                        showToast(uiMsg || `Invalid ${ALT_ID_LABEL} or password`);
-
-                        // 3) Also update the Form Error widget text if present
-                        //    (CDC populates it; we make sure it says Alternate ID)
-                        try {
-                            const container = document.getElementById(e.containerID);
-                            if (container) {
-                                const formErr = container.querySelector('.gigya-error-msg, .gigya-message, .gigya-error');
-                                if (formErr && formErr.textContent) {
-                                    formErr.textContent = formErr.textContent.replace(/username/gi, ALT_ID_LABEL);
-                                }
-                            }
-                        } catch (err) {
-                            /* no-op */
-                        }
 
                     }
                     if (sHash === '#lite' && e && e.response && e.response.errorCode === 0) {
@@ -7063,8 +7034,8 @@
                             document.getElementById('loginID').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
                         });
                     }
-                    
-                    
+
+
                     // Optional: live filtering to keep digits only
                     // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
