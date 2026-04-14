@@ -6745,22 +6745,10 @@
  * Works for CDC’s field-level validation errors that render in the DOM.
  */
         function normalizeFieldErrorLabel(containerID, fieldName, labelText) {
-            const root = document.getElementById(containerID) || document.body;
-
+            //const root = document.getElementById(containerID) || document.body;
+            document.getElementById("gigya-error-msg-gigya-register-form-username").textContent.replace(/username/gi, labelText);
             // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
-            const input = root.querySelector(`input[name="${fieldName}"], [data-gigya-name="${fieldName}"]`);
-            if (!input) return;
 
-            // Look for an inline error element near the field
-            // Common patterns CDC uses: next sibling in the field wrapper; class names vary by theme
-            const wrappers = [input.parentElement, input.closest('.gigya-input-wrapper'), input.closest('.gigya-form-field')];
-            for (const w of wrappers) {
-                if (!w) continue;
-                const errEl = w.querySelector('.gigya-error-msg, .gigya-error, .gigya-message, .inline-field-error');
-                if (errEl && errEl.textContent) {
-                    errEl.textContent = errEl.textContent.replace(/username/gi, labelText);
-                }
-            }
         }
         function updateRewardsEmailSubscription(optsOrBool, cb) {
             let subsPayload = {};
