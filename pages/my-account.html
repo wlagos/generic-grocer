@@ -6833,7 +6833,10 @@
                     }
                     return true;
                 },
-
+                // Called when an error occurs.
+                onError: function (event) {
+                    console.log("phone error");
+                },
                 // After submit: if Lite registration succeeded, set the subscription via API
                 onAfterSubmit: function (e) {
                     const sHash = (window.location.hash || '').toLowerCase();
@@ -6869,7 +6872,7 @@
                     // Normalize inline field error for both possible bindings
                     setTimeout(() => {
                         normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
-                       // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                        // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
                     }, 30);
                 },
                 onFieldChanged: function (e) {
