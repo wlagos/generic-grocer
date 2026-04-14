@@ -6858,17 +6858,6 @@
                     if (!failed) return;
                     const ALT_ID = 'Alternate ID';
 
-                    // Normalize global form error text, too
-                    try {
-                        const root = document.getElementById(e.containerID);
-                        if (root) {
-                            const formErr = root.querySelector('.gigya-error-msg, .gigya-message, .gigya-error');
-                            if (formErr && formErr.textContent) {
-                                formErr.textContent = formErr.textContent.replace(/username/gi, ALT_ID);
-                            }
-                        }
-                    } catch (_ignore) { }
-
                     // Normalize inline field error for both possible bindings
                     setTimeout(() => {
                         normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
