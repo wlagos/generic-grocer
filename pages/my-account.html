@@ -6859,10 +6859,10 @@
                     const ALT_ID = 'Alternate ID';
 
                     // Normalize inline field error for both possible bindings
-                    setTimeout(() => {
+                  //  setTimeout(() => {
                         normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
                         // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
-                    }, 30);
+                  //  }, 30);
                 },
                 onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
@@ -6880,10 +6880,10 @@
                     // Handle both to be safe:
                     if (e.field === 'username' || e.field === 'loginID') {
                         // Slight delay to let CDC render the error into the DOM first
-                        setTimeout(() => {
+                       // setTimeout(() => {
                             normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
                             //normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
-                        }, 30);
+                      //  }, 30);
                     }
 
                 },
