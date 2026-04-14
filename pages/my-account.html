@@ -6746,7 +6746,7 @@
  */
         function normalizeFieldErrorLabel(containerID, fieldName, labelText) {
             //const root = document.getElementById(containerID) || document.body;
-            document.getElementById("gigya-error-msg-gigya-register-form-username").textContent.replace(/username/gi, labelText);
+            document.getElementById("gigya-error-msg-gigya-register-form-username").textContent = document.getElementById("gigya-error-msg-gigya-register-form-username").textContent.replace(/username/gi, labelText);
             // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
 
         }
