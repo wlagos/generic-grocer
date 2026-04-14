@@ -6740,26 +6740,28 @@
             // Remove
             setTimeout(() => { toast.remove(); }, 2000);
         }
-        // ---- Helper: post-registration subscription update
         /**
-        * Update email subscriptions.
-        *
-        * Backward compatible:
-        * - If you pass a single boolean, it updates ONLY 'rewards_card'.
-        * - If you pass an object map, it updates the provided subscriptions.
-        *
-        * @param {boolean|Object} optsOrBool
-        *   - Boolean: updates subscriptions.rewards_card.email.isSubscribed
-        *   - Object: keys are { sales_promotions, healthy_living, food_safety, rewards_card } with boolean values
-        *     Example:
-        *       {
-        *         sales_promotions: true,
-        *         healthy_living: false,
-        *         food_safety: true,
-        *         rewards_card: true
-        *       }
-        * @param {Function} [cb] - optional callback(res)
-        */
+ * Replace "username" with your label in any inline error below a given field.
+ * Works for CDC’s field-level validation errors that render in the DOM.
+ */
+        function normalizeFieldErrorLabel(containerID, fieldName, labelText) {
+            const root = document.getElementById(containerID) || document.body;
+
+            // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
+            const input = root.querySelector(`input[name="${fieldName}"], [data-gigya-name="${fieldName}"]`);
+            if (!input) return;
+
+            // Look for an inline error element near the field
+            // Common patterns CDC uses: next sibling in the field wrapper; class names vary by theme
+            const wrappers = [input.parentElement, input.closest('.gigya-input-wrapper'), input.closest('.gigya-form-field')];
+            for (const w of wrappers) {
+                if (!w) continue;
+                const errEl = w.querySelector('.gigya-error-msg, .gigya-error, .gigya-message, .inline-field-error');
+                if (errEl && errEl.textContent) {
+                    errEl.textContent = errEl.textContent.replace(/username/gi, labelText);
+                }
+            }
+        }
         function updateRewardsEmailSubscription(optsOrBool, cb) {
             let subsPayload = {};
 
@@ -6849,36 +6851,6 @@
                     const sHash = (window.location.hash || '').toLowerCase();
                     // e.eventName might be 'register', 'registerLite', 'login', etc.
                     // We care about Lite Registration success
-                    if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
-                        // Only handle failed login/registration submits
-                        const failed = e && e.response && e.response.errorCode !== 0;
-                        if (!failed) return;
-
-                        // Get the server message and validation errors (if any)
-                        const serverMsg = (e.response.errorMessage || '').trim();
-                        const vErrs = Array.isArray(e.response.validationErrors) ? e.response.validationErrors : [];
-
-                        // Your field binding name (the input the user types into for login)
-                        // If you allow username-as-loginID, this is usually 'loginID' in CDC.
-                        const LOGIN_FIELD_NAME = 'loginID';
-                        const ALT_ID_LABEL = 'Alternate ID';
-
-                        // 1) Rewrite the message text for display (toast + form error widget)
-                        let uiMsg = serverMsg;
-                        if (/username/i.test(uiMsg)) {
-                            uiMsg = uiMsg.replace(/username/gi, ALT_ID_LABEL);
-                        }
-
-                        // If CDC is returning a field-level validation error for "username",
-                        // rewrite that too and show it inline on your LOGIN_FIELD_NAME
-                        const usernameErr = vErrs.find(v => /username/i.test(v.fieldName));
-                        if (usernameErr) {
-                            const fieldMsg = (usernameErr.message || serverMsg || 'Invalid value').replace(/username/gi, ALT_ID_LABEL);
-                            setFieldError('loginID', formErr.textContent.replace(/username/gi, ALT_ID_LABEL));
-                        }
-
-
-                    }
                     if (sHash === '#lite' && e && e.response && e.response.errorCode === 0) {
                         // Default behavior for your "Subscribe with email" screen:
                         // subscribe the user to rewards_card email
@@ -6891,7 +6863,29 @@
                             }
                         });
                     }
-                },
+                    const failed = e && e.response && e.response.errorCode !== 0;
+                    if (!failed) return;
+                    const ALT_ID = 'Alternate ID';
+
+                    // Normalize global form error text, too
+                    try {
+                        const root = document.getElementById(e.containerID);
+                        if (root) {
+                            const formErr = root.querySelector('.gigya-error-msg, .gigya-message, .gigya-error');
+                            if (formErr && formErr.textContent) {
+                                formErr.textContent = formErr.textContent.replace(/username/gi, ALT_ID);
+                            }
+                        }
+                    } catch (_ignore) { }
+
+                    // Normalize inline field error for both possible bindings
+                    setTimeout(() => {
+                        normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
+                        normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                    }, 30);
+                }
+
+            },
                 onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -6901,6 +6895,19 @@
                             document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
                         }
                     }
+                    const ALT_ID = 'Alternate ID';
+
+                    // Your field binding name:
+                    // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
+                    // Handle both to be safe:
+                    if (e.field === 'username' || e.field === 'loginID') {
+                        // Slight delay to let CDC render the error into the DOM first
+                        setTimeout(() => {
+                            normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
+                            normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                        }, 30);
+                    }
+
                 },
 
                 // After the screen renders: define helpers and wire live feedback
@@ -7034,8 +7041,6 @@
                             document.getElementById('loginID').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
                         });
                     }
-
-
                     // Optional: live filtering to keep digits only
                     // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
