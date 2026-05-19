@@ -6854,15 +6854,35 @@
                             }
                         });
                     }
+                    if (event.form === "login" &&
+                        event.response &&
+                        event.response.errorCode === 0) {
+
+                        const email = (event.response.profile?.email || "").toLowerCase();
+
+                        // Check for .net domain
+                        if (email.includes(".mil")) {
+                            // Redirect user to built‑in change email screen
+                            gigya.accounts.showScreenSet({
+                                screenSet: 'mpaturu-RegistrationLogin',
+                                startScreen: 'mpaturu-gigya-change-email-screen'
+                            });
+                            return;
+                        }
+
+                        // Normal flow
+                       
+                    }
+
                     const failed = e && e.response && e.response.errorCode !== 0;
                     if (!failed) return;
                     const ALT_ID = 'Alternate ID';
 
                     // Normalize inline field error for both possible bindings
-                   setTimeout(() => {
+                    setTimeout(() => {
                         normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
                         // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
-                   }, 50);
+                    }, 50);
                 },
                 onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
@@ -6883,7 +6903,7 @@
                         setTimeout(() => {
                             normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
                             //normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
-                       }, 50);
+                        }, 50);
                     }
 
                 },
