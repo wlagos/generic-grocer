@@ -6854,11 +6854,11 @@
                             }
                         });
                     }
-                    if (event.form === "login" &&
-                        event.response &&
-                        event.response.errorCode === 0) {
+                    if (e.form === "gigya-login-form" &&
+                        e.response &&
+                        e.response.errorCode === 0) {
 
-                        const email = (event.response.profile?.email || "").toLowerCase();
+                        const email = (e.response.profile?.email || "").toLowerCase();
 
                         // Check for .net domain
                         if (email.includes(".mil")) {
