@@ -6864,20 +6864,31 @@
                             gigya.accounts.showScreenSet({
                                 screenSet: 'mpaturu-RegistrationLogin',
                                 startScreen: 'mpaturu-gigya-change-email-screen-withoutOPT',
-                                containerID: 'screensetContainer'
+                                containerID: 'screensetContainer',
+
+                                onAfterSubmit: function (event) {
+                                    if (event.response && event.response.errorCode === 0) {
+                                        showToast("Your email has been updated successfully!");
+
+                                        setTimeout(() => {
+                                            document.getElementById("screensetContainer").style.display = "none";
+                                        }, 1500); // close after toast appears
+                                    }
+                                }
+
                             });
                             return;
                         }
                     }
                     if (e.screen === 'mpaturu-gigya-register-screen' &&
                         e.response.status === 'OK') {
-                             showToast("Your profile has been successfully created.");
-                            gigya.accounts.showScreenSet({
-                                screenSet: 'mpaturu-RegistrationLogin',
-                                startScreen: 'mpaturu-gigya-login-screen',
-                                containerID: 'screensetContainer'
-                            });
-                            return;
+                        showToast("Your profile has been successfully created.");
+                        gigya.accounts.showScreenSet({
+                            screenSet: 'mpaturu-RegistrationLogin',
+                            startScreen: 'mpaturu-gigya-login-screen',
+                            containerID: 'screensetContainer'
+                        });
+                        return;
                     }
                     const failed = e && e.response && e.response.errorCode !== 0;
                     if (failed) {
