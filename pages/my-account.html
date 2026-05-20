@@ -6871,18 +6871,19 @@
                         }
 
                         // Normal flow
-                       
+
                     }
 
                     const failed = e && e.response && e.response.errorCode !== 0;
-                    if (!failed) return;
-                    const ALT_ID = 'Alternate ID';
+                    if (failed) {
+                        const ALT_ID = 'Alternate ID';
 
-                    // Normalize inline field error for both possible bindings
-                    setTimeout(() => {
-                        normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
-                        // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
-                    }, 50);
+                        // Normalize inline field error for both possible bindings
+                        setTimeout(() => {
+                            normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
+                            // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                        }, 50);
+                    }
                 },
                 onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
