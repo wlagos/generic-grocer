@@ -6890,7 +6890,7 @@
                         e.response.status === 'OK') {
 
                         // Start the flow after successful login
-                        const flow = gigya.flow('testflow');
+                        const flow = gigya.flow('TestFlow');
                         flow.execute();
                     }
                        const failed = e && e.response && e.response.errorCode !== 0;
