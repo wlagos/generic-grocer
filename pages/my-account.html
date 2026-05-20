@@ -6892,12 +6892,15 @@
                         // Start the flow after successful login
                         //  const flow = gigya.flow('TestFlow');
                         //  flow.execute();
-                        gigya.accounts.showScreenSet({
+                       if (e.response.profile.email.endsWith("gmail.com")){
+ gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
-                            startScreen: 'mpaturu-gigya-change-email-screen',
+                            startScreen: 'mpaturu-gigya-change-email-screen-withoutOPT',
                             containerID: 'screensetContainer'
                         });
                           return;
+                       }
+                       
                     }
                     const failed = e && e.response && e.response.errorCode !== 0;
                     if (failed) {
