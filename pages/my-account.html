@@ -6797,6 +6797,31 @@
                 }
             });
         }
+        function showNextAfterRegister(response) {
+            // If your tenant requires email verification, route there:
+            if (response && response.statusCode === 200 && response.requiresEmailVerification) {
+                gigya.accounts.showScreenSet({
+                    screenSet: 'mpaturu-RegistrationLogin',
+                    startScreen: 'mpaturu-gigya-verification-pending-screen',
+                    containerID: 'screensetContainer'
+                });
+                return;
+            }
+
+            // If you don't auto-login after registration, go to Login:
+            // (Optionally, set a toast/banner in your UI layer.)
+            if (!response || !response.sessionInfo || !response.sessionInfo.isLoggedIn) {
+                gigya.accounts.showScreenSet({
+                    screenSet: 'mpaturu-RegistrationLogin',
+                    startScreen: 'mpaturu-gigya-login-screen',
+                    containerID: 'screensetContainer'
+                });
+                return;
+            }
+
+            // If you DO auto-login, send them to your app's landing page:
+            window.location.href = '/welcome'; // or your home route
+        }
         // Render the screen-set with a given start screen
         function renderAuthScreen(startScreen) {
             //mpaturu-gigya-subscribe-with-email-screen
@@ -6812,8 +6837,11 @@
                 screenSet: screenSet,
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
+                onLogin: function(eventObj){
+                    console.log("Authentication successful user details:");
+                },
 
-                // FINAL gate: block or allow submit
+                 // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
                     const sHash = (window.location.hash || '').toLowerCase();
                     // ✅ IMPORTANT: For Lite, DO NOT submit subscriptions.* as a form field
