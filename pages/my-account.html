@@ -6871,7 +6871,8 @@
                                         showToast("Your email has been updated successfully!");
 
                                         setTimeout(() => {
-                                            document.getElementById("screensetContainer").style.display = "none";
+                                           // document.getElementById("screensetContainer").style.display = "none";
+                                           window.location.href = "../";
                                         }, 1500); // close after toast appears
                                     }
                                 }
