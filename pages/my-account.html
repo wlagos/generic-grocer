@@ -6664,19 +6664,7 @@
     <div
         style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
         Offline static copy — commissaries.com</div>
- <script>
-
-
-        // Map URL hash to your screen IDs v2
-        function getStartScreenFromHash() {
-            const hash = (window.location.hash || '').toLowerCase();
-            if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
-                return 'mpaturu-gigya-register-screen';
-            }
-            // Default to login
-            return 'mpaturu-gigya-login-screen';
-        }
-
+    <script>
         // Utility: hide caption/title if it matches certain words
         function hideCaptionIfMatches(root, words) {
             const selectors = [
@@ -6914,7 +6902,6 @@
             });
         }
         function setLoggedInUI(account) {
-
             // Hide the auth links
             document.getElementById("nav-login").style.display = "none";
             document.getElementById("nav-register").style.display = "none";
@@ -6971,40 +6958,6 @@
                 })());
 
                 gigya.accounts.addEventHandlers({
-                    onLogin: function (r) { /* optional */ },
-                    onLogout: function (r) { /* optional */ }
-                });
-
-                gigya.accounts.session.verify({
-                    callback: function (response) {
-                        // optional: nothing to change here for validation
-                    }
-                });
-            }
-        };
-
-        // Helper: choose start screen from hash
-        function getStartScreenFromHash() {
-            const hash = (window.location.hash || '').toLowerCase();
-            if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
-                return 'mpaturu-gigya-register-screen';
-            }
-            return 'mpaturu-gigya-login-screen';
-        }
-
-        // Gigya bootstrap config
-        var __gigyaConf = {
-            onGigyaServiceReady: function () {
-                // Initial render based on the hash
-                renderAuthScreen(getStartScreenFromHash());
-
-                // Allow switching screens by changing the hash (no reload)
-                window.addEventListener('hashchange', function () {
-                    renderAuthScreen(getStartScreenFromHash());
-                });
-
-                // Session events (optional)
-                gigya.accounts.addEventHandlers({
                     onLogin: function (event) {
                         // event.UID          — CDC unique user identifier
                         // event.UIDSignature — cryptographic signature (verify server-side!)
@@ -7026,23 +6979,27 @@
                         console.log("[CDC] Global onLogout.");
                         setLoggedOutUI();
                     }
-
                 });
 
-                // Verify session (optional)
                 gigya.accounts.session.verify({
                     callback: function (response) {
-                        if (response.errorCode == 0) {
-                            // Already logged in; you could show a profile/update screen here
-                            // gigya.accounts.showScreenSet({ screenSet:'Default-ProfileUpdate', containerID:'screensetContainer' });
-                        } else {
-                            // Not logged in; hash already decides which start screen to render
-                        }
+                        // optional: nothing to change here for validation
                     }
                 });
             }
         };
-    </script>
+
+        // Helper: choose start screen from hash
+        function getStartScreenFromHash() {
+            const hash = (window.location.hash || '').toLowerCase();
+            if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
+                return 'mpaturu-gigya-register-screen';
+            }
+            return 'mpaturu-gigya-login-screen';
+        }
+
+        // Gigya bootstrap config
+     </script>
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
 
 </body>
