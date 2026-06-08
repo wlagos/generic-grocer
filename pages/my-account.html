@@ -6665,6 +6665,21 @@
         style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
         Offline static copy — commissaries.com</div>
     <script>
+
+
+        // Map URL hash to your screen IDs v2
+        function getStartScreenFromHash() {
+            const hash = (window.location.hash || '').toLowerCase();
+            if (hash === '#register' || hash === '#signup' || hash === '#create' || hash === '#create-account') {
+                return 'mpaturu-gigya-register-screen';
+            } else if (hash === '#lite') {
+                return 'mpaturu-gigya-subscribe-with-email-screen';
+            } else {
+                // Default to login
+                return 'mpaturu-gigya-login-screen';
+            }
+        }
+
         // Utility: hide caption/title if it matches certain words
         function hideCaptionIfMatches(root, words) {
             const selectors = [
@@ -6725,22 +6740,168 @@
             // Remove
             setTimeout(() => { toast.remove(); }, 2000);
         }
+        /**
+ * Replace "username" with your label in any inline error below a given field.
+ * Works for CDC’s field-level validation errors that render in the DOM.
+ */
+        function normalizeFieldErrorLabel(containerID, fieldName, labelText) {
+            //const root = document.getElementById(containerID) || document.body;
+            document.getElementById("gigya-error-msg-gigya-register-form-username").textContent = document.getElementById("gigya-error-msg-gigya-register-form-username").textContent.replace(/username/gi, labelText);
+            // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
+
+        }
+        function updateRewardsEmailSubscription(optsOrBool, cb) {
+            let subsPayload = {};
+
+            if (typeof optsOrBool === 'boolean') {
+                // Backward compatible: single boolean → rewards_card only
+                subsPayload = {
+                    rewards_card: { email: { isSubscribed: optsOrBool } }
+                };
+            } else if (optsOrBool && typeof optsOrBool === 'object') {
+                const opts = optsOrBool;
+
+                // Only include keys that are explicitly boolean to avoid overwriting others
+                if (typeof opts.sales_promotions === 'boolean') {
+                    subsPayload.sales_promotions = { email: { isSubscribed: opts.sales_promotions } };
+                }
+                if (typeof opts.healthy_living === 'boolean') {
+                    subsPayload.healthy_living = { email: { isSubscribed: opts.healthy_living } };
+                }
+                if (typeof opts.food_safety === 'boolean') {
+                    subsPayload.food_safety = { email: { isSubscribed: opts.food_safety } };
+                }
+                if (typeof opts.rewards_card === 'boolean') {
+                    subsPayload.rewards_card = { email: { isSubscribed: opts.rewards_card } };
+                }
+            } else {
+                // Nothing valid provided
+                if (typeof cb === 'function') {
+                    cb({ errorCode: 0, status: 'noop', message: 'No subscription flags provided.' });
+                }
+                return;
+            }
+
+            // If the payload is empty (object mode with no boolean keys), short‑circuit
+            if (Object.keys(subsPayload).length === 0) {
+                if (typeof cb === 'function') {
+                    cb({ errorCode: 0, status: 'noop', message: 'No subscription flags provided.' });
+                }
+                return;
+            }
+
+            gigya.accounts.setAccountInfo({
+                subscriptions: subsPayload,
+                callback: function (res) {
+                    if (typeof cb === 'function') cb(res);
+                }
+            });
+        }
         // Render the screen-set with a given start screen
         function renderAuthScreen(startScreen) {
+            //mpaturu-gigya-subscribe-with-email-screen
+            //Screen Set ID: mpaturu-RegistrationLogin
+            const sHash = (window.location.hash || '').toLowerCase();
+            if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
+                screenSet = 'mpaturu-RegistrationLogin';
+            } else if (sHash === '#lite') {
+                screenSet = 'mpaturu-LiteRegistration';
+            } else { screenSet = 'mpaturu-RegistrationLogin'; }
+
             gigya.accounts.showScreenSet({
-                screenSet: 'mpaturu-RegistrationLogin',
+                screenSet: screenSet,
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
+                flow: 'TestFlow',
+                onLogin: function (eventObj) {
+                    console.log("Authentication successful user details:");
+                },
 
                 // FINAL gate: block or allow submit
                 onBeforeSubmit: function (e) {
-                    var rewardsId = e.formData['data.rewardsid'];
-                    if (!rewardsId) {
-                        showToast("Rewards ID is blank. Continuing…");
+                    const sHash = (window.location.hash || '').toLowerCase();
+                    // ✅ IMPORTANT: For Lite, DO NOT submit subscriptions.* as a form field
+                    if (sHash === '#lite') {
+                        // Remove any dynamic subscriptions field if the screenset bound it
+                        // This prevents error 400024 (dynamic fields not allowed)
+                        delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
+                        delete e.formData['subscriptions.food_safety.email.isSubscribed'];
+                        delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
+                        delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
+                    }
+                    if (['#register', '#signup', '#create', '#create-account'].includes(sHash)) {
+                        var rewardsId = e.formData['data.rewardsid'];
+                        if (!rewardsId) {
+                            showToast("Rewards ID is blank. Continuing…");
+                        }
                     }
                     return true;
                 },
+                // Called when an error occurs.
+                onError: function (event) {
+                    console.log("phone error");
+                },
+                // After submit: if Lite registration succeeded, set the subscription via API
+                onAfterSubmit: function (e) {
+                    const sHash = (window.location.hash || '').toLowerCase();
+                    // e.eventName might be 'register', 'registerLite', 'login', etc.
+                    // We care about Lite Registration success
+                    if (sHash === '#lite' && e && e.response && e.response.errorCode === 0) {
+                        // Default behavior for your "Subscribe with email" screen:
+                        // subscribe the user to rewards_card email
+                        updateRewardsEmailSubscription(true, function (upd) {
+                            if (upd.errorCode === 0) {
+                                showToast('Subscribed to Rewards Card emails.');
+                            } else {
+                                console.warn('Subscription update failed:', upd);
+                                showToast('Could not update subscription. Please try later.');
+                            }
+                        });
+                    }
+                    if (e.screen === 'mpaturu-gigya-login-screen' &&
+                        e.response.status === 'OK') {
+                        if (e.response.profile.email.endsWith("gmail.com")) {
+                            gigya.accounts.showScreenSet({
+                                screenSet: 'mpaturu-RegistrationLogin',
+                                startScreen: 'mpaturu-gigya-change-email-screen-withoutOPT',
+                                containerID: 'screensetContainer',
 
+                                onAfterSubmit: function (event) {
+                                    if (event.response && event.response.errorCode === 0) {
+                                        showToast("Your email has been updated successfully!");
+
+                                        setTimeout(() => {
+                                           // document.getElementById("screensetContainer").style.display = "none";
+                                           window.location.href = "../";
+                                        }, 1500); // close after toast appears
+                                    }
+                                }
+
+                            });
+                            return;
+                        }
+                    }
+                    if (e.screen === 'mpaturu-gigya-register-screen' &&
+                        e.response.status === 'OK') {
+                        showToast("Your profile has been successfully created.");
+                        gigya.accounts.showScreenSet({
+                            screenSet: 'mpaturu-RegistrationLogin',
+                            startScreen: 'mpaturu-gigya-login-screen',
+                            containerID: 'screensetContainer'
+                        });
+                        return;
+                    }
+                    const failed = e && e.response && e.response.errorCode !== 0;
+                    if (failed) {
+                        const ALT_ID = 'Alternate ID';
+
+                        // Normalize inline field error for both possible bindings
+                        setTimeout(() => {
+                            normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
+                            // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                        }, 50);
+                    }
+                },
                 onFieldChanged: function (e) {
                     if (e.field === "profile.phones.number") {
                         var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -6750,20 +6911,35 @@
                             document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
                         }
                     }
+                    const ALT_ID = 'Alternate ID';
+
+                    // Your field binding name:
+                    // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
+                    // Handle both to be safe:
+                    if (e.field === 'username' || e.field === 'loginID') {
+                        // Slight delay to let CDC render the error into the DOM first
+                        setTimeout(() => {
+                            normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
+                            //normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                        }, 50);
+                    }
+
                 },
 
                 // After the screen renders: define helpers and wire live feedback
                 onAfterScreenLoad: function (event) {
-                    const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
-                    if (!screensWithLoginID.includes(event.currentScreen)) return;
+                    // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
+                    // if (!screensWithLoginID.includes(event.currentScreen)) return;
                     const root = document.getElementById(event.containerID) || document.body;
 
                     // Hide captions based on current screen
                     if (event.currentScreen === 'mpaturu-gigya-login-screen') {
                         hideCaptionIfMatches(root, ['login']);
-                    }
-                    if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                    } if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                         hideCaptionIfMatches(root, ['register', 'registration']);
+                    }
+                    if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                        hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
                     }
 
                     // Re-apply hiding if CDC re-renders parts of the DOM
@@ -6774,6 +6950,10 @@
                         if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                             hideCaptionIfMatches(root, ['register', 'registration']);
                         }
+                        if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                            hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
+                        }
+
                     });
                     mo.observe(root, { childList: true, subtree: true });
                     // Single source of truth for messages
@@ -6847,35 +7027,36 @@
                     }
 
                     // Validate on blur
-                    phoneInput.addEventListener('blur', function () {
+                    if (phoneInput !== null) {
+                        phoneInput.addEventListener('blur', function () {
 
-                        var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
-                        var isUSA = (ccDigits === '+1');
-                        var raw = (phoneInput.value || '').trim();
+                            var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
+                            var isUSA = (ccDigits === '+1');
+                            var raw = (phoneInput.value || '').trim();
 
-                        // Normalize to digits only
-                        var digits = raw.replace(/\D+/g, '');
-                        phoneInput.value = digits;
+                            // Normalize to digits only
+                            var digits = raw.replace(/\D+/g, '');
+                            phoneInput.value = digits;
 
-                        if (isUSA) {
-                            // US must be exactly 10 digits
-                            if (!/^\d{10}$/.test(digits)) {
-                                setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
-                                return;
+                            if (isUSA) {
+                                // US must be exactly 10 digits
+                                if (!/^\d{10}$/.test(digits)) {
+                                    setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
+                                    return;
+                                }
+                            } else {
+                                // Non-US: digits-only (any length)
+                                if (!/^\d+$/.test(digits)) {
+                                    setFieldError('profile.phones.number', 'Phone number must contain digits only.');
+                                    return;
+                                }
                             }
-                        } else {
-                            // Non-US: digits-only (any length)
-                            if (!/^\d+$/.test(digits)) {
-                                setFieldError('profile.phones.number', 'Phone number must contain digits only.');
-                                return;
-                            }
-                        }
 
-                        // Clear error if valid
-                        clearFieldError('profile.phones.number');
-                        document.getElementById('gigya-textbox-90580195761339150').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
-                    });
-
+                            // Clear error if valid
+                            clearFieldError('profile.phones.number');
+                            document.getElementById('loginID').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                        });
+                    }
                     // Optional: live filtering to keep digits only
                     // --- Keep your existing lastName clamp, observers, etc. below ---
                     //const root = document.getElementById(event.containerID) || document.body;
@@ -6903,7 +7084,7 @@
         }
         function setLoggedInUI(account) {
             // Hide the auth links
-            document.getElementById("nav-login").style.display = "none";
+/*             document.getElementById("nav-login").style.display = "none";
             document.getElementById("nav-register").style.display = "none";
 
             // Show the authenticated links
@@ -6923,7 +7104,7 @@
             strip.style.display = "flex";
 
             // Clear any screenset still rendered in the container
-            document.getElementById(CDC_CONFIG.containerId).innerHTML = "";
+            document.getElementById(CDC_CONFIG.containerId).innerHTML = ""; */
         }
 
         /**
@@ -6932,7 +7113,7 @@
          */
         function setLoggedOutUI() {
 
-            document.getElementById("nav-login").style.display = "";
+/*             document.getElementById("nav-login").style.display = "";
             document.getElementById("nav-register").style.display = "";
 
             document.getElementById("nav-myaccount").style.display = "none";
@@ -6941,7 +7122,7 @@
             document.getElementById("welcome-strip").style.display = "none";
 
             // Clear the screenset container
-            document.getElementById(CDC_CONFIG.containerId).innerHTML = "";
+            document.getElementById(CDC_CONFIG.containerId).innerHTML = ""; */
         }
 
         // Bootstrap with hashchange (debounced to avoid double render)
@@ -6957,24 +7138,20 @@
                     };
                 })());
 
+
+                // Session events: as a fallback, update subscription right after login if Lite was used
                 gigya.accounts.addEventHandlers({
-                    onLogin: function (event) {
-                        // event.UID          — CDC unique user identifier
-                        // event.UIDSignature — cryptographic signature (verify server-side!)
-                        // event.profile      — { firstName, lastName, email, … }
-                        // event.data         — custom schema data fields
-                        //
-                        // IMPORTANT: Always verify UIDSignature on your backend before
-                        // creating a server session. Never trust client-side UID alone.
-                        // Server-side verification docs:
-                        // https://help.sap.com/docs/SAP_CUSTOMER_DATA_CLOUD/
-                        // 8b8d6fffe113457094a17701f63e3d6a/416557e570b21014bbc5a10ce4041860.html
-
+                    onLogin: function (r) {
                         console.log("[CDC] Global onLogin — UID:", event.UID);
-                        setLoggedInUI(event);
+                        const sHash = (window.location.hash || '').toLowerCase();
+                        if (sHash === '#lite') {
+                            // In case onAfterSubmit didn't fire (some flows), ensure subscription is set
+                            updateRewardsEmailSubscription(true);
+                        }
+                        
+                      //  setLoggedInUI(event);
                     },
-
-                    onLogout: function () {
+                    onLogout: function (r) { /* optional */ 
                         // Fired after any logout, including session expiry.
                         console.log("[CDC] Global onLogout.");
                         setLoggedOutUI();
@@ -6989,17 +7166,7 @@
             }
         };
 
-        // Helper: choose start screen from hash
-        function getStartScreenFromHash() {
-            const hash = (window.location.hash || '').toLowerCase();
-            if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
-                return 'mpaturu-gigya-register-screen';
-            }
-            return 'mpaturu-gigya-login-screen';
-        }
-
-        // Gigya bootstrap config
-     </script>
+    </script>
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
 
 </body>
