@@ -7238,44 +7238,40 @@
 		style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
 		Offline static copy — commissaries.com</div>
 		  <script>
-
-            
-/* if (conditionIsTrue) {
-    $('.fp-not-logged-in').hide();
-} */
 document.addEventListener("DOMContentLoaded", function () {
-  gigya.accounts.getAccountInfo({
-    callback: function(res) {
-      if (res.errorCode === 0) {
-        // user logged in
-        const profile = res.profile;
-        const name =
-          profile.firstName ||
-          profile.nickname ||
-          profile.email ||
-          "User";
 
-        document.querySelector(".fp-user-name").textContent = name;
+    gigya.accounts.getAccountInfo({
+        callback: function (res) {
 
-        // show welcome block
-        document.querySelector(".fp-welcome").style.display = "inline-block";
+            if (res.errorCode === 0) {
+                // User is logged in
+                const profile = res.profile;
+                const name =
+                    profile.firstName ||
+                    profile.nickname ||
+                    profile.email ||
+                    "User";
 
-        // hide login/register block
-        const notLoggedIn = document.querySelector(".fp-not-logged-in");
-        if (notLoggedIn) {
-          notLoggedIn.style.display = "none";
+                // Insert name
+                document.querySelector(".fp-user-name").textContent = name;
+
+                // Show welcome section
+                document.querySelector(".fp-welcome").style.display = "inline-block";
+
+                // Hide Sign In / Create Account section
+                let notLoggedIn = document.querySelector(".fp-not-logged-in");
+                if (notLoggedIn) notLoggedIn.style.display = "none";
+
+            } else {
+                // User is not logged in
+                document.querySelector(".fp-welcome").style.display = "none";
+
+                let notLoggedIn = document.querySelector(".fp-not-logged-in");
+                if (notLoggedIn) notLoggedIn.style.display = "inline-block";
+            }
         }
-      } else {
-        // user not logged in
-        document.querySelector(".fp-welcome").style.display = "none";
+    });
 
-        const notLoggedIn = document.querySelector(".fp-not-logged-in");
-        if (notLoggedIn) {
-          notLoggedIn.style.display = "inline-block";
-        }
-      }
-    }
-  });
 });
 
     </script>
