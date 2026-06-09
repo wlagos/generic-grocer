@@ -7274,6 +7274,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const notLoggedIn = document.querySelector(".fp-not-logged-in");
         if (notLoggedIn) notLoggedIn.style.display = "none";
 
+
       } else {
         // Logged out
         const welcome = document.querySelector(".fp-welcome");
@@ -7286,7 +7287,30 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 });
+    const trigger = document.querySelector('.fp-your-account');
+    const menu = document.querySelector('.fp-user-session-menu');
 
+    if (trigger && menu) {
+
+        trigger.addEventListener('click', function (e) {
+            e.preventDefault(); 
+
+            // Toggle dropdown
+            const isOpen = menu.style.display === "block";
+            menu.style.display = isOpen ? "none" : "block";
+
+            // Toggle aria-expanded
+            trigger.setAttribute("aria-expanded", !isOpen);
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+                menu.style.display = "none";
+                trigger.setAttribute("aria-expanded", false);
+            }
+        });
+    }
     </script>
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
 </body>
