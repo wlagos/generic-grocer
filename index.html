@@ -6059,7 +6059,8 @@
 										<li><strong>YOUR ACCOUNT.</strong> The account that you set up to access the
 											Site is the same account used for this Service.  Please reference the Site
 											<a href="pages/terms-and-conditions_.html">Terms of Use</a> for details
-											related to the Site account set up. </li>
+											related to the Site account set up. 
+										</li>
 										<li><strong>ELIGIBILITY.</strong> Age restricted items such as tobacco products
 											and alcoholic beverages will require pickup by an authorized patron 21 years
 											or older.</li>
@@ -6370,7 +6371,8 @@
 																				decoding="async" fetchpriority="high"
 																				height="639" id="soliloquy-image-12078"
 																				src="assets/images/57150-NNM-1733X541-2048x639_597c33.jpg"
-																				width="2048" /></a></li>
+																				width="2048" /></a>
+																	</li>
 																	<li aria-hidden="true"
 																		class="soliloquy-item soliloquy-item-2 soliloquy-id-12079 soliloquy-image-slide"
 																		draggable="false"
@@ -6386,7 +6388,8 @@
 																				id="soliloquy-image-12079"
 																				loading="lazy"
 																				src="assets/images/61400-WEB-SHOP-Courtside-Banner_850ed9.jpg"
-																				width="1" /></a></li>
+																				width="1" /></a>
+																	</li>
 																	<li aria-hidden="false"
 																		class="soliloquy-item soliloquy-item-3 soliloquy-id-11840 soliloquy-image-slide soliloquy-active-slide"
 																		draggable="false"
@@ -6402,7 +6405,8 @@
 																				id="soliloquy-image-11840"
 																				loading="lazy"
 																				src="assets/images/Click-2-Go-On-the-Go-1733x541-1-2048x639_a5140f.jpg"
-																				width="1" /></a></li>
+																				width="1" /></a>
+																	</li>
 																</ul>
 															</div>
 															<div class="soliloquy-controls soliloquy-has-pager soliloquy-has-controls-direction"
@@ -6485,7 +6489,8 @@
 																			decoding="async" height="1024"
 																			id="soliloquy-image-12065"
 																			src="assets/images/57150-NNM-1024X1024-1024x1024_c_8526c1.jpg"
-																			width="1024" /></a></li>
+																			width="1024" /></a>
+																</li>
 																<li aria-hidden="true"
 																	class="soliloquy-item soliloquy-item-2 soliloquy-id-12076 soliloquy-image-slide"
 																	draggable="false"
@@ -6500,7 +6505,8 @@
 																			decoding="async" height="1"
 																			id="soliloquy-image-12076" loading="lazy"
 																			src="assets/images/61400-WEB-MOBILE-Courtside-Banner_c079ec.jpg"
-																			width="1" /></a></li>
+																			width="1" /></a>
+																</li>
 																<li aria-hidden="false"
 																	class="soliloquy-item soliloquy-item-3 soliloquy-id-11839 soliloquy-image-slide soliloquy-active-slide"
 																	draggable="false"
@@ -6515,7 +6521,8 @@
 																			decoding="async" height="1"
 																			id="soliloquy-image-11839" loading="lazy"
 																			src="assets/images/Click-2-Go-On-the-Go-1024X1024-1-1024x1024_c_d45965.jpg"
-																			width="1" /></a></li>
+																			width="1" /></a>
+																</li>
 															</ul>
 														</div>
 														<div class="soliloquy-controls soliloquy-has-pager soliloquy-has-controls-direction"
@@ -7237,82 +7244,99 @@
 	<div
 		style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
 		Offline static copy — commissaries.com</div>
-		  <script>
+	<script>
 
 
-document.addEventListener("DOMContentLoaded", function () {
+		document.addEventListener("DOMContentLoaded", function () {
 
-  gigya.accounts.getAccountInfo({
-    callback: function (res) {
+			gigya.accounts.getAccountInfo({
+				callback: function (res) {
 
-      if (res.errorCode === 0) {
-        // Logged in
-        const profile = res.profile || {};
-        const name =
-          profile.firstName ||
-          profile.nickname ||
-          profile.email ||
-          "User";
+					if (res.errorCode === 0) {
+						// Logged in
+						const profile = res.profile || {};
+						const name =
+							profile.firstName ||
+							profile.nickname ||
+							profile.email ||
+							"User";
 
-        // Update user name
-        document.querySelector(".fp-user-name").textContent = name;
+						// Update user name
+						document.querySelector(".fp-user-name").textContent = name;
 
-        // Reveal ALL welcome elements
-        const welcome = document.querySelector(".fp-welcome");
-        if (welcome) welcome.style.display = "inline-flex";
+						// Reveal ALL welcome elements
+						const welcome = document.querySelector(".fp-welcome");
+						if (welcome) welcome.style.display = "inline-flex";
 
-        const account = document.querySelector(".fp-welcome-account");
-        if (account) account.style.display = "inline";
+						const account = document.querySelector(".fp-welcome-account");
+						if (account) account.style.display = "inline";
 
-        const separator = document.querySelector(".fp-welcome-separator");
-        if (separator) separator.style.display = "inline";
+						const separator = document.querySelector(".fp-welcome-separator");
+						if (separator) separator.style.display = "inline";
 
-        const arrow = document.querySelector(".fp-welcome-angle-down");
-        if (arrow) arrow.style.display = "inline-block";
+						const arrow = document.querySelector(".fp-welcome-angle-down");
+						if (arrow) arrow.style.display = "inline-block";
 
-        // Hide login/create block
-        const notLoggedIn = document.querySelector(".fp-not-logged-in");
-        if (notLoggedIn) notLoggedIn.style.display = "none";
+						// Hide login/create block
+						const notLoggedIn = document.querySelector(".fp-not-logged-in");
+						if (notLoggedIn) notLoggedIn.style.display = "none";
 
 
-      } else {
-        // Logged out
-        const welcome = document.querySelector(".fp-welcome");
-        if (welcome) welcome.style.display = "none";
+					} else {
+						// Logged out
+						const welcome = document.querySelector(".fp-welcome");
+						if (welcome) welcome.style.display = "none";
 
-        const notLoggedIn = document.querySelector(".fp-not-logged-in");
-        if (notLoggedIn) notLoggedIn.style.display = "inline-block";
-      }
-    }
-  });
+						const notLoggedIn = document.querySelector(".fp-not-logged-in");
+						if (notLoggedIn) notLoggedIn.style.display = "inline-block";
+					}
+				}
+			});
+			const trigger = document.querySelector('.fp-your-account');
+			const arrow = document.querySelector('.fp-welcome-angle-down');
+			const menu = document.querySelector('.fp-user-session-menu');
 
-});
-    const trigger = document.querySelector('.fp-your-account');
-    const menu = document.querySelector('.fp-user-session-menu');
+			if (trigger && menu) {
 
-    if (trigger && menu) {
+				// CLICK ON ARROW → TOGGLE DROPDOWN (NO NAVIGATION)
+				if (arrow) {
+					arrow.addEventListener('click', function (e) {
+						e.preventDefault();
+						e.stopPropagation();
 
-        trigger.addEventListener('click', function (e) {
-            e.preventDefault(); 
+						const isOpen = menu.style.display === "block";
+						menu.style.display = isOpen ? "none" : "block";
+					});
+				}
 
-            // Toggle dropdown
-            const isOpen = menu.style.display === "block";
-            menu.style.display = isOpen ? "none" : "block";
+				// CLICK ON "My Account" TEXT LINK → NORMAL NAVIGATION
+				// (do not override link behavior)
 
-            // Toggle aria-expanded
-            trigger.setAttribute("aria-expanded", !isOpen);
-        });
+				// CLICK ON WRAPPER (div) → TOGGLE DROPDOWN, DO NOT NAVIGATE
+				trigger.addEventListener('click', function (e) {
+					// block only when clicking the wrapper, not the link
+					if (!e.target.classList.contains('fp-your-account-link')) {
+						e.preventDefault();
+						e.stopPropagation();
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function (e) {
-            if (!trigger.contains(e.target) && !menu.contains(e.target)) {
-                menu.style.display = "none";
-                trigger.setAttribute("aria-expanded", false);
-            }
-        });
-    }
-    </script>
-    <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
+						const isOpen = menu.style.display === "block";
+						menu.style.display = isOpen ? "none" : "block";
+					}
+				});
+
+				// CLICK OUTSIDE → CLOSE DROPDOWN
+				document.addEventListener('click', function (e) {
+					if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+						menu.style.display = "none";
+					}
+				});
+
+			}
+		});
+
+
+	</script>
+	<script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
 </body>
 
 </html>
