@@ -655,10 +655,6 @@
                                 <span class="fp-icon-store-select fp-icon-store-select-style fp-icon-layered"></span>
                                 <div class="fp-my-store-wrap">
                                     My Store:
-
-
-
-
                                     <div class="fp-dropdown fp-dropdown-store">
                                         <a aria-label="Select Store" class="fp-my-store"
                                             href="my-store_store-locator.html" id="fp-aria-store-selection"><span
@@ -7084,6 +7080,11 @@
         }
         function setLoggedInUI(account) {
             // Hide the auth links
+            
+if (conditionIsTrue) {
+    $('.fp-not-logged-in').hide();
+}
+
 /*             document.getElementById("nav-login").style.display = "none";
             document.getElementById("nav-register").style.display = "none";
 
