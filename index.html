@@ -7238,39 +7238,52 @@
 		style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
 		Offline static copy — commissaries.com</div>
 		  <script>
+
+
 document.addEventListener("DOMContentLoaded", function () {
 
-    gigya.accounts.getAccountInfo({
-        callback: function (res) {
+  gigya.accounts.getAccountInfo({
+    callback: function (res) {
 
-            if (res.errorCode === 0) {
-                // User is logged in
-                const profile = res.profile;
-                const name =
-                    profile.firstName ||
-                    profile.nickname ||
-                    profile.email ||
-                    "User";
+      if (res.errorCode === 0) {
+        // Logged in
+        const profile = res.profile || {};
+        const name =
+          profile.firstName ||
+          profile.nickname ||
+          profile.email ||
+          "User";
 
-                // Insert name
-                document.querySelector(".fp-user-name").textContent = name;
+        // Update user name
+        document.querySelector(".fp-user-name").textContent = name;
 
-                // Show welcome section
-                document.querySelector(".fp-welcome").style.display = "inline-block";
+        // Reveal ALL welcome elements
+        const welcome = document.querySelector(".fp-welcome");
+        if (welcome) welcome.style.display = "inline-flex";
 
-                // Hide Sign In / Create Account section
-                let notLoggedIn = document.querySelector(".fp-not-logged-in");
-                if (notLoggedIn) notLoggedIn.style.display = "none";
+        const account = document.querySelector(".fp-welcome-account");
+        if (account) account.style.display = "inline";
 
-            } else {
-                // User is not logged in
-                document.querySelector(".fp-welcome").style.display = "none";
+        const separator = document.querySelector(".fp-welcome-separator");
+        if (separator) separator.style.display = "inline";
 
-                let notLoggedIn = document.querySelector(".fp-not-logged-in");
-                if (notLoggedIn) notLoggedIn.style.display = "inline-block";
-            }
-        }
-    });
+        const arrow = document.querySelector(".fp-welcome-angle-down");
+        if (arrow) arrow.style.display = "inline-block";
+
+        // Hide login/create block
+        const notLoggedIn = document.querySelector(".fp-not-logged-in");
+        if (notLoggedIn) notLoggedIn.style.display = "none";
+
+      } else {
+        // Logged out
+        const welcome = document.querySelector(".fp-welcome");
+        if (welcome) welcome.style.display = "none";
+
+        const notLoggedIn = document.querySelector(".fp-not-logged-in");
+        if (notLoggedIn) notLoggedIn.style.display = "inline-block";
+      }
+    }
+  });
 
 });
 
