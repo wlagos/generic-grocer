@@ -7142,17 +7142,17 @@ if (conditionIsTrue) {
 
                 // Session events: as a fallback, update subscription right after login if Lite was used
                 gigya.accounts.addEventHandlers({
-                    onLogin: function (r) {
-                        console.log("[CDC] Global onLogin — UID:", r.UID);
+                    onLogin: function (event) {
+                        console.log("[CDC] Global onLogin — UID:", event.UID);
                         const sHash = (window.location.hash || '').toLowerCase();
                         if (sHash === '#lite') {
                             // In case onAfterSubmit didn't fire (some flows), ensure subscription is set
                             updateRewardsEmailSubscription(true);
                         }
                         
-                      //  setLoggedInUI(event);
+                       setLoggedInUI(event);
                     },
-                    onLogout: function (r) { /* optional */ 
+                    onLogout: function (event) { /* optional */ 
                         // Fired after any logout, including session expiry.
                         console.log("[CDC] Global onLogout.");
                         setLoggedOutUI();
