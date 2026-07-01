@@ -6661,6 +6661,70 @@
         style="position:fixed;bottom:0;left:0;right:0;background:#1a3a5c;color:#fff;padding:6px 16px;font-size:12px;text-align:center;z-index:99999;font-family:sans-serif;">
         Offline static copy — commissaries.com</div>
     <script>
+async function getJwtToken() {
+  const url = "https://accounts.us1.gigya.com/accounts.getJWT";
+
+  const formData = new URLSearchParams();
+  formData.append("apiKey", "4_eqwSIEzYKaq7MI871n2USw");   // your apiKey
+  formData.append("uid", "8247d7fed3f54160ac920d85df2aabe0");     // UID
+  formData.append("secret", "7vDv2Hy2Etrbfs9ctc1dTpTl9AXdtKxXlaHESF7SZJA=");   // user secret
+  formData.append("expiration", "3600");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: formData.toString()
+  });
+
+  const data = await response.json();
+
+  if (!data.id_token) {
+    throw new Error("JWT token not returned: " + JSON.stringify(data));
+  }
+
+  console.log("JWT Token Retrieved:", data.id_token);
+  return data.id_token;
+}
+
+//
+// STEP 2 — Use returned token to call the SAP API
+//
+async function callCustomerProfile(jwtToken) {
+  const url = "https://dev.apim.fc.scp.sapns2.us/v1/customer-profile";
+
+  const payload = {
+    EDIPI: "1234567890",
+    Mobile: "5551234567"
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${jwtToken}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  console.log("API Response:", result);
+  return result;
+}
+
+//
+// STEP 3 — Run both steps
+//
+async function freshShopRegVerification() {
+  try {
+    const jwt = await getJwtToken();       // Step 1
+    await callCustomerProfile(jwt);        // Step 2
+  } catch (err) {
+    console.error("Error:", err);
+  }
+}
+
 
 
         // Map URL hash to your screen IDs v2
@@ -6880,6 +6944,7 @@
                     if (e.screen === 'mpaturu-gigya-register-screen' &&
                         e.response.status === 'OK') {
                         showToast("Your profile has been successfully created.");
+                        freshShopRegVerification();
                         gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
                             startScreen: 'mpaturu-gigya-login-screen',
