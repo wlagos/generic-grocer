@@ -6942,7 +6942,7 @@ async function freshShopRegVerification() {
                         }
                     }
                     if (e.screen === 'mpaturu-gigya-register-screen' &&
-                        e.response.errorCode === '206002') {
+                        e.response.errorCode === 206002) {
                         showToast("Your profile has been successfully created.");
                         freshShopRegVerification();
                         gigya.accounts.showScreenSet({
