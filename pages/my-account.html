@@ -591,6 +591,15 @@
         }
     </style>
     <script>
+var ScarabQueue = ScarabQueue || [];
+(function(id) {
+  if (document.getElementById(id)) return;
+  var js = document.createElement('script'); js.id = id;
+  js.src = '//cdn.scarabresearch.com/js/13A8187A265F1E7A/scarab-v2.js';
+  var fs = document.getElementsByTagName('script')[0];
+  fs.parentNode.insertBefore(js, fs);
+})('scarab-js-api');
+
         (function () {
             document.addEventListener('DOMContentLoaded', function () {
                 if (!window.jQuery) return;
@@ -7235,16 +7244,8 @@ if (conditionIsTrue) {
 
     </script>
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
-<script type="text/javascript">
-var ScarabQueue = ScarabQueue || [];
-(function(id) {
-  if (document.getElementById(id)) return;
-  var js = document.createElement('script'); js.id = id;
-  js.src = '//cdn.scarabresearch.com/js/13A8187A265F1E7A/scarab-v2.js';
-  var fs = document.getElementsByTagName('script')[0];
-  fs.parentNode.insertBefore(js, fs);
-})('scarab-js-api');
-</script>
+
 </body>
 
 </html>
+
