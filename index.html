@@ -7265,6 +7265,13 @@ var ScarabQueue = ScarabQueue || [];
 
 					if (res.errorCode === 0) {
 						// Logged in
+						
+   const cdcUID = response.data.uid; 
+      // or response.data.customerId or any external_id you choose
+      
+      ScarabQueue.push(['setCustomerId', cdcUID]);
+      ScarabQueue.push(['go']);  // send immediately
+
 						const profile = res.profile || {};
 						const name =
 							profile.firstName ||
