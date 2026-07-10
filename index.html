@@ -7266,7 +7266,7 @@ var ScarabQueue = ScarabQueue || [];
 					if (res.errorCode === 0) {
 						// Logged in
 						
-   const cdcUID = response.data.uid; 
+   const cdcUID = res.uid; 
       // or response.data.customerId or any external_id you choose
       
       ScarabQueue.push(['setCustomerId', cdcUID]);
