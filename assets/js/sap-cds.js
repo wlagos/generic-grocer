@@ -418,6 +418,23 @@
             });
         }
 
+        // Render the Profile Update screen
+        function renderProfileUpdateScreen() {
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-ProfileUpdate',
+                startScreen: 'mpaturu-gigya-update-profile-screen',
+                containerID: 'screensetContainer',
+                onError: function (event) {
+                    console.log("phone error");
+                },
+                onAfterSubmit: function (e) {
+                    normalizeFailedSubmitFieldError(e);
+                },
+                onFieldChanged: handleScreenSetFieldChanged,
+                onAfterScreenLoad: handleScreenSetAfterLoad
+            });
+        }
+
         // Dispatch to the right screen renderer based on the URL hash
         function renderAuthScreen() {
             const hash = (window.location.hash || '').toLowerCase();
@@ -426,7 +443,18 @@
             } else if (hash === '#lite') {
                 renderLiteRegistrationScreen();
             } else {
-                renderLoginScreen();
+                // Default (My Account) destination: show the profile update
+                // screen for an already-authenticated user, otherwise fall
+                // back to the login screen.
+                gigya.accounts.getAccountInfo({
+                    callback: function (res) {
+                        if (res.errorCode === 0) {
+                            renderProfileUpdateScreen();
+                        } else {
+                            renderLoginScreen();
+                        }
+                    }
+                });
             }
         }
 
@@ -436,6 +464,7 @@
         window.sapCds.showLogin = function () { return renderLoginScreen(); };
         window.sapCds.showRegistration = function () { return renderRegistrationScreen(); };
         window.sapCds.showLiteRegistration = function () { return renderLiteRegistrationScreen(); };
+        window.sapCds.showProfileUpdate = function () { return renderProfileUpdateScreen(); };
         // Additional helpers
         window.sapCds.renderAuthScreen = renderAuthScreen;
         window.sapCds.setLoggedInUI = setLoggedInUI;
