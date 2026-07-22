@@ -545,10 +545,11 @@ if (conditionIsTrue) {
                         ScarabQueue.push(['go']);  // send immediately
 
                         const profile = res.profile || {};
+                        const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
                         const name =
+                            fullName ||
                             profile.firstName ||
                             profile.nickname ||
-                            profile.email ||
                             "User";
 
                         // Update user name
