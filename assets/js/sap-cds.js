@@ -428,6 +428,12 @@
                     console.log("phone error");
                 },
                 onAfterSubmit: function (e) {
+                    if (e.screen === 'mpaturu-gigya-update-profile-screen' && e.response.status === 'OK') {
+                        setTimeout(() => {
+                            window.location.href = "../";
+                        }, 100);
+                        return;
+                    }
                     normalizeFailedSubmitFieldError(e);
                 },
                 onFieldChanged: handleScreenSetFieldChanged,
@@ -471,10 +477,8 @@
         window.sapCds.setLoggedOutUI = setLoggedOutUI;
         function setLoggedInUI(account) {
             // Hide the auth links
-
-if (conditionIsTrue) {
-    $('.fp-not-logged-in').hide();
-}
+            const notLoggedIn = document.querySelector(".fp-not-logged-in");
+            if (notLoggedIn) notLoggedIn.style.display = "none";
 
 /*             document.getElementById("nav-login").style.display = "none";
             document.getElementById("nav-register").style.display = "none";
@@ -582,7 +586,8 @@ if (conditionIsTrue) {
                             "User";
 
                         // Update user name
-                        document.querySelector(".fp-user-name").textContent = name;
+                        const userNameEl = document.querySelector(".fp-user-name");
+                        if (userNameEl) userNameEl.textContent = name;
 
                         // Reveal ALL welcome elements
                         const welcome = document.querySelector(".fp-welcome");
