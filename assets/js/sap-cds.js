@@ -143,7 +143,7 @@
                 screenSet: screenSet,
                 startScreen: startScreen,
                 containerID: 'screensetContainer',
-                flow: 'TestFlow',
+               // flow: 'TestFlow',  **commented out because it was working and leaving it for reference**
                 onLogin: function (eventObj) {
                     console.log("Authentication successful user details:");
                 },
