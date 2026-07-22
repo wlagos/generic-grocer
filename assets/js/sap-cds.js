@@ -191,7 +191,12 @@
                     }
                     if (e.screen === 'mpaturu-gigya-login-screen' &&
                         e.response.status === 'OK') {
-                        if (e.response.profile.email.endsWith("gmail.com")) {
+                                   setTimeout(() => {
+                                           // document.getElementById("screensetContainer").style.display = "none";
+                                           window.location.href = "../";
+                                        }, 100); // close 
+                                           return;
+             /*            if (e.response.profile.email.endsWith("gmail.com")) {
                             gigya.accounts.showScreenSet({
                                 screenSet: 'mpaturu-RegistrationLogin',
                                 startScreen: 'mpaturu-gigya-change-email-screen-withoutOPT',
@@ -210,7 +215,7 @@
 
                             });
                             return;
-                        }
+                        } */
                     }
                     if (e.screen === 'mpaturu-gigya-register-screen' &&
                         e.response.errorCode === 206002) {
