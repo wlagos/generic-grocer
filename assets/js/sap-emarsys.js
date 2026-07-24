@@ -73,9 +73,9 @@ async function callCustomerProfile(jwtToken) {
 //
 // STEP 3 — Run both steps
 //
-async function freshShopRegVerification() {
+async function freshShopRegVerification(uid) {
   try {
-    const uid = await getLoggedInUid();    // Step 1
+    //const uid = await getLoggedInUid();    // Step 1
     const jwt = await getJwtToken(uid);    // Step 2
     await callCustomerProfile(jwt);        // Step 3
   } catch (err) {
