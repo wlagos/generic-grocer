@@ -1,9 +1,28 @@
-async function getJwtToken() {
+// Resolve the currently logged-in Gigya user's UID.
+function getLoggedInUid() {
+  return new Promise((resolve, reject) => {
+    gigya.accounts.getAccountInfo({
+      callback: function (res) {
+        if (res.errorCode === 0 && res.UID) {
+          resolve(res.UID);
+        } else {
+          reject(new Error("No logged-in user found: " + JSON.stringify(res)));
+        }
+      }
+    });
+  });
+}
+
+async function getJwtToken(uid) {
   const url = "https://accounts.us1.gigya.com/accounts.getJWT";
+
+  if (!uid) {
+    throw new Error("getJwtToken: uid is required");
+  }
 
 const formData = new URLSearchParams({
   apiKey: "4_eqwSIEzYKaq7MI871n2USw",
-  uid: "8247d7fed3f54160ac920d85df2aabe0",
+  uid: uid,
   secret: "7vDv2Hy2Etrbfs9ctc1dTpTl9AXdtKxXlaHESF7SZJA=", // raw secret
   expiration: "3600"
 });
@@ -56,8 +75,9 @@ async function callCustomerProfile(jwtToken) {
 //
 async function freshShopRegVerification() {
   try {
-    const jwt = await getJwtToken();       // Step 1
-    await callCustomerProfile(jwt);        // Step 2
+    const uid = await getLoggedInUid();    // Step 1
+    const jwt = await getJwtToken(uid);    // Step 2
+    await callCustomerProfile(jwt);        // Step 3
   } catch (err) {
     console.error("Error:", err);
   }
