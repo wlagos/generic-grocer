@@ -1,17 +1,3 @@
-// Resolve the currently logged-in Gigya user's UID.
-function getLoggedInUid() {
-  return new Promise((resolve, reject) => {
-    gigya.accounts.getAccountInfo({
-      callback: function (res) {
-        if (res.errorCode === 0 && res.UID) {
-          resolve(res.UID);
-        } else {
-          reject(new Error("No logged-in user found: " + JSON.stringify(res)));
-        }
-      }
-    });
-  });
-}
 
 async function getJwtToken(uid) {
   const url = "https://accounts.us1.gigya.com/accounts.getJWT";
