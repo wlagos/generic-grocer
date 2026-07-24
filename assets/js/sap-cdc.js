@@ -121,9 +121,13 @@
             if (e.field === "profile.phones.number") {
                 var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
                 var isUSA = (ccDigits === '+1');
-                var phoneInputValue = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
-                if (isUSA && phoneInputValue.length > 10) {
-                    document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
+                var phoneEl = document.getElementById('gigya-phoneInputLabel-167363755631131230');
+                var digitsOnly = (phoneEl.value || '').replace(/\D+/g, '');
+                if (isUSA && digitsOnly.length > 10) {
+                    digitsOnly = digitsOnly.slice(0, 10);
+                }
+                if (digitsOnly !== phoneEl.value) {
+                    phoneEl.value = digitsOnly;
                 }
             }
             const ALT_ID = 'Alternate ID';
