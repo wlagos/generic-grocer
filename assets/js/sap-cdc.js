@@ -121,13 +121,9 @@
             if (e.field === "profile.phones.number") {
                 var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
                 var isUSA = (ccDigits === '+1');
-                var phoneEl = document.getElementById('gigya-phoneInputLabel-167363755631131230');
-                var digitsOnly = (phoneEl.value || '').replace(/\D+/g, '');
-                if (isUSA && digitsOnly.length > 10) {
-                    digitsOnly = digitsOnly.slice(0, 10);
-                }
-                if (digitsOnly !== phoneEl.value) {
-                    phoneEl.value = digitsOnly;
+                var phoneInputValue = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                if (isUSA && phoneInputValue.length > 10) {
+                    document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
                 }
             }
             const ALT_ID = 'Alternate ID';
@@ -171,7 +167,6 @@
                         hideCaptionIfMatches(root, ['login']);
                     } if (event.currentScreen === 'mpaturu-gigya-register-screen') {
                         hideCaptionIfMatches(root, ['register', 'registration']);
-                        refreshRegistrationConsentStatements();
                     }
                     if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
                         hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
@@ -316,30 +311,6 @@
                     //  mo.observe(root, { childList: true, subtree: true });
                 }
 
-        // Gigya/SAP CDC API key (matches the CDC Web SDK <script> include).
-        var GIGYA_API_KEY = '4_eqwSIEzYKaq7MI871n2USw';
-
-        // Cache of the site's consent statement definitions. Gigya's screen-set
-        // callbacks (onBeforeSubmit) must return a boolean synchronously, so we
-        // can't await the async getConsentStatements call there — instead we
-        // refresh this cache when the registration screen loads and read it
-        // synchronously on submit.
-        var registrationConsentStatements = null;
-
-        function refreshRegistrationConsentStatements() {
-            registrationConsentStatements = null;
-            gigya.accounts.getConsentStatements({
-                apiKey: GIGYA_API_KEY,
-                callback: function (res) {
-                    if (res.errorCode === 0) {
-                        registrationConsentStatements = res.preferences || {};
-                    } else {
-                        console.error('getConsentStatements failed:', res);
-                    }
-                }
-            });
-        }
-
         // Render the Login screen
         function renderLoginScreen() {
             gigya.accounts.showScreenSet({
@@ -383,15 +354,6 @@
                     if (!rewardsId) {
                         showToast("Rewards ID is blank. Continuing…");
                     }
-
-                    // Block submit until we've confirmed the site's consent
-                    // statements were successfully retrieved.
-                    if (!registrationConsentStatements) {
-                        showToast("Still verifying consent status — please submit again in a moment.");
-                        refreshRegistrationConsentStatements();
-                        return false;
-                    }
-
                     return true;
                 },
                 onError: function (event) {
