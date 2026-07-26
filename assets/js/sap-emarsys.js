@@ -1,34 +1,25 @@
 
 async function getJwtToken(uid) {
-  const url = "https://accounts.us1.gigya.com/accounts.getJWT";
-
-  if (!uid) {
-    throw new Error("getJwtToken: uid is required");
-  }
-
-const formData = new URLSearchParams({
-  apiKey: "4_eqwSIEzYKaq7MI871n2USw",
-  uid: uid,
-  secret: "7vDv2Hy2Etrbfs9ctc1dTpTl9AXdtKxXlaHESF7SZJA=", // raw secret
-  expiration: "3600"
-});
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: formData.toString()
+  return new Promise((resolve, reject) => {
+    const formData = new URLSearchParams({
+      apiKey: "4_eqwSIEzYKaq7MI871n2USw",
+      uid: uid,
+      secret: "7vDv2Hy2Etrbfs9ctc1dTpTl9AXdtKxXlaHESF7SZJA=", // raw secret
+      expiration: "3600"
+    });
+    gigya.accounts.getJWT({
+      expiration: 3600,
+      boyd: formData.toString(),
+      callback: function (res) {
+        if (res.errorCode === 0 && res.id_token) {
+          console.log("JWT Token Retrieved:", res.id_token);
+          resolve(res.id_token);
+        } else {
+          reject(new Error("JWT token not returned: " + JSON.stringify(res)));
+        }
+      }
+    });
   });
-
-  const data = await response.json();
-
-  if (!data.id_token) {
-    throw new Error("JWT token not returned: " + JSON.stringify(data));
-  }
-
-  console.log("JWT Token Retrieved:", data.id_token);
-  return data.id_token;
 }
 
 //
@@ -59,10 +50,9 @@ async function callCustomerProfile(jwtToken) {
 //
 // STEP 3 — Run both steps
 //
-async function freshShopRegVerification(uid) {
+async function freshShopRegVerification() {
   try {
-    //const uid = await getLoggedInUid();    // Step 1
-    const jwt = await getJwtToken(uid);    // Step 2
+    const jwt = await getJwtToken(uid);       // Step 2
     await callCustomerProfile(jwt);        // Step 3
   } catch (err) {
     console.error("Error:", err);
