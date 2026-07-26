@@ -461,8 +461,15 @@
             });
         }
 
-        // Dispatch to the right screen renderer based on the URL hash
+        // Dispatch to the right screen renderer based on the URL hash.
+        // Only relevant on pages that actually host the auth screenset
+        // (pages/my-account.html). On pages without it (e.g. the home page),
+        // there's nothing to render, and skipping avoids an already-logged-in
+        // user being redirected "home" while already on the home page —
+        // which would just reload the page and re-trigger this on every load,
+        // looping forever.
         function renderAuthScreen() {
+            if (!document.getElementById('screensetContainer')) return;
             const hash = (window.location.hash || '').toLowerCase();
             if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
                 renderRegistrationScreen();
