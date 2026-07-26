@@ -1,15 +1,8 @@
 
-async function getJwtToken(uid) {
+async function getJwtToken() {
   return new Promise((resolve, reject) => {
-    const formData = new URLSearchParams({
-      apiKey: "4_eqwSIEzYKaq7MI871n2USw",
-      uid: uid,
-      secret: "7vDv2Hy2Etrbfs9ctc1dTpTl9AXdtKxXlaHESF7SZJA=", // raw secret
-      expiration: "3600"
-    });
     gigya.accounts.getJWT({
       expiration: 3600,
-      boyd: formData.toString(),
       callback: function (res) {
         if (res.errorCode === 0 && res.id_token) {
           console.log("JWT Token Retrieved:", res.id_token);
@@ -50,9 +43,9 @@ async function callCustomerProfile(jwtToken) {
 //
 // STEP 3 — Run both steps
 //
-async function freshShopRegVerification(uid) {
+async function freshShopRegVerification() {
   try {
-    const jwt = await getJwtToken(uid);       // Step 2
+    const jwt = await getJwtToken();       // Step 2
     await callCustomerProfile(jwt);        // Step 3
   } catch (err) {
     console.error("Error:", err);
