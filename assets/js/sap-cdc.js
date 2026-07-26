@@ -350,7 +350,12 @@
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-login-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
-                            window.location.href = CDC_HOME_URL;
+                            // Wait for the global onLogin handler's freshShopRegVerification
+                            // call to finish before navigating away — otherwise the redirect
+                            // races the fetch and the page unloads before it can log its result.
+                            Promise.resolve(window._freshShopRegPromise).catch(() => {}).then(() => {
+                                window.location.href = CDC_HOME_URL;
+                            });
                         }, 100);
                         return;
                     }
