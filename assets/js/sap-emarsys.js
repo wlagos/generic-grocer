@@ -19,7 +19,7 @@ async function getJwtToken() {
 // STEP 2 — Use returned token to call the SAP API
 //
 async function callCustomerProfile(jwtToken) {
-  const url = "https://dec-dev.apim.fc.scp.sapns2.us/v1/customer-profile";
+  const url = "https://deca-dev.apim.fc.scp.sapns2.us/v1/customer-profile";
 
   const payload = {
     EDIPI: "1234567890",
