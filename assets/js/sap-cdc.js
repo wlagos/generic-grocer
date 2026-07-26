@@ -329,7 +329,7 @@
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-login-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
-                            window.location.href = "../";
+                            window.location.href = "/";
                         }, 100);
                         return;
                     }
@@ -429,7 +429,7 @@
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-update-profile-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
-                            window.location.href = "../";
+                            window.location.href = "/";
                         }, 100);
                         return;
                     }
@@ -455,7 +455,7 @@
                     callback: function (res) {
                         if (res.errorCode === 0) {
                             setTimeout(() => {
-                                window.location.href = "../";
+                                window.location.href = "/";
                             }, 100);
                         } else {
                             renderLoginScreen();
