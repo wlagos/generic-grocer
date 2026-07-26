@@ -43,11 +43,17 @@ async function callCustomerProfile(jwtToken) {
 //
 // STEP 3 — Run both steps
 //
+// Tracks the in-flight promise on window so callers elsewhere (e.g. the
+// post-login redirect in sap-cdc.js) can wait for this to actually finish
+// instead of racing a navigation against the fetch and losing the result.
 async function freshShopRegVerification() {
-  try {
-    const jwt = await getJwtToken();       // Step 2
-    await callCustomerProfile(jwt);        // Step 3
-  } catch (err) {
-    console.error("Error:", err);
-  }
+  window._freshShopRegPromise = (async () => {
+    try {
+      const jwt = await getJwtToken();       // Step 2
+      await callCustomerProfile(jwt);        // Step 3
+    } catch (err) {
+      console.error("Error:", err);
+    }
+  })();
+  return window._freshShopRegPromise;
 }
