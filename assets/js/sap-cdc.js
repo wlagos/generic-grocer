@@ -362,7 +362,7 @@
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
                         showToast("Your profile has been successfully created.");
-                        freshShopRegVerification(e.response.UID);
+                        freshShopRegVerification(e.response.UID); // Call the function to get JWT and call SAP API
                         gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
                             startScreen: 'mpaturu-gigya-login-screen',
