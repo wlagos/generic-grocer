@@ -1,3 +1,24 @@
+        // Resolve the site's home URL from wherever this script was actually
+        // loaded from, so redirects work whether the including page lives at
+        // the site root (index.html) or one level down (pages/*.html) —
+        // without hardcoding a domain or repo path.
+        var CDC_HOME_URL = (function () {
+            var scriptEl = document.currentScript;
+            if (!scriptEl) {
+                var scripts = document.getElementsByTagName('script');
+                for (var i = scripts.length - 1; i >= 0; i--) {
+                    if (/assets\/js\/sap-cdc\.js(\?.*)?$/.test(scripts[i].src)) {
+                        scriptEl = scripts[i];
+                        break;
+                    }
+                }
+            }
+            if (scriptEl && scriptEl.src) {
+                return scriptEl.src.replace(/assets\/js\/sap-cdc\.js(\?.*)?$/, '');
+            }
+            return './';
+        })();
+
         // Utility: hide caption/title if it matches certain words
         function hideCaptionIfMatches(root, words) {
             const selectors = [
@@ -329,7 +350,7 @@
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-login-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
-                            window.location.href = "/";
+                            window.location.href = CDC_HOME_URL;
                         }, 100);
                         return;
                     }
@@ -429,7 +450,7 @@
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-update-profile-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
-                            window.location.href = "/";
+                            window.location.href = CDC_HOME_URL;
                         }, 100);
                         return;
                     }
@@ -455,7 +476,7 @@
                     callback: function (res) {
                         if (res.errorCode === 0) {
                             setTimeout(() => {
-                                window.location.href = "/";
+                                window.location.href = CDC_HOME_URL;
                             }, 100);
                         } else {
                             renderLoginScreen();
