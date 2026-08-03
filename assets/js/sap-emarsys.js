@@ -22,8 +22,8 @@ async function callCustomerProfile(jwtToken) {
   const url = "https://deca-dev.apim.fc.scp.sapns2.us/v1/customer-profile";
 
   const payload = {
-    EDIPI: "1234567890",
-    Mobile: "5551234567"
+    edipi: "2111704251",
+    mobile: "5551234567"
   };
 
   const response = await fetch(url, {
