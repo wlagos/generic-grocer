@@ -1,3 +1,8 @@
+//https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi
+//  "edipi": "2111704251"
+//https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/registration
+//  "edipi": "1234567890",
+//  "mobile": "5551234567"
 
 async function getJwtToken() {
   return new Promise((resolve, reject) => {
