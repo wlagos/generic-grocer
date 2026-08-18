@@ -89,6 +89,28 @@
             // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
 
         }
+        // Validate a Military ID (EDIPI) against the SAP customer-profile API.
+        // Mirrors callCustomerProfile() in sap-emarsys.js, but posts militaryId
+        // as the "edipi" payload value instead of authorizing with a jwtToken.
+        async function validateEdipi(militaryId) {
+            const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi";
+            const payload = {
+                edipi: militaryId
+            };
+
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json().catch(() => null);
+            console.log("EDIPI validation response:", response.status, result);
+            return { ok: response.ok, status: response.status, result: result };
+        }
+
         function updateRewardsEmailSubscription(optsOrBool, cb) {
             let subsPayload = {};
 
@@ -384,7 +406,40 @@
                     if (!rewardsId) {
                         showToast("Rewards ID is blank. Continuing…");
                     }
-                    return true;
+
+                    var militaryId = e.formData['data.militaryId'];
+
+                    // CDC's onBeforeSubmit is synchronous and can't await the
+                    // EDIPI validation call. So: cancel this submit attempt,
+                    // run the async validation, and on success re-trigger the
+                    // submit button — skipping validation the second time
+                    // around via the _edipiValidated flag.
+                    if (window._edipiValidated) {
+                        window._edipiValidated = false;
+                        return true;
+                    }
+                    if (!militaryId) {
+                        return true;
+                    }
+
+                    validateEdipi(militaryId).then(function (res) {
+                        if (res.ok) {
+                            window._edipiValidated = true;
+                            var submitBtn = document.querySelector(
+                                '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+                            );
+                            if (submitBtn) {
+                                submitBtn.click();
+                            }
+                        } else {
+                            showToast("Military ID could not be validated. Please check and try again.");
+                        }
+                    }).catch(function (err) {
+                        console.error("EDIPI validation error:", err);
+                        showToast("Could not validate Military ID right now. Please try again.");
+                    });
+
+                    return false;
                 },
                 onError: function (event) {
                     console.log("phone error");
