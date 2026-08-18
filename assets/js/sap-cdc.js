@@ -137,7 +137,8 @@
 
             const result = await response.json().catch(() => null);
             console.log("EDIPI validation response:", response.status, result);
-            return { ok: response.ok, status: response.status, result: result };
+            const isValid = response.ok && !!result && result.result === "continue_registration";
+            return { ok: isValid, status: response.status, result: result };
         }
 
         function updateRewardsEmailSubscription(optsOrBool, cb) {
