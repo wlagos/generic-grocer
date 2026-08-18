@@ -103,7 +103,7 @@
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Authorization": `Basic ${basicAuth}`
                 },
-                body: ""
+                body: "grant_type=client_credentials"
             });
 
             const result = await response.json().catch(() => null);
