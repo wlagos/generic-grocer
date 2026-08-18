@@ -89,19 +89,48 @@
             // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
 
         }
+        // Fetch an OAuth access token for the validate-edipi API via the
+        // client_credentials token endpoint (Basic auth with client id/secret).
+        async function getEdipiAccessToken() {
+            const tokenUrl = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi/token";
+            const clientId = "6sr10dNf0N11HBapfXAUDRAcAtzA6P12";
+            const clientSecret = "wHRsalGMvQJISkeI";
+            const basicAuth = btoa(`${clientId}:${clientSecret}`);
+
+            const response = await fetch(tokenUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": `Basic ${basicAuth}`
+                },
+                body: ""
+            });
+
+            const result = await response.json().catch(() => null);
+            if (!response.ok || !result || !result.access_token) {
+                throw new Error("EDIPI token request failed: " + response.status);
+            }
+            return result.access_token;
+        }
+
         // Validate a Military ID (EDIPI) against the SAP customer-profile API.
         // Mirrors callCustomerProfile() in sap-emarsys.js, but posts militaryId
         // as the "edipi" payload value instead of authorizing with a jwtToken.
+        // First fetches an access token from the validate-edipi/token endpoint,
+        // then uses it as the Bearer token for the validate-edipi call.
         async function validateEdipi(militaryId) {
             const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi";
             const payload = {
                 edipi: militaryId
             };
 
+            const accessToken = await getEdipiAccessToken();
+
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken}`
                 },
                 body: JSON.stringify(payload)
             });
@@ -422,7 +451,7 @@
                         return true;
                     }
 
-                    validateEdipi(militaryId).then(function (res) {
+                    validateEdipi(militaryId).then(function (res) { 
                         if (res.ok) {
                             window._edipiValidated = true;
                             var submitBtn = document.querySelector(
