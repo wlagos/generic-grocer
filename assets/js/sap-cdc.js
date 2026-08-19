@@ -484,6 +484,20 @@
                         });
                         return;
                     }
+                    if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 0) {
+                        // Full registration success (no pending email verification) —
+                        // the account is already logged in, so close the screen the
+                        // same way the login screen does: kick off freshShopRegVerification
+                        // and then leave the auth page.
+                        setTimeout(() => {
+                            Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification() : null)
+                                .catch(() => {})
+                                .then(() => {
+                                    window.location.href = CDC_HOME_URL;
+                                });
+                        }, 100);
+                        return;
+                    }
                     normalizeFailedSubmitFieldError(e);
                 },
                 onFieldChanged: handleScreenSetFieldChanged,
