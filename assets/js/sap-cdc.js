@@ -590,9 +590,7 @@
                 gigya.accounts.getAccountInfo({
                     callback: function (res) {
                         if (res.errorCode === 0) {
-                            setTimeout(() => {
-                                window.location.href = CDC_HOME_URL;
-                            }, 100);
+                            renderProfileUpdateScreen();
                         } else {
                             renderLoginScreen();
                         }
