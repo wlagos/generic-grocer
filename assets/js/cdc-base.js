@@ -14,6 +14,12 @@
 
     // Called before a form is submitted. This event gives you an opportunity to perform certain actions before the form is submitted, or cancel the submission by returning false.
     onBeforeSubmit: function(event) {
+        if (event.screen === "mpaturu-gigya-register-screen") {
+            var rewardsId = event.formData['data.rewardsid'];
+            if (!rewardsId) {
+                showToast("Rewards ID is blank. Continuing…");
+            }
+        }
     },
 
     // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
