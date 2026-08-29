@@ -432,11 +432,6 @@
                     console.log("Authentication successful user details:");
                 },
                 onBeforeSubmit: function (e) {
-                    var rewardsId = e.formData['data.rewardsid'];
-                    if (!rewardsId) {
-                        showToast("Rewards ID is blank. Continuing…");
-                    }
-
                     var militaryId = e.formData['data.militaryId'];
 
                     // CDC's onBeforeSubmit is synchronous and can't await the
@@ -794,4 +789,4 @@
                 });
 
             }
-        });
+        }); 
