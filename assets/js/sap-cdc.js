@@ -432,6 +432,7 @@
                     console.log("Authentication successful user details:");
                 },
                 onBeforeSubmit: function (e) {
+                        return true;
                     var militaryId = e.formData['data.militaryId'];
 
                     // CDC's onBeforeSubmit is synchronous and can't await the
