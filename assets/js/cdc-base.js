@@ -55,7 +55,7 @@
 
     // Called before a form is submitted. This event gives you an opportunity to perform certain actions before the form is submitted, or cancel the submission by returning false.
     onBeforeSubmit: function(event) {
-        console.log("onBeforeSubmit begin");
+        console.log("onBeforeSubmit begin "+event.screen);
         if (event.screen === "mpaturu-gigya-register-screen") {
             var rewardsId = event.formData['data.rewardsid'];
             if (!rewardsId) {
