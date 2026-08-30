@@ -51,7 +51,7 @@ var myScreenSetHandlers = {
 
 // 3. Pass the variable to your Gigya screen-set load command
 gigya.accounts.showScreenSet({
-    screenSet: 'Your-Screen-Set-ID',
+    screenSet: 'mpaturu-RegistrationLogin',
     // ... other parameters ...
     onError: myScreenSetHandlers.onError,
     onBeforeSubmit: myScreenSetHandlers.onBeforeSubmit,
