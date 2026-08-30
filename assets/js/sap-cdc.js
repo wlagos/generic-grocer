@@ -432,6 +432,7 @@
                     console.log("Authentication successful user details:");
                 },
                 onBeforeSubmit: function (e) {
+                        console.log("onbeforesbumit event in html");
                         return true;
                     var militaryId = e.formData['data.militaryId'];
 
