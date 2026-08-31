@@ -282,24 +282,10 @@
       });
     }
 
-    // --- Keep the lastName clamp (limits profile.lastName to one character) ---
-    var container = document.getElementById('screensetContainer');
-    if (!container) return;
-
-    function clampToOneChar(val) { return (val || '').slice(0, 1); }
-    function onFocusOut(evt) {
-      var target = evt.target;
-      if (target && target.name === 'profile.lastName') {
-        target.value = clampToOneChar(target.value);
-      }
-    }
-    container.addEventListener('focusout', onFocusOut, true);
-    container.addEventListener('input', function (evt) {
-      var target = evt.target;
-      if (target && target.name === 'profile.lastName') {
-        target.value = clampToOneChar(target.value);
-      }
-    }, true);
+    // Note: lastName is clamped to 1 char in onFieldChanged below (via Gigya's
+    // onFieldChanged callback), not with DOM 'input'/'focusout' listeners here —
+    // those never fire when a field's value is set programmatically, which is
+    // how the iOS app's webview bridge sets it, so the clamp silently never ran there.
   },
 
   // Use the helpers in other handlers
@@ -375,6 +361,14 @@
       if (isUSA && phoneInput && phoneInput.value.length > 10) {
         phoneInput.value = phoneInput.value.slice(0, 10);
         console.log("onFieldChanged phone truncated to:", phoneInput.value);
+      }
+    }
+
+    if (event.field === 'profile.lastName') {
+      var root = document.getElementById(event.containerID) || document.body;
+      var lastNameInput = root.querySelector('[name="profile.lastName"]');
+      if (lastNameInput && lastNameInput.value.length > 1) {
+        lastNameInput.value = lastNameInput.value.slice(0, 1);
       }
     }
 
