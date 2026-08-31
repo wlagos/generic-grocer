@@ -149,6 +149,16 @@
                     document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
                 }
             }
+            if (e.field === "profile.lastName") {
+                // Clamp via the onFieldChanged callback (not raw DOM 'input'/'focusout'
+                // listeners) because the iOS app's WKWebView/native-keyboard bridge sets
+                // field values programmatically, which never fires DOM input events.
+                var root = document.getElementById(e.containerID) || document.body;
+                var lastNameInput = root.querySelector('[name="profile.lastName"]');
+                if (lastNameInput && lastNameInput.value.length > 1) {
+                    lastNameInput.value = lastNameInput.value.slice(0, 1);
+                }
+            }
             const ALT_ID = 'Alternate ID';
 
             // Your field binding name:
@@ -310,28 +320,10 @@
                             document.getElementById('loginID').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
                         });
                     }
-                    // Optional: live filtering to keep digits only
-                    // --- Keep your existing lastName clamp, observers, etc. below ---
-                    //const root = document.getElementById(event.containerID) || document.body;
-                    const container = document.getElementById('screensetContainer');
-                    if (!container) return;
-
-                    function clampToOneChar(val) { return (val || '').slice(0, 1); }
-                    function onFocusOut(evt) {
-                        var target = evt.target;
-                        if (target && target.name === 'profile.lastName') {
-                            target.value = clampToOneChar(target.value);
-                        }
-                    }
-                    container.addEventListener('focusout', onFocusOut, true);
-                    container.addEventListener('input', function (evt) {
-                        var target = evt.target;
-                        if (target && target.name === 'profile.lastName') {
-                            target.value = clampToOneChar(target.value);
-                        }
-                    }, true);
-                    // const mo = new MutationObserver(() => { /* your caption hide logic */ });
-                    //  mo.observe(root, { childList: true, subtree: true });
+                    // Note: lastName is clamped to 1 char in handleScreenSetFieldChanged
+                    // (via Gigya's onFieldChanged callback), not with DOM 'input'/'focusout'
+                    // listeners here — those never fire when a field's value is set
+                    // programmatically, which is how the iOS app's webview bridge does it.
                 }
 
         // Render the Login screen
