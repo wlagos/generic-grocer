@@ -63,6 +63,16 @@
             setTimeout(() => { toast.remove(); }, 2000);
           },
 
+          // Replace "username" with a custom label in any inline error below a
+          // given field. Works for CDC's field-level validation errors that
+          // render in the DOM.
+          normalizeFieldErrorLabel: function (containerID, fieldName, labelText) {
+            var errEl = document.getElementById("gigya-error-msg-gigya-register-form-username");
+            if (errEl) {
+              errEl.textContent = errEl.textContent.replace(/username/gi, labelText);
+            }
+          },
+
           /* EDIPI validation temporarily disabled — commented out, not deleted.
           // Fetch an OAuth access token for the validate-edipi API via the
           // client_credentials token endpoint (Basic auth with client id/secret).
@@ -171,7 +181,34 @@
   },
 
   // Called when a field is changed in a managed form.
-  onFieldChanged: function(event) {
+  // This Global Config applies to every screen in the screen-set, so only
+  // run the Registration-screen field handling (phone digit limiting,
+  // normalizing the inline "username" validation label) here.
+  onFieldChanged: function (event) {
+    if (event.screen !== 'mpaturu-gigya-register-screen') {
+      return;
+    }
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+
+    if (event.field === 'profile.phones.number') {
+      var ccInput = document.getElementById('gigya-countryCodeLabel-167363755631131230');
+      var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230');
+      var isUSA = ccInput && ccInput.value === '+1';
+      if (isUSA && phoneInput && phoneInput.value.length > 10) {
+        phoneInput.value = phoneInput.value.slice(0, 10);
+      }
+    }
+
+    // Your field binding name:
+    // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
+    // Handle both to be safe:
+    if (event.field === 'username' || event.field === 'loginID') {
+      var containerID = event.containerID;
+      // Slight delay to let CDC render the error into the DOM first
+      setTimeout(function () {
+        h.normalizeFieldErrorLabel(containerID, 'username', 'Alternate ID');
+      }, 50);
+    }
   },
 
   // Called when a user clicks the "X" (close) button or the screen is hidden following the end of the flow.
