@@ -67,9 +67,13 @@
           // given field. Works for CDC's field-level validation errors that
           // render in the DOM.
           normalizeFieldErrorLabel: function (containerID, fieldName, labelText) {
+            console.log("normalizeFieldErrorLabel called with:", { containerID: containerID, fieldName: fieldName, labelText: labelText });
             var errEl = document.getElementById("gigya-error-msg-gigya-register-form-username");
+            console.log("normalizeFieldErrorLabel errEl found:", !!errEl, errEl ? errEl.textContent : null);
             if (errEl) {
+              var before = errEl.textContent;
               errEl.textContent = errEl.textContent.replace(/username/gi, labelText);
+              console.log("normalizeFieldErrorLabel replaced text:", { before: before, after: errEl.textContent });
             }
           },
 
@@ -185,17 +189,22 @@
   // run the Registration-screen field handling (phone digit limiting,
   // normalizing the inline "username" validation label) here.
   onFieldChanged: function (event) {
+    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field, containerID: event.containerID });
     if (event.screen !== 'mpaturu-gigya-register-screen') {
+      console.log("onFieldChanged skipped, wrong screen:", event.screen);
       return;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
+    console.log("onFieldChanged helpers available:", !!h);
 
     if (event.field === 'profile.phones.number') {
       var ccInput = document.getElementById('gigya-countryCodeLabel-167363755631131230');
       var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230');
       var isUSA = ccInput && ccInput.value === '+1';
+      console.log("onFieldChanged phone check:", { isUSA: isUSA, phoneValue: phoneInput && phoneInput.value });
       if (isUSA && phoneInput && phoneInput.value.length > 10) {
         phoneInput.value = phoneInput.value.slice(0, 10);
+        console.log("onFieldChanged phone truncated to:", phoneInput.value);
       }
     }
 
@@ -204,6 +213,7 @@
     // Handle both to be safe:
     if (event.field === 'username' || event.field === 'loginID') {
       var containerID = event.containerID;
+      console.log("onFieldChanged scheduling normalizeFieldErrorLabel for containerID:", containerID);
       // Slight delay to let CDC render the error into the DOM first
       setTimeout(function () {
         h.normalizeFieldErrorLabel(containerID, 'username', 'Alternate ID');
