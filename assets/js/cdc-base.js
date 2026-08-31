@@ -120,17 +120,16 @@
   onBeforeSubmit: function (event) {
     // This Global Config applies to every screen in the screen-set, so only
     // run the Registration-screen EDIPI/rewards-ID logic on that screen.
-    if (event.currentScreen !== 'mpaturu-gigya-register-screen') {
+   
+    if (event.screen !== 'mpaturu-gigya-register-screen') {
       return true;
     }
-
     var h = document.__cdcNs && document.__cdcNs.helpers;
-
     var rewardsId = event.formData['data.rewardsid'];
     if (!rewardsId) {
+    console.log("Rewards ID is blank");
       h.showToast("Rewards ID is blank. Continuing…");
     }
-
     var militaryId = event.formData['data.militaryId'];
 
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
