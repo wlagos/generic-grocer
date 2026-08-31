@@ -136,8 +136,10 @@
                 }
             });
         }
-        // Shared field-change handler for all screensets (phone digit limiting,
-        // and normalizing the inline "username" validation label)
+        // Shared field-change handler for the Login, Lite Registration, and
+        // Profile Update screensets (phone digit limiting, and normalizing the
+        // inline "username" validation label). The Registration screen's
+        // version of this logic now lives in cdc-base.js's Global Config.
         function handleScreenSetFieldChanged(e) {
             if (e.field === "profile.phones.number") {
                 var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -377,7 +379,7 @@
                 startScreen: 'mpaturu-gigya-register-screen',
                 containerID: 'screensetContainer',
                 onLogin: function (eventObj) {
-                    console.log("Authentication successful user details:");
+                    console.log("Authentication successful - User details screen:");
                 },
                 // onBeforeSubmit for this screen (EDIPI validation, rewards-ID
                 // check) now lives in cdc-base.js's Global Config, guarded by
@@ -411,7 +413,9 @@
                     }
                     normalizeFailedSubmitFieldError(e);
                 },
-                onFieldChanged: handleScreenSetFieldChanged,
+                // onFieldChanged for this screen (phone digit limiting, username
+                // label normalization) now lives in cdc-base.js's Global Config,
+                // guarded by event.screen === 'mpaturu-gigya-register-screen'.
                 onAfterScreenLoad: handleScreenSetAfterLoad
             });
         }
