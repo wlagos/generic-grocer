@@ -77,6 +77,49 @@
             }
           },
 
+          // Hide caption/title elements under root whose text matches any of the
+          // given words (case-insensitive). Used to hide the per-screen heading
+          // CDC renders (e.g. "Login", "Register") when a custom title is used.
+          hideCaptionIfMatches: function (root, words) {
+            var selectors = [
+              '#screensetContainer_content_caption',
+              '.gigya-header',
+              '.gigya-screen-title',
+              'h2.gigya-screen-title'
+            ];
+            var nodes = root.querySelectorAll(selectors.join(','));
+            var pattern = new RegExp(words.join('|'), 'i'); // case-insensitive
+
+            nodes.forEach(function (el) {
+              var text = (el.textContent || '').trim();
+              if (pattern.test(text)) {
+                el.style.display = 'none';
+                el.style.margin = '0';
+                el.style.padding = '0';
+              }
+            });
+          },
+
+          // Show/clear an inline validation message next to a custom field.
+          setInlineError: function (inputEl, spanEl, message, code) {
+            spanEl.textContent = message || '';
+            spanEl.style.display = message ? 'inline' : 'none';
+            inputEl.setAttribute('aria-invalid', message ? 'true' : 'false');
+            inputEl.classList.toggle('gigya-invalid', !!message);
+            inputEl.classList.toggle('gigya-valid', !message);
+            if (code) inputEl.setAttribute('data-invalid-error-code', String(code));
+            else inputEl.removeAttribute('data-invalid-error-code');
+          },
+
+          clearInlineError: function (inputEl, spanEl) {
+            spanEl.textContent = '';
+            spanEl.style.display = 'none';
+            inputEl.setAttribute('aria-invalid', 'false');
+            inputEl.classList.remove('gigya-invalid');
+            inputEl.classList.add('gigya-valid');
+            inputEl.removeAttribute('data-invalid-error-code');
+          },
+
           /* EDIPI validation temporarily disabled — commented out, not deleted.
           // Fetch an OAuth access token for the validate-edipi API via the
           // client_credentials token endpoint (Basic auth with client id/secret).
@@ -132,6 +175,133 @@
       };
     }
   },
+  // Called after a screen finishes loading. This Global Config applies to
+  // every screen in the screen-set: hide the per-screen caption/title,
+  // define the shared inline-error helpers, and wire up phone/lastName
+  // field feedback that all screens rely on.
+  onAfterScreenLoad: function (event) {
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    var root = document.getElementById(event.containerID) || document.body;
+
+    function applyCaptionHiding() {
+      if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+        h.hideCaptionIfMatches(root, ['login']);
+      }
+      if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+        h.hideCaptionIfMatches(root, ['register', 'registration']);
+      }
+      if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+        h.hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
+      }
+    }
+    applyCaptionHiding();
+
+    // Re-apply hiding if CDC re-renders parts of the DOM
+    var mo = new MutationObserver(applyCaptionHiding);
+    mo.observe(root, { childList: true, subtree: true });
+
+    // Single source of truth for inline field error messages
+    window.setInlineError = h.setInlineError;
+    window.clearInlineError = h.clearInlineError;
+
+    // --- Phone field validation on blur ---
+    var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230');
+
+    function setFieldError(fieldName, message) {
+      if (gigya?.accounts?.setFieldError) {
+        gigya.accounts.setFieldError({
+          screenSet: "Default-Registration",
+          fieldName: fieldName,
+          message: message
+        });
+      } else {
+        // Fallback inline message
+        var el = phoneInput;
+        var id = fieldName.replace(/\W+/g, '_') + '_error';
+        var msg = document.getElementById(id);
+        if (!msg) {
+          msg = document.createElement('div');
+          msg.id = id;
+          msg.style.color = '#d32f2f';
+          msg.style.fontSize = '12px';
+          msg.style.marginTop = '4px';
+          el.insertAdjacentElement('afterend', msg);
+        }
+        msg.textContent = message;
+      }
+    }
+
+    function clearFieldError(fieldName) {
+      if (gigya?.accounts?.clearFieldError) {
+        gigya.accounts.clearFieldError({
+          screenSet: "Default-Registration",
+          fieldName: fieldName
+        });
+      } else if (gigya?.accounts?.setFieldError) {
+        gigya.accounts.setFieldError({
+          screenSet: "Default-Registration",
+          fieldName: fieldName,
+          message: ""
+        });
+      } else {
+        var id = fieldName.replace(/\W+/g, '_') + '_error';
+        var msg = document.getElementById(id);
+        if (msg) msg.remove();
+      }
+    }
+
+    // Validate on blur
+    if (phoneInput !== null) {
+      phoneInput.addEventListener('blur', function () {
+        var ccInput = document.getElementById('gigya-countryCodeLabel-167363755631131230');
+        var isUSA = (ccInput && ccInput.value === '+1');
+        var raw = (phoneInput.value || '').trim();
+
+        // Normalize to digits only
+        var digits = raw.replace(/\D+/g, '');
+        phoneInput.value = digits;
+
+        if (isUSA) {
+          // US must be exactly 10 digits
+          if (!/^\d{10}$/.test(digits)) {
+            setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
+            return;
+          }
+        } else {
+          // Non-US: digits-only (any length)
+          if (!/^\d+$/.test(digits)) {
+            setFieldError('profile.phones.number', 'Phone number must contain digits only.');
+            return;
+          }
+        }
+
+        // Clear error if valid
+        clearFieldError('profile.phones.number');
+        var loginIdEl = document.getElementById('loginID');
+        if (loginIdEl) loginIdEl.value = phoneInput.value;
+      });
+    }
+
+    // --- Keep the lastName clamp (limits profile.lastName to one character) ---
+    var container = document.getElementById('screensetContainer');
+    if (!container) return;
+
+    function clampToOneChar(val) { return (val || '').slice(0, 1); }
+    function onFocusOut(evt) {
+      var target = evt.target;
+      if (target && target.name === 'profile.lastName') {
+        target.value = clampToOneChar(target.value);
+      }
+    }
+    container.addEventListener('focusout', onFocusOut, true);
+    container.addEventListener('input', function (evt) {
+      var target = evt.target;
+      if (target && target.name === 'profile.lastName') {
+        target.value = clampToOneChar(target.value);
+      }
+    }, true);
+  },
+
   // Use the helpers in other handlers
   onBeforeSubmit: function (event) {
     // This Global Config applies to every screen in the screen-set, so only
