@@ -393,9 +393,6 @@
                 onLogin: function (eventObj) {
                     console.log("Authentication successful user details:");
                 },
-                onBeforeSubmit: function (e) {
-                    return true;
-                },
                 onError: function (event) {
                     console.log("phone error");
                 },
@@ -431,7 +428,6 @@
                 onLogin: function (eventObj) {
                     console.log("Authentication successful user details:");
                 },
-            
                 onError: function (event) {
                     console.log("phone error");
                 },
