@@ -63,6 +63,7 @@
             setTimeout(() => { toast.remove(); }, 2000);
           },
 
+          /* EDIPI validation temporarily disabled — commented out, not deleted.
           // Fetch an OAuth access token for the validate-edipi API via the
           // client_credentials token endpoint (Basic auth with client id/secret).
           getEdipiAccessToken: async function () {
@@ -112,6 +113,7 @@
             const isValid = response.ok && !!result && result.result === "continue_registration";
             return { ok: isValid, status: response.status, result: result };
           }
+          */
         }
       };
     }
@@ -136,14 +138,15 @@
     // call. So: cancel this submit attempt, run the async validation, and
     // on success re-trigger the submit button — skipping validation the
     // second time around via the _edipiValidated flag.
-    if (window._edipiValidated) {
-      window._edipiValidated = false;
-      return true;
-    }
-    if (!militaryId) {
-      return true;
-    }
+   // if (window._edipiValidated) {
+   //   window._edipiValidated = false;
+   //   return true;
+   // }
+   // if (!militaryId) {
+    //  return true;
+   // }
 
+    /* EDIPI validation call temporarily disabled — commented out, not deleted.
     h.validateEdipi(militaryId).then(function (res) {
       if (res.ok) {
         window._edipiValidated = true;
@@ -162,6 +165,9 @@
     });
 
     return false;
+    */
+
+    return true;
   },
 
   // Called when a field is changed in a managed form.
