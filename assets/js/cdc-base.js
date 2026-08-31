@@ -127,12 +127,12 @@
       return true;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
-    var rewardsId = event.formData['data.rewardsid'];
+    var rewardsId = event.formData['data.rewardsId'];
     if (!rewardsId) {
     console.log("Rewards ID is blank");
       h.showToast("Rewards ID is blank. Continuing…");
     }
-    var militaryId = event.formData['data.militaryId'];
+  //  var militaryId = event.formData['data.militaryId'];
 
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
     // call. So: cancel this submit attempt, run the async validation, and
