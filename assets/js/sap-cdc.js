@@ -431,9 +431,7 @@
                 onLogin: function (eventObj) {
                     console.log("Authentication successful user details:");
                 },
-                onBeforeSubmit: function (e) {
-                  
-                },
+            
                 onError: function (event) {
                     console.log("phone error");
                 },
