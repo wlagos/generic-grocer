@@ -365,8 +365,9 @@
     }
 
     if (event.field === 'profile.lastName') {
+      console.log("event.containerID" + event.containerID);
       var root = document.getElementById(event.containerID) || document.body;
-      var lastNameInput = root.querySelector('[name="profile.lastName"]');
+      var lastNameInput = document.getElementById('gigya-textbox-lastName') ;
       if (lastNameInput && lastNameInput.value.length > 1) {
         lastNameInput.value = lastNameInput.value.slice(0, 1);
       }
