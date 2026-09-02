@@ -807,6 +807,14 @@
 			fs.parentNode.insertBefore(js, fs);
 		})('scarab-js-api');
 
+		(function (id) {
+			if (document.getElementById(id)) return;
+			var js = document.createElement('script'); js.id = id;
+			js.src = 'https://cdn.emarsys.net/webextend/js/webextend.js';
+			var fs = document.getElementsByTagName('script')[0];
+			fs.parentNode.insertBefore(js, fs);
+		})('webextend-js-api');
+
 		(function () {
 			document.addEventListener('DOMContentLoaded', function () {
 				if (!window.jQuery) return;
