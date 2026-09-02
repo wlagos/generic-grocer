@@ -621,69 +621,47 @@
                         const profile = res.profile || {};
 
                         // -------------------------------------------------------------
-                        // Emarsys Web Extend — identify the logged-in CDC user
+                        // Emarsys Scarab (scarab-v2.js) — identify the logged-in CDC user
                         // -------------------------------------------------------------
-                        // webextend.js is injected asynchronously in index.html, so
-                        // `emarsys` may not exist yet by the time this callback runs.
+                        // scarab-v2.js is injected asynchronously in index.html, so
+                        // `ScarabQueue` may not exist yet by the time this callback runs.
                         // Wait for it instead of assuming it's already loaded.
                         (function runEmarsysTracking(retries) {
                             retries = retries || 0;
-                            if (!(window.emarsys && window.emarsys.webExtend)) {
+                            if (!window.ScarabQueue) {
                                 if (retries >= 50) {
-                                    console.warn("[CDC] emarsys.webExtend not available after waiting; skipping Web Extend tracking.");
+                                    console.warn("[CDC] ScarabQueue not available after waiting; skipping Scarab tracking.");
                                     return;
                                 }
                                 setTimeout(function () { runEmarsysTracking(retries + 1); }, 200);
                                 return;
                             }
 
-                            emarsys.webExtend.identify({
-                                email: profile.email,
-                                customerId: cdcUID,
-                                firstName: profile.firstName,
-                                lastName: profile.lastName
-                            });
+                            ScarabQueue.push(['setEmail', profile.email]);
+                            ScarabQueue.push(['setCustomerId', cdcUID]);
 
                             // -------------------------------------------------------------
-                            // Hard-coded Web Extend events
+                            // Hard-coded Scarab events
                             // -------------------------------------------------------------
-                            emarsys.webExtend.track("pageView", {
-                                url: window.location.href,
-                                category: "logged-in-page"
-                            });
+                            ScarabQueue.push(['category', ["logged-in-page"]]);
 
-                            emarsys.webExtend.track("productView", {
-                                product: {
-                                    id: "SKU-001",
-                                    name: "Running Shoes",
-                                    price: 79.99,
-                                    category: "Footwear"
-                                }
-                            });
+                            ScarabQueue.push(['view', "SKU-001"]);
 
-                            emarsys.webExtend.track("search", {
-                                searchTerm: "running shoes"
-                            });
+                            ScarabQueue.push(['searchTerm', "running shoes"]);
 
-                            emarsys.webExtend.track("cart", {
-                                product: {
-                                    id: "SKU-001",
-                                    name: "Running Shoes",
-                                    price: 79.99
-                                },
-                                quantity: 1
-                            });
+                            ScarabQueue.push(['cart', [
+                                { item: "SKU-001", price: 79.99, quantity: 1 }
+                            ]]);
 
-                            emarsys.webExtend.track("purchase", {
+                            ScarabQueue.push(['purchase', {
                                 orderId: "ORDER-12345",
-                                total: 159.98,
-                                products: [
-                                    { id: "SKU-001", quantity: 2, price: 79.99 }
+                                items: [
+                                    { item: "SKU-001", price: 79.99, quantity: 2 }
                                 ]
-                            });
+                            }]);
 
                             // GO command — must be last
-                            emarsys.webExtend.go();
+                            ScarabQueue.push(['go']);
                         })();
 
                         const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
