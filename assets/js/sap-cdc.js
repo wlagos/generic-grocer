@@ -640,7 +640,7 @@
                             // -------------------------------------------------------------
                             // Hard-coded Scarab events
                             // -------------------------------------------------------------
-                            ScarabQueue.push(['category', ["logged-in-page"]]);
+                            ScarabQueue.push(['category', "account"]);
 
                             ScarabQueue.push(['view', "SKU-001"]);
 
