@@ -615,9 +615,6 @@
                     if (res.errorCode === 0) {
                         // Logged in
 
-                        const cdcUID = res.UID;
-                        // or response.data.customerId or any external_id you choose
-
                         const profile = res.profile || {};
 
                         // -------------------------------------------------------------
@@ -638,7 +635,7 @@
                             }
 
                             ScarabQueue.push(['setEmail', profile.email]);
-                            ScarabQueue.push(['setCustomerId', cdcUID]);
+                            ScarabQueue.push(['setCustomerId', (res.data || {})['ARTS-CUST-KEY']]);
 
                             // -------------------------------------------------------------
                             // Hard-coded Scarab events
