@@ -798,7 +798,7 @@
 
 	<script>
 
-		var ScarabQueue = ScarabQueue || [];
+	/*	var ScarabQueue = ScarabQueue || [];
 		(function (id) {
 			if (document.getElementById(id)) return;
 			var js = document.createElement('script'); js.id = id;
@@ -806,15 +806,12 @@
 			var fs = document.getElementsByTagName('script')[0];
 			fs.parentNode.insertBefore(js, fs);
 		})('scarab-js-api');
+		**/
+	</script>
 
-		(function (id) {
-			if (document.getElementById(id)) return;
-			var js = document.createElement('script'); js.id = id;
-			js.src = 'https://cdn.emarsys.net/webextend/js/webextend.js';
-			var fs = document.getElementsByTagName('script')[0];
-			fs.parentNode.insertBefore(js, fs);
-		})('webextend-js-api');
+	<script src="https://cdn.emarsys.net/webextend/js/webextend.js"></script>
 
+	<script>
 		(function () {
 			document.addEventListener('DOMContentLoaded', function () {
 				if (!window.jQuery) return;
