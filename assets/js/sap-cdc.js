@@ -618,10 +618,59 @@
                         const cdcUID = res.UID;
                         // or response.data.customerId or any external_id you choose
 
-                        ScarabQueue.push(['setCustomerId', cdcUID]);
-                        ScarabQueue.push(['go']);  // send immediately
-
                         const profile = res.profile || {};
+
+                        // -------------------------------------------------------------
+                        // Emarsys Web Extend — identify the logged-in CDC user
+                        // -------------------------------------------------------------
+                        emarsys.webExtend.identify({
+                            email: profile.email,
+                            customerId: cdcUID,
+                            firstName: profile.firstName,
+                            lastName: profile.lastName
+                        });
+
+                        // -------------------------------------------------------------
+                        // Hard-coded Web Extend events
+                        // -------------------------------------------------------------
+                        emarsys.webExtend.track("pageView", {
+                            url: window.location.href,
+                            category: "logged-in-page"
+                        });
+
+                        emarsys.webExtend.track("productView", {
+                            product: {
+                                id: "SKU-001",
+                                name: "Running Shoes",
+                                price: 79.99,
+                                category: "Footwear"
+                            }
+                        });
+
+                        emarsys.webExtend.track("search", {
+                            searchTerm: "running shoes"
+                        });
+
+                        emarsys.webExtend.track("cart", {
+                            product: {
+                                id: "SKU-001",
+                                name: "Running Shoes",
+                                price: 79.99
+                            },
+                            quantity: 1
+                        });
+
+                        emarsys.webExtend.track("purchase", {
+                            orderId: "ORDER-12345",
+                            total: 159.98,
+                            products: [
+                                { id: "SKU-001", quantity: 2, price: 79.99 }
+                            ]
+                        });
+
+                        // GO command — must be last
+                        emarsys.webExtend.go();
+
                         const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
                         const name =
                             fullName ||
