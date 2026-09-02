@@ -623,53 +623,68 @@
                         // -------------------------------------------------------------
                         // Emarsys Web Extend — identify the logged-in CDC user
                         // -------------------------------------------------------------
-                        emarsys.webExtend.identify({
-                            email: profile.email,
-                            customerId: cdcUID,
-                            firstName: profile.firstName,
-                            lastName: profile.lastName
-                        });
-
-                        // -------------------------------------------------------------
-                        // Hard-coded Web Extend events
-                        // -------------------------------------------------------------
-                        emarsys.webExtend.track("pageView", {
-                            url: window.location.href,
-                            category: "logged-in-page"
-                        });
-
-                        emarsys.webExtend.track("productView", {
-                            product: {
-                                id: "SKU-001",
-                                name: "Running Shoes",
-                                price: 79.99,
-                                category: "Footwear"
+                        // webextend.js is injected asynchronously in index.html, so
+                        // `emarsys` may not exist yet by the time this callback runs.
+                        // Wait for it instead of assuming it's already loaded.
+                        (function runEmarsysTracking(retries) {
+                            retries = retries || 0;
+                            if (!(window.emarsys && window.emarsys.webExtend)) {
+                                if (retries >= 50) {
+                                    console.warn("[CDC] emarsys.webExtend not available after waiting; skipping Web Extend tracking.");
+                                    return;
+                                }
+                                setTimeout(function () { runEmarsysTracking(retries + 1); }, 200);
+                                return;
                             }
-                        });
 
-                        emarsys.webExtend.track("search", {
-                            searchTerm: "running shoes"
-                        });
+                            emarsys.webExtend.identify({
+                                email: profile.email,
+                                customerId: cdcUID,
+                                firstName: profile.firstName,
+                                lastName: profile.lastName
+                            });
 
-                        emarsys.webExtend.track("cart", {
-                            product: {
-                                id: "SKU-001",
-                                name: "Running Shoes",
-                                price: 79.99
-                            },
-                            quantity: 1
-                        });
+                            // -------------------------------------------------------------
+                            // Hard-coded Web Extend events
+                            // -------------------------------------------------------------
+                            emarsys.webExtend.track("pageView", {
+                                url: window.location.href,
+                                category: "logged-in-page"
+                            });
 
-                        emarsys.webExtend.track("purchase", {
-                            orderId: "ORDER-12345",
-                            total: 159.98,
-                            products: [
-                                { id: "SKU-001", quantity: 2, price: 79.99 }
-                            ]
-                        });
+                            emarsys.webExtend.track("productView", {
+                                product: {
+                                    id: "SKU-001",
+                                    name: "Running Shoes",
+                                    price: 79.99,
+                                    category: "Footwear"
+                                }
+                            });
 
-                        // GO command — must be last
-                        emarsys.webExtend.go();
+                            emarsys.webExtend.track("search", {
+                                searchTerm: "running shoes"
+                            });
+
+                            emarsys.webExtend.track("cart", {
+                                product: {
+                                    id: "SKU-001",
+                                    name: "Running Shoes",
+                                    price: 79.99
+                                },
+                                quantity: 1
+                            });
+
+                            emarsys.webExtend.track("purchase", {
+                                orderId: "ORDER-12345",
+                                total: 159.98,
+                                products: [
+                                    { id: "SKU-001", quantity: 2, price: 79.99 }
+                                ]
+                            });
+
+                            // GO command — must be last
+                            emarsys.webExtend.go();
+                        })();
 
                         const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
                         const name =
