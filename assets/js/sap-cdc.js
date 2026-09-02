@@ -635,7 +635,7 @@
                             }
 
                             ScarabQueue.push(['setEmail', profile.email]);
-                            ScarabQueue.push(['setCustomerId', (res.data || {})['ARTS-CUST-KEY']]);
+                            ScarabQueue.push(['setCustomerId', (res.data || {})['ARTS_CUST_KEY']]);
 
                             // -------------------------------------------------------------
                             // Hard-coded Scarab events
