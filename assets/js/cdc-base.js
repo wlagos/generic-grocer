@@ -86,8 +86,8 @@
           // Replace "username" with a custom label in any inline error below a
           // given field. Works for CDC's field-level validation errors that
           // render in the DOM.
-          normalizeFieldErrorLabel: function (containerID, fieldName, labelText) {
-            console.log("normalizeFieldErrorLabel called with:", { containerID: containerID, fieldName: fieldName, labelText: labelText });
+          normalizeFieldErrorLabel: function (fieldName, labelText) {
+            console.log("normalizeFieldErrorLabel called with:", { fieldName: fieldName, labelText: labelText });
             var errEl = document.getElementById("gigya-error-msg-gigya-register-form-username");
             console.log("normalizeFieldErrorLabel errEl found:", !!errEl, errEl ? errEl.textContent : null);
             if (errEl) {
@@ -310,14 +310,14 @@
   onBeforeSubmit: function (event) {
     // This Global Config applies to every screen in the screen-set, so only
     // run the Registration-screen EDIPI/rewards-ID logic on that screen.
-   
+
     if (event.screen !== 'mpaturu-gigya-register-screen') {
       return true;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
     var rewardsId = event.formData['data.rewardsId'];
     if (!rewardsId) {
-    console.log("Rewards ID is blank");
+      console.log("Rewards ID is blank");
       h.showToast("Rewards ID is blank. Continuing…");
     }
     var militaryId = event.formData['data.militaryId'];
@@ -359,7 +359,7 @@
   // run the Registration-screen field handling (phone digit limiting,
   // normalizing the inline "username" validation label) here.
   onFieldChanged: function (event) {
-    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field, containerID: event.containerID });
+    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field});
     if (event.screen !== 'mpaturu-gigya-register-screen') {
       console.log("onFieldChanged skipped, wrong screen:", event.screen);
       return;
@@ -379,9 +379,8 @@
     }
 
     if (event.field === 'profile.lastName') {
-      console.log("event.containerID" + event.containerID);
-      var root = document.getElementById(event.containerID) || document.body;
-      var lastNameInput = document.getElementById('gigya-textbox-lastName') ;
+   
+      var lastNameInput = document.getElementById('gigya-textbox-lastName');
       if (lastNameInput && lastNameInput.value.length > 1) {
         lastNameInput.value = lastNameInput.value.slice(0, 1);
       }
@@ -391,11 +390,10 @@
     // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
     // Handle both to be safe:
     if (event.field === 'username' || event.field === 'loginID') {
-      var containerID = event.containerID;
-      console.log("onFieldChanged scheduling normalizeFieldErrorLabel for containerID:", containerID);
+      console.log("onFieldChanged scheduling normalizeFieldErrorLabel");
       // Slight delay to let CDC render the error into the DOM first
       setTimeout(function () {
-        h.normalizeFieldErrorLabel(containerID, 'username', 'Alternate ID');
+        h.normalizeFieldErrorLabel('username', 'Alternate ID');
       }, 50);
     }
   },
