@@ -173,6 +173,16 @@
             }
         }
 
+        // Shared onError handler for all screensets: surfaces screen-set-level
+        // errors (e.g. network/communication failures) to the user instead of
+        // silently swallowing them, and logs the full event for debugging.
+        function handleScreenSetError(event) {
+            console.error('Screen-set error:', event);
+            var message = (event && (event.errorMessage || event.errorDetails)) ||
+                'Something went wrong. Please try again.';
+            showToast(message);
+        }
+
         // Normalize the inline "username" validation error on a failed submit.
         // Shared across Login, Registration, and Lite Registration.
         function normalizeFailedSubmitFieldError(e) {
@@ -338,9 +348,7 @@
                 onBeforeSubmit: function (e) {
                     return true;
                 },
-                onError: function (event) {
-                    console.log("phone error");
-                },
+                onError: handleScreenSetError,
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-login-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
@@ -370,16 +378,7 @@
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-register-screen',
                 containerID: 'screensetContainer',
-                onLogin: function (eventObj) {
-                    console.log("Authentication successful - User details screen:");
-                },
-                // onBeforeSubmit for this screen (EDIPI validation, rewards-ID
-                // check) now lives in cdc-base.js's Global Config, guarded by
-                // event.currentScreen === 'mpaturu-gigya-register-screen'.
-                onError: function (event) {
-                    console.log("phone error");
-                },
-                onAfterSubmit: function (e) {
+                  onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
                         showToast("Your profile has been successfully created.");
                         gigya.accounts.showScreenSet({
@@ -404,11 +403,7 @@
                         return;
                     }
                     normalizeFailedSubmitFieldError(e);
-                },
-                // onFieldChanged for this screen (phone digit limiting, username
-                // label normalization) now lives in cdc-base.js's Global Config,
-                // guarded by event.screen === 'mpaturu-gigya-register-screen'.
-                onAfterScreenLoad: handleScreenSetAfterLoad
+                }
             });
         }
 
@@ -430,9 +425,7 @@
                     delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
                     return true;
                 },
-                onError: function (event) {
-                    console.log("phone error");
-                },
+                onError: handleScreenSetError,
                 onAfterSubmit: function (e) {
                     if (e && e.response && e.response.errorCode === 0) {
                         // Default behavior for the "Subscribe with email" screen:
@@ -459,9 +452,7 @@
                 screenSet: 'mpaturu-ProfileUpdate',
                 startScreen: 'mpaturu-gigya-update-profile-screen',
                 containerID: 'screensetContainer',
-                onError: function (event) {
-                    console.log("phone error");
-                },
+                onError: handleScreenSetError,
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-update-profile-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
