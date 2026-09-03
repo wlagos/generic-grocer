@@ -1,11 +1,31 @@
 
 {
-  // Called when an error occurs.
+  // Called when an error occurs. This Global Config applies to every screen
+  // in the screen-set, so only run the Registration-screen error surfacing
+  // here (other screens still get their own onError in sap-cdc.js).
   onError: function(event) {
+    if (event.screen !== 'mpaturu-gigya-register-screen') {
+      return;
+    }
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    console.error('Registration screen-set error:', event);
+    var message = (event && (event.errorMessage || event.errorDetails)) ||
+      'Something went wrong. Please try again.';
+    if (h) h.showToast(message);
   },
 
   // Called before validation of the form.
   onBeforeValidation: function(event) {
+  },
+
+  // Called after a successful login. This Global Config applies to every
+  // screen in the screen-set, so only run the Registration-screen logging
+  // here (other screens still get their own onLogin in sap-cdc.js).
+  onLogin: function (event) {
+    if (event.screen !== 'mpaturu-gigya-register-screen') {
+      return;
+    }
+    console.log("Authentication successful - User details screen:");
   },
 
 
