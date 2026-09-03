@@ -83,8 +83,7 @@
  * Replace "username" with your label in any inline error below a given field.
  * Works for CDC’s field-level validation errors that render in the DOM.
  */
-        function normalizeFieldErrorLabel(containerID, fieldName, labelText) {
-            //const root = document.getElementById(containerID) || document.body;
+        function normalizeFieldErrorLabel(fieldName, labelText) {
             document.getElementById("gigya-error-msg-gigya-register-form-username").textContent = document.getElementById("gigya-error-msg-gigya-register-form-username").textContent.replace(/username/gi, labelText);
             // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
 
@@ -167,8 +166,8 @@
             if (e.field === 'username' || e.field === 'loginID') {
                 // Slight delay to let CDC render the error into the DOM first
                 setTimeout(() => {
-                    normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
-                    //normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                    normalizeFieldErrorLabel('username', ALT_ID);
+                    //normalizeFieldErrorLabel('loginID', ALT_ID);
                 }, 50);
             }
         }
@@ -192,8 +191,8 @@
 
                 // Normalize inline field error for both possible bindings
                 setTimeout(() => {
-                    normalizeFieldErrorLabel(e.containerID, 'username', ALT_ID);
-                    // normalizeFieldErrorLabel(e.containerID, 'loginID', ALT_ID);
+                    normalizeFieldErrorLabel('username', ALT_ID);
+                    // normalizeFieldErrorLabel('loginID', ALT_ID);
                 }, 50);
             }
         }
