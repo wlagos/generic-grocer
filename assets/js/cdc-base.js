@@ -1,14 +1,15 @@
 
 {
   // Called when an error occurs. This Global Config applies to every screen
-  // in the screen-set, so only run the Registration-screen error surfacing
-  // here (other screens still get their own onError in sap-cdc.js).
+  // in the screen-set, so only run the Registration- and Login-screen error
+  // surfacing here (Lite Registration and Profile Update still get their own
+  // onError in sap-cdc.js).
   onError: function(event) {
-    if (event.screen !== 'mpaturu-gigya-register-screen') {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
       return;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
-    console.error('Registration screen-set error:', event);
+    console.error('Screen-set error:', event);
     var message = (event && (event.errorMessage || event.errorDetails)) ||
       'Something went wrong. Please try again.';
     if (h) h.showToast(message);
@@ -19,13 +20,13 @@
   },
 
   // Called after a successful login. This Global Config applies to every
-  // screen in the screen-set, so only run the Registration-screen logging
-  // here (other screens still get their own onLogin in sap-cdc.js).
+  // screen in the screen-set, so only run the Registration- and Login-screen
+  // logging here (Lite Registration still gets its own onLogin in sap-cdc.js).
   onLogin: function (event) {
-    if (event.screen !== 'mpaturu-gigya-register-screen') {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
       return;
     }
-    console.log("Authentication successful - User details screen:");
+    console.log("Authentication successful user details:");
   },
 
 
@@ -356,11 +357,13 @@
 
   // Called when a field is changed in a managed form.
   // This Global Config applies to every screen in the screen-set, so only
-  // run the Registration-screen field handling (phone digit limiting,
-  // normalizing the inline "username" validation label) here.
+  // run the Registration- and Login-screen field handling (phone digit
+  // limiting, lastName clamping, normalizing the inline "username"
+  // validation label) here. Lite Registration and Profile Update keep
+  // their own local onFieldChanged in sap-cdc.js.
   onFieldChanged: function (event) {
     console.log("onFieldChanged fired:", { screen: event.screen, field: event.field});
-    if (event.screen !== 'mpaturu-gigya-register-screen') {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
       console.log("onFieldChanged skipped, wrong screen:", event.screen);
       return;
     }
