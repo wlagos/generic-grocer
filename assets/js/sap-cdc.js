@@ -452,9 +452,12 @@
                 onError: handleScreenSetError,
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-update-profile-screen' && e.response.status === 'OK') {
+                        showToast('Your profile has been successfully updated.');
+                        // Delay the redirect long enough for the toast to actually be
+                        // seen before the page unloads (showToast fades out at 1500ms).
                         setTimeout(() => {
                             window.location.href = CDC_HOME_URL;
-                        }, 100);
+                        }, 1500);
                         return;
                     }
                     normalizeFailedSubmitFieldError(e);
