@@ -357,13 +357,13 @@
 
   // Called when a field is changed in a managed form.
   // This Global Config applies to every screen in the screen-set, so only
-  // run the Registration-, Login-, and Profile Update-screen field handling
-  // (phone digit limiting, lastName clamping, normalizing the inline
-  // "username" validation label) here. Lite Registration keeps its own
-  // local onFieldChanged in sap-cdc.js.
+  // run the Registration- and Login-screen field handling (phone digit
+  // limiting, lastName clamping, normalizing the inline "username"
+  // validation label) here. Lite Registration and Profile Update have
+  // their own Global Config / local onFieldChanged elsewhere.
   onFieldChanged: function (event) {
     console.log("onFieldChanged fired:", { screen: event.screen, field: event.field});
-    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen' && event.screen !== 'mpaturu-gigya-update-profile-screen') {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
       console.log("onFieldChanged skipped, wrong screen:", event.screen);
       return;
     }
