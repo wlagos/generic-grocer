@@ -742,7 +742,13 @@
                         e.stopPropagation();
                         gigya.accounts.logout({
                             callback: function () {
-                                window.location.href = CDC_HOME_URL;
+                                showToast('You have been successfully logged out.');
+                                // Delay the redirect long enough for the toast to actually
+                                // be seen before the page unloads (showToast fades out at
+                                // 1500ms — see showToast above).
+                                setTimeout(() => {
+                                    window.location.href = CDC_HOME_URL;
+                                }, 1500);
                             }
                         });
                     });
