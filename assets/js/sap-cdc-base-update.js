@@ -24,6 +24,7 @@
   },
   onBeforeScreenLoad: function (event) {
     var doc = document;
+    doc.getElementById('gigya-textbox-112545187415970690').value = "";
     if (!doc.__cdcNs) {
       doc.__cdcNs = {
         helpers: {
