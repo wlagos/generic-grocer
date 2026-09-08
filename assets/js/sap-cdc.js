@@ -137,8 +137,9 @@
         }
         // Field-change handler for the Lite Registration screenset (phone
         // digit limiting, and normalizing the inline "username" validation
-        // label). The Registration, Login, and Profile Update screens'
-        // version of this logic now lives in cdc-base.js's Global Config.
+        // label). The Registration/Login screens' version of this logic now
+        // lives in sap-cdc-base.js's Global Config, and the Profile Update
+        // screen's version lives in sap-cdc-base-update.js's Global Config.
         function handleScreenSetFieldChanged(e) {
             if (e.field === "profile.phones.number") {
                 var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -202,8 +203,9 @@
 
         // After-screen-load handler for the Lite Registration screenset: define
         // inline-error helpers, hide screen captions, and wire phone/lastName
-        // field feedback. The Registration, Login, and Profile Update screens'
-        // version of this now lives in cdc-base.js's Global Config.
+        // field feedback. The Registration/Login screens' version of this now
+        // lives in sap-cdc-base.js's Global Config, and the Profile Update
+        // screen's version lives in sap-cdc-base-update.js's Global Config.
         function handleScreenSetAfterLoad(event) {
                     // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
                     // if (!screensWithLoginID.includes(event.currentScreen)) return;
