@@ -196,8 +196,14 @@
   },
 
   // EDIPI validation stays Registration-only (sap-cdc-base.js), but warn on
-  // a blank Rewards ID here too, same as the Registration screen.
+  // a blank Rewards ID here too, same as the Registration screen. This
+  // Global Config applies to every screen in the mpaturu-ProfileUpdate
+  // screen-set (e.g. also mpaturu-gigya-change-email-screen), so only run
+  // this check on the actual profile-update screen.
   onBeforeSubmit: function (event) {
+    if (event.screen !== 'mpaturu-gigya-update-profile-screen') {
+      return true;
+    }
     var h = document.__cdcNs && document.__cdcNs.helpers;
     var rewardsId = event.formData['data.rewardsId'];
     if (!rewardsId) {
