@@ -135,9 +135,9 @@
                 }
             });
         }
-        // Shared field-change handler for the Lite Registration and Profile
-        // Update screensets (phone digit limiting, and normalizing the inline
-        // "username" validation label). The Registration and Login screens'
+        // Field-change handler for the Lite Registration screenset (phone
+        // digit limiting, and normalizing the inline "username" validation
+        // label). The Registration, Login, and Profile Update screens'
         // version of this logic now lives in cdc-base.js's Global Config.
         function handleScreenSetFieldChanged(e) {
             if (e.field === "profile.phones.number") {
@@ -200,8 +200,10 @@
             }
         }
 
-        // Shared after-screen-load handler for all screensets: define inline-error
-        // helpers, hide screen captions, and wire phone/lastName field feedback.
+        // After-screen-load handler for the Lite Registration screenset: define
+        // inline-error helpers, hide screen captions, and wire phone/lastName
+        // field feedback. The Registration, Login, and Profile Update screens'
+        // version of this now lives in cdc-base.js's Global Config.
         function handleScreenSetAfterLoad(event) {
                     // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
                     // if (!screensWithLoginID.includes(event.currentScreen)) return;
@@ -344,10 +346,6 @@
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-login-screen',
                 containerID: 'screensetContainer',
-                // onLogin: now handled by cdc-base.js's Global Config.
-                // onBeforeSubmit: removed — cdc-base.js's Global Config already
-                // returns true for every non-Registration screen.
-                // onError: now handled by cdc-base.js's Global Config.
                 onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-login-screen' && e.response.status === 'OK') {
                         setTimeout(() => {
@@ -366,8 +364,6 @@
                     }
                     normalizeFailedSubmitFieldError(e);
                 }
-                // onFieldChanged/onAfterScreenLoad: now handled by cdc-base.js's
-                // Global Config, which applies to every screen in the screen-set.
             });
         }
 
@@ -460,9 +456,7 @@
                         return;
                     }
                     normalizeFailedSubmitFieldError(e);
-                },
-                onFieldChanged: handleScreenSetFieldChanged,
-                onAfterScreenLoad: handleScreenSetAfterLoad
+                }
             });
         }
 
