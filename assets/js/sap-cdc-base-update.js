@@ -195,9 +195,14 @@
     // how the iOS app's webview bridge sets it, so the clamp silently never ran there.
   },
 
-  // Not applicable to the Profile Update screen set (no EDIPI/rewards-ID
-  // fields here — that logic stays in sap-cdc-base.js for Registration).
+  // EDIPI validation stays Registration-only (sap-cdc-base.js), but warn on
+  // a blank Rewards ID here too, same as the Registration screen.
   onBeforeSubmit: function (event) {
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    var rewardsId = event.formData['data.rewardsId'];
+    if (!rewardsId) {
+      h.showToast("Rewards ID is blank. Continuing…");
+    }
     return true;
   },
 
