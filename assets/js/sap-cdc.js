@@ -728,5 +728,25 @@
                     }
                 });
 
+                // CLICK ON "Logout" → actually end the CDC session first.
+                // The link's href just points at my-account.html, which (since the
+                // session was still active) re-rendered the Profile Update screen
+                // instead of logging out. Intercept it, call gigya.accounts.logout,
+                // and only then navigate home.
+                const logoutLink = Array.from(menu.querySelectorAll('a')).find(function (a) {
+                    return a.textContent.trim() === 'Logout';
+                });
+                if (logoutLink) {
+                    logoutLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        gigya.accounts.logout({
+                            callback: function () {
+                                window.location.href = CDC_HOME_URL;
+                            }
+                        });
+                    });
+                }
+
             }
         });
