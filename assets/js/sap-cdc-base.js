@@ -316,20 +316,21 @@
       return true;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
-    var rewardsId = event.formData['data.rewardsId'];
-    if (!rewardsId) {
-      console.log("Rewards ID is blank");
-      h.showToast("Rewards ID is blank. Continuing…");
-    }
     var militaryId = event.formData['data.militaryId'];
 
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
     // call. So: cancel this submit attempt, run the async validation, and
-    // on success re-trigger the submit button — skipping validation the
+    // on success re-trigger the submit button — skipping validation (and
+    // the rewards-ID check below, so its toast isn't shown twice) the
     // second time around via the _edipiValidated flag.
     if (window._edipiValidated) {
       window._edipiValidated = false;
       return true;
+    }
+
+    var rewardsId = event.formData['data.rewardsId'];
+    if (!rewardsId) {
+      h.showToast("Rewards ID is blank. Continuing…");
     }
     if (!militaryId) {
       return true;
