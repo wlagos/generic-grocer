@@ -1,0 +1,415 @@
+
+{
+  // Called when an error occurs. This Global Config applies to every screen
+  // in the screen-set, so only run the Registration- and Login-screen error
+  // surfacing here (Lite Registration and Profile Update still get their own
+  // onError in sap-cdc.js).
+  onError: function(event) {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
+      return;
+    }
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    console.error('Screen-set error:', event);
+    var message = (event && (event.errorMessage || event.errorDetails)) ||
+      'Something went wrong. Please try again.';
+    if (h) h.showToast(message);
+  },
+
+  // Called before validation of the form.
+  onBeforeValidation: function(event) {
+  },
+
+  // Called after a successful login. This Global Config applies to every
+  // screen in the screen-set, so only run the Registration- and Login-screen
+  // logging here (Lite Registration still gets its own onLogin in sap-cdc.js).
+  onLogin: function (event) {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
+      return;
+    }
+    console.log("Authentication successful user details:");
+  },
+
+
+
+  // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
+  onSubmit: function(event) {
+  },
+
+  // Called after a form is submitted.
+  onAfterSubmit: function(event) {
+  },
+  onBeforeScreenLoad: function (event) {
+    var doc = document;
+    if (!doc.__cdcNs) {
+      doc.__cdcNs = {
+        helpers: {
+          showToast: function (msg) {
+            var toast = document.createElement('div');
+            toast.textContent = msg;
+
+            toast.style.position = 'fixed';
+            toast.style.top = '50%';
+            toast.style.left = '50%';
+            toast.style.transform = 'translate(-50%, -50%)';
+
+            /* Bigger size */
+            toast.style.minWidth = '350px';
+            toast.style.maxWidth = '500px';
+            toast.style.padding = '30px 40px';   // bigger height + width
+            toast.style.fontSize = '20px';       // larger font
+            toast.style.lineHeight = '28px';
+
+            /* Style */
+            toast.style.background = 'rgba(40, 40, 40, 0.95)';
+            toast.style.color = 'white';
+            toast.style.textAlign = 'center';
+            toast.style.borderRadius = '12px';
+            toast.style.boxShadow = '0 8px 30px rgba(0,0,0,0.35)';
+
+            /* Animation */
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.4s ease';
+
+            toast.style.zIndex = '99999';
+
+            document.body.appendChild(toast);
+
+            // Fade in
+            setTimeout(() => { toast.style.opacity = '1'; }, 20);
+
+            // Fade out
+            setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+
+            // Remove
+            setTimeout(() => { toast.remove(); }, 2000);
+          },
+
+          // Replace "username" with a custom label in any inline error below a
+          // given field. Works for CDC's field-level validation errors that
+          // render in the DOM.
+          normalizeFieldErrorLabel: function (fieldName, labelText) {
+            console.log("normalizeFieldErrorLabel called with:", { fieldName: fieldName, labelText: labelText });
+            var errEl = document.getElementById("gigya-error-msg-gigya-register-form-username");
+            console.log("normalizeFieldErrorLabel errEl found:", !!errEl, errEl ? errEl.textContent : null);
+            if (errEl) {
+              var before = errEl.textContent;
+              errEl.textContent = errEl.textContent.replace(/username/gi, labelText);
+              console.log("normalizeFieldErrorLabel replaced text:", { before: before, after: errEl.textContent });
+            }
+          },
+
+          // Hide caption/title elements under root whose text matches any of the
+          // given words (case-insensitive). Used to hide the per-screen heading
+          // CDC renders (e.g. "Login", "Register") when a custom title is used.
+          hideCaptionIfMatches: function (root, words) {
+            var selectors = [
+              '#screensetContainer_content_caption',
+              '.gigya-header',
+              '.gigya-screen-title',
+              'h2.gigya-screen-title'
+            ];
+            var nodes = root.querySelectorAll(selectors.join(','));
+            var pattern = new RegExp(words.join('|'), 'i'); // case-insensitive
+
+            nodes.forEach(function (el) {
+              var text = (el.textContent || '').trim();
+              if (pattern.test(text)) {
+                el.style.display = 'none';
+                el.style.margin = '0';
+                el.style.padding = '0';
+              }
+            });
+          },
+
+          // Show/clear an inline validation message next to a custom field.
+          setInlineError: function (inputEl, spanEl, message, code) {
+            spanEl.textContent = message || '';
+            spanEl.style.display = message ? 'inline' : 'none';
+            inputEl.setAttribute('aria-invalid', message ? 'true' : 'false');
+            inputEl.classList.toggle('gigya-invalid', !!message);
+            inputEl.classList.toggle('gigya-valid', !message);
+            if (code) inputEl.setAttribute('data-invalid-error-code', String(code));
+            else inputEl.removeAttribute('data-invalid-error-code');
+          },
+
+          clearInlineError: function (inputEl, spanEl) {
+            spanEl.textContent = '';
+            spanEl.style.display = 'none';
+            inputEl.setAttribute('aria-invalid', 'false');
+            inputEl.classList.remove('gigya-invalid');
+            inputEl.classList.add('gigya-valid');
+            inputEl.removeAttribute('data-invalid-error-code');
+          },
+
+          // Fetch an OAuth access token for the validate-edipi API via the
+          // client_credentials token endpoint (Basic auth with client id/secret).
+          getEdipiAccessToken: async function () {
+            const tokenUrl = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi/token";
+            const clientId = "6sr10dNf0N11HBapfXAUDRAcAtzA6P12";
+            const clientSecret = "wHRsalGMvQJISkeI";
+            const basicAuth = btoa(`${clientId}:${clientSecret}`);
+
+            const response = await fetch(tokenUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": `Basic ${basicAuth}`
+              },
+              body: "grant_type=client_credentials"
+            });
+
+            const result = await response.json().catch(() => null);
+            if (!response.ok || !result || !result.access_token) {
+              throw new Error("EDIPI token request failed: " + response.status);
+            }
+            return result.access_token;
+          },
+
+          // Validate a Military ID (EDIPI) against the SAP customer-profile API.
+          // First fetches an access token from the validate-edipi/token endpoint,
+          // then uses it as the Bearer token for the validate-edipi call.
+          validateEdipi: async function (militaryId) {
+            const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi";
+            const payload = {
+              edipi: militaryId
+            };
+
+            const accessToken = await this.getEdipiAccessToken();
+
+            const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const result = await response.json().catch(() => null);
+            console.log("EDIPI validation response:", response.status, result);
+            const isValid = response.ok && !!result && result.result === "continue_registration";
+            return { ok: isValid, status: response.status, result: result };
+          }
+        }
+      };
+    }
+  },
+  // Called after a screen finishes loading. This Global Config applies to
+  // every screen in the screen-set: hide the per-screen caption/title,
+  // define the shared inline-error helpers, and wire up phone/lastName
+  // field feedback that all screens rely on.
+  onAfterScreenLoad: function (event) {
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    var root = document.getElementById(event.containerID) || document.body;
+
+    function applyCaptionHiding() {
+      if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+        h.hideCaptionIfMatches(root, ['login']);
+      }
+      if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+        h.hideCaptionIfMatches(root, ['register', 'registration']);
+      }
+      if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+        h.hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
+      }
+    }
+    applyCaptionHiding();
+
+    // Re-apply hiding if CDC re-renders parts of the DOM
+    var mo = new MutationObserver(applyCaptionHiding);
+    mo.observe(root, { childList: true, subtree: true });
+
+    // Single source of truth for inline field error messages
+    window.setInlineError = h.setInlineError;
+    window.clearInlineError = h.clearInlineError;
+
+    // --- Phone field validation on blur ---
+    var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230');
+
+    function setFieldError(fieldName, message) {
+      if (gigya?.accounts?.setFieldError) {
+        gigya.accounts.setFieldError({
+          screenSet: "Default-Registration",
+          fieldName: fieldName,
+          message: message
+        });
+      } else {
+        // Fallback inline message
+        var el = phoneInput;
+        var id = fieldName.replace(/\W+/g, '_') + '_error';
+        var msg = document.getElementById(id);
+        if (!msg) {
+          msg = document.createElement('div');
+          msg.id = id;
+          msg.style.color = '#d32f2f';
+          msg.style.fontSize = '12px';
+          msg.style.marginTop = '4px';
+          el.insertAdjacentElement('afterend', msg);
+        }
+        msg.textContent = message;
+      }
+    }
+
+    function clearFieldError(fieldName) {
+      if (gigya?.accounts?.clearFieldError) {
+        gigya.accounts.clearFieldError({
+          screenSet: "Default-Registration",
+          fieldName: fieldName
+        });
+      } else if (gigya?.accounts?.setFieldError) {
+        gigya.accounts.setFieldError({
+          screenSet: "Default-Registration",
+          fieldName: fieldName,
+          message: ""
+        });
+      } else {
+        var id = fieldName.replace(/\W+/g, '_') + '_error';
+        var msg = document.getElementById(id);
+        if (msg) msg.remove();
+      }
+    }
+
+    // Validate on blur
+    if (phoneInput !== null) {
+      phoneInput.addEventListener('blur', function () {
+        var ccInput = document.getElementById('gigya-countryCodeLabel-167363755631131230');
+        var isUSA = (ccInput && ccInput.value === '+1');
+        var raw = (phoneInput.value || '').trim();
+
+        // Normalize to digits only
+        var digits = raw.replace(/\D+/g, '');
+        phoneInput.value = digits;
+
+        if (isUSA) {
+          // US must be exactly 10 digits
+          if (!/^\d{10}$/.test(digits)) {
+            setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
+            return;
+          }
+        } else {
+          // Non-US: digits-only (any length)
+          if (!/^\d+$/.test(digits)) {
+            setFieldError('profile.phones.number', 'Phone number must contain digits only.');
+            return;
+          }
+        }
+
+        // Clear error if valid
+        clearFieldError('profile.phones.number');
+        var loginIdEl = document.getElementById('loginID');
+        if (loginIdEl) loginIdEl.value = phoneInput.value;
+      });
+    }
+
+    // Note: lastName is clamped to 1 char in onFieldChanged below (via Gigya's
+    // onFieldChanged callback), not with DOM 'input'/'focusout' listeners here —
+    // those never fire when a field's value is set programmatically, which is
+    // how the iOS app's webview bridge sets it, so the clamp silently never ran there.
+  },
+
+  // Use the helpers in other handlers
+  onBeforeSubmit: function (event) {
+    // This Global Config applies to every screen in the screen-set, so only
+    // run the Registration-screen EDIPI/rewards-ID logic on that screen.
+
+    if (event.screen !== 'mpaturu-gigya-register-screen') {
+      return true;
+    }
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    var rewardsId = event.formData['data.rewardsId'];
+    if (!rewardsId) {
+      console.log("Rewards ID is blank");
+      h.showToast("Rewards ID is blank. Continuing…");
+    }
+    var militaryId = event.formData['data.militaryId'];
+
+    // onBeforeSubmit is synchronous and can't await the EDIPI validation
+    // call. So: cancel this submit attempt, run the async validation, and
+    // on success re-trigger the submit button — skipping validation the
+    // second time around via the _edipiValidated flag.
+    if (window._edipiValidated) {
+      window._edipiValidated = false;
+      return true;
+    }
+    if (!militaryId) {
+      return true;
+    }
+
+    h.validateEdipi(militaryId).then(function (res) {
+      if (res.ok) {
+        window._edipiValidated = true;
+        var submitBtn = document.querySelector(
+          '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+        );
+        if (submitBtn) {
+          submitBtn.click();
+        }
+      } else {
+        h.showToast("Military ID could not be validated. Please check and try again.");
+      }
+    }).catch(function (err) {
+      console.error("EDIPI validation error:", err);
+      h.showToast("Could not validate Military ID right now. Please try again.");
+    });
+
+    return false;
+  },
+
+  // Called when a field is changed in a managed form.
+  // This Global Config applies to every screen in the screen-set, so only
+  // run the Registration- and Login-screen field handling (phone digit
+  // limiting, lastName clamping, normalizing the inline "username"
+  // validation label) here. Lite Registration and Profile Update have
+  // their own Global Config / local onFieldChanged elsewhere.
+  onFieldChanged: function (event) {
+    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field});
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
+      console.log("onFieldChanged skipped, wrong screen:", event.screen);
+      return;
+    }
+    var h = document.__cdcNs && document.__cdcNs.helpers;
+    console.log("onFieldChanged helpers available:", !!h);
+
+    if (event.field === 'profile.phones.number') {
+      var ccInput = document.getElementById('gigya-countryCodeLabel-167363755631131230');
+      var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230');
+      var isUSA = ccInput && ccInput.value === '+1';
+      console.log("onFieldChanged phone check:", { isUSA: isUSA, phoneValue: phoneInput && phoneInput.value });
+      if (isUSA && phoneInput && phoneInput.value.length > 10) {
+        phoneInput.value = phoneInput.value.slice(0, 10);
+        console.log("onFieldChanged phone truncated to:", phoneInput.value);
+      }
+    }
+
+    if (event.field === 'profile.lastName') {
+   
+      var lastNameInput = document.getElementById('gigya-textbox-lastName');
+      if (lastNameInput && lastNameInput.value.length > 1) {
+        lastNameInput.value = lastNameInput.value.slice(0, 1);
+      }
+    }
+
+    // Your field binding name:
+    // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
+    // Handle both to be safe:
+    if (event.field === 'username' || event.field === 'loginID') {
+      console.log("onFieldChanged scheduling normalizeFieldErrorLabel");
+      // Slight delay to let CDC render the error into the DOM first
+      setTimeout(function () {
+        h.normalizeFieldErrorLabel('username', 'Alternate ID');
+      }, 50);
+    }
+  },
+
+  // Called when a user clicks the "X" (close) button or the screen is hidden following the end of the flow.
+  onHide: function(event) {
+  },
+
+  // Called when a user clicks a custom button.
+  onButtonClicked: function(event) {
+  },
+
+  // Called when a screen is automatically skipped because the "Skip if data exists" option is enabled and the user already has data for all fields on that screen.
+  onAutoSkip: function(event) {
+  }
+}
