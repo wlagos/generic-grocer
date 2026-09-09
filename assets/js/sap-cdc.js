@@ -439,6 +439,7 @@
                        //         showToast('Could not update subscription. Please try later.');
                        //     }
                      //   });
+                            return true;
                     }
                     normalizeFailedSubmitFieldError(e);
                 },
