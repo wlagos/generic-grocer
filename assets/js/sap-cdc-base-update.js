@@ -109,8 +109,8 @@
   onAfterScreenLoad: function (event) {
     var h = document.__cdcNs && document.__cdcNs.helpers;
 
-    // Blank out this field every time the Profile Update screen (re)loads.
-    if (event.currentScreen === 'mpaturu-gigya-update-profile-screen') {
+    // Blank out this field every time the Change Alternate ID screen (re)loads.
+    if (event.currentScreen === 'mpaturu-gigya-change-alternateid-screen') {
       var fieldToClear = document.getElementById('gigya-textbox-112545187415970690');
       if (fieldToClear) {
         fieldToClear.value = '';
