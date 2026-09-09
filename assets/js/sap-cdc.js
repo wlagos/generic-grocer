@@ -431,14 +431,14 @@
                     if (e && e.response && e.response.errorCode === 0) {
                         // Default behavior for the "Subscribe with email" screen:
                         // subscribe the user to rewards_card email
-                        updateRewardsEmailSubscription(true, function (upd) {
-                            if (upd.errorCode === 0) {
-                                showToast('Subscribed to Rewards Card emails.');
-                            } else {
-                                console.warn('Subscription update failed:', upd);
-                                showToast('Could not update subscription. Please try later.');
-                            }
-                        });
+                      //  updateRewardsEmailSubscription(true, function (upd) {
+                      //      if (upd.errorCode === 0) {
+                      //          showToast('Subscribed to Rewards Card emails.');
+                       //     } else {
+                       //         console.warn('Subscription update failed:', upd);
+                       //         showToast('Could not update subscription. Please try later.');
+                       //     }
+                     //   });
                     }
                     normalizeFailedSubmitFieldError(e);
                 },
@@ -579,7 +579,7 @@
                     const sHash = (window.location.hash || '').toLowerCase();
                     if (sHash === '#lite') {
                         // In case onAfterSubmit didn't fire (some flows), ensure subscription is set
-                        updateRewardsEmailSubscription(true);
+                     //   updateRewardsEmailSubscription(true);
                     }
 
                     freshShopRegVerification(); // Session now exists — safe to call gigya.accounts.getJWT
