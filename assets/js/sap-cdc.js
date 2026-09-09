@@ -416,10 +416,10 @@
                 onBeforeSubmit: function (e) {
                     // Lite does NOT submit subscriptions.* as a form field.
                     // This prevents error 400024 (dynamic fields not allowed)
-                    delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
-                    delete e.formData['subscriptions.food_safety.email.isSubscribed'];
-                    delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
-                    delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
+                //    delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
+                //    delete e.formData['subscriptions.food_safety.email.isSubscribed'];
+                //    delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
+              //      delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
                     return true;
                 },
                 onError: handleScreenSetError,
