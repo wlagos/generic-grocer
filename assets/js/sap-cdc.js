@@ -416,30 +416,34 @@
                 onBeforeSubmit: function (e) {
                     // Lite does NOT submit subscriptions.* as a form field.
                     // This prevents error 400024 (dynamic fields not allowed)
-                //    delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
-                //    delete e.formData['subscriptions.food_safety.email.isSubscribed'];
-                //    delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
-              //      delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
+                  //  delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
+                  //  delete e.formData['subscriptions.food_safety.email.isSubscribed'];
+                  //  delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
+                 //   delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
                     return true;
                 },
                 onError: handleScreenSetError,
+                // The "OK" button on the thank-you screen closes/hides the
+                // screen-set rather than submitting a form, so onHide (not
+                // onAfterSubmit) is what actually fires when it's clicked.
+                onHide: function (e) {
+                    console.log("[Lite Registration] onHide:", e);
+                    window.location.href = CDC_HOME_URL;
+                },
                 onAfterSubmit: function (e) {
-                    if (e.screen === 'mpaturu-gigya-subscribe-thank-you-screen') {
-                        window.location.href = CDC_HOME_URL;
-                        return;
-                    }
                     if (e && e.response && e.response.errorCode === 0) {
                         // Default behavior for the "Subscribe with email" screen:
                         // subscribe the user to rewards_card email
-                      //  updateRewardsEmailSubscription(true, function (upd) {
-                      //      if (upd.errorCode === 0) {
-                      //          showToast('Subscribed to Rewards Card emails.');
-                       //     } else {
-                       //         console.warn('Subscription update failed:', upd);
-                       //         showToast('Could not update subscription. Please try later.');
-                       //     }
-                     //   });
-                            return true;
+                        // Commented out for now.
+                        // updateRewardsEmailSubscription(true, function (upd) {
+                        //     if (upd.errorCode === 0) {
+                        //         showToast('Subscribed to Rewards Card emails.');
+                        //     } else {
+                        //         console.warn('Subscription update failed:', upd);
+                        //         showToast('Could not update subscription. Please try later.');
+                        //     }
+                        // });
+                        return true;
                     }
                     normalizeFailedSubmitFieldError(e);
                 },
@@ -580,7 +584,8 @@
                     const sHash = (window.location.hash || '').toLowerCase();
                     if (sHash === '#lite') {
                         // In case onAfterSubmit didn't fire (some flows), ensure subscription is set
-                     //   updateRewardsEmailSubscription(true);
+                        // Commented out for now.
+                        // updateRewardsEmailSubscription(true);
                     }
 
                     freshShopRegVerification(); // Session now exists — safe to call gigya.accounts.getJWT
