@@ -424,6 +424,10 @@
                 },
                 onError: handleScreenSetError,
                 onAfterSubmit: function (e) {
+                    if (e.screen === 'mpaturu-gigya-subscribe-thank-you-screen') {
+                        window.location.href = CDC_HOME_URL;
+                        return;
+                    }
                     if (e && e.response && e.response.errorCode === 0) {
                         // Default behavior for the "Subscribe with email" screen:
                         // subscribe the user to rewards_card email
