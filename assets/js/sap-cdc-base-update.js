@@ -102,10 +102,20 @@
     }
   },
 
-  // Called after the Profile Update screen finishes loading: define the
-  // shared inline-error helpers and wire up phone-field blur validation.
+  // Called after a screen finishes loading. This Global Config applies to
+  // every screen in the mpaturu-ProfileUpdate screen-set (e.g. also
+  // mpaturu-gigya-change-email-screen), so screen-specific bits below are
+  // gated on event.currentScreen.
   onAfterScreenLoad: function (event) {
     var h = document.__cdcNs && document.__cdcNs.helpers;
+
+    // Blank out this field every time the Profile Update screen (re)loads.
+    if (event.currentScreen === 'mpaturu-gigya-update-profile-screen') {
+      var fieldToClear = document.getElementById('gigya-textbox-112545187415970690');
+      if (fieldToClear) {
+        fieldToClear.value = '';
+      }
+    }
 
     // Single source of truth for inline field error messages
     window.setInlineError = h.setInlineError;
