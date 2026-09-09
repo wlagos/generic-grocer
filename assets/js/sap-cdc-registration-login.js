@@ -336,24 +336,25 @@
       return true;
     }
 
-    h.validateEdipi(militaryId).then(function (res) {
-      if (res.ok) {
-        window._edipiValidated = true;
-        var submitBtn = document.querySelector(
-          '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
-        );
-        if (submitBtn) {
-          submitBtn.click();
-        }
-      } else {
-        h.showToast("Military ID could not be validated. Please check and try again.");
-      }
-    }).catch(function (err) {
-      console.error("EDIPI validation error:", err);
-      h.showToast("Could not validate Military ID right now. Please try again.");
-    });
+    // Commented out for now — EDIPI validation disabled.
+    // h.validateEdipi(militaryId).then(function (res) {
+    //   if (res.ok) {
+    //     window._edipiValidated = true;
+    //     var submitBtn = document.querySelector(
+    //       '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+    //     );
+    //     if (submitBtn) {
+    //       submitBtn.click();
+    //     }
+    //   } else {
+    //     h.showToast("Military ID could not be validated. Please check and try again.");
+    //   }
+    // }).catch(function (err) {
+    //   console.error("EDIPI validation error:", err);
+    //   h.showToast("Could not validate Military ID right now. Please try again.");
+    // });
 
-    return false;
+    return true;
   },
 
   // Called when a field is changed in a managed form.
