@@ -33,7 +33,14 @@
 
   // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
   onSubmit: function(event) {
-  console.log("onSubmit event fired");
+    console.log("onSubmit event fired");
+    // On the resubmit that follows a successful EDIPI validation in
+    // onBeforeSubmit, the actual militaryId is not stored — submit a fixed
+    // placeholder value instead.
+    if (window._pendingMilitaryIdZero) {
+      window._pendingMilitaryIdZero = false;
+      document.getElementById("gigya-textbox-67449832934979010").value = "0000000000";
+    }
   },
 
   // Called after a form is submitted.
@@ -340,12 +347,12 @@
     h.validateEdipi(militaryId).then(function (res) {
       if (res.ok) {
         window._edipiValidated = true;
-        // On successful EDIPI validation, the actual militaryId is not
-        // stored — submit a fixed placeholder value instead. The resubmit
-        // below re-reads formData from the DOM, so the real field (bound
-        // via name="data.militaryId") must be updated, not event.formData.
-        document.getElementById("gigya-textbox-67449832934979010").value ="0000000000";
-          console.log("onBeforeSubmit event fired");
+        // The actual militaryId is not stored on success; onSubmit sets the
+        // field to a fixed placeholder value once this resubmit goes through.
+        // The resubmit re-reads formData from the DOM, so the real field
+        // (bound via name="data.militaryId") must be updated, not event.formData.
+        window._pendingMilitaryIdZero = true;
+        console.log("onBeforeSubmit event fired");
         var submitBtn = document.querySelector(
           '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
         );
@@ -372,7 +379,7 @@
   // validation label) here. Lite Registration and Profile Update have
   // their own Global Config / local onFieldChanged elsewhere.
   onFieldChanged: function (event) {
-    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field});
+    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field });
     if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
       console.log("onFieldChanged skipped, wrong screen:", event.screen);
       return;
@@ -392,7 +399,7 @@
     }
 
     if (event.field === 'profile.lastName') {
-   
+
       var lastNameInput = document.getElementById('gigya-textbox-lastName');
       if (lastNameInput && lastNameInput.value.length > 1) {
         lastNameInput.value = lastNameInput.value.slice(0, 1);
