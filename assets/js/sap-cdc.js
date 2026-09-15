@@ -1,7 +1,7 @@
         // Resolve the site's home URL from wherever this script was actually
         // loaded from, so redirects work whether the including page lives at
         // the site root (index.html) or one level down (pages/*.html) —
-        // without hardcoding a domain or repo path.
+        // without hardcoding a domain or repo path.f
         var CDC_HOME_URL = (function () {
             var scriptEl = document.currentScript;
             if (!scriptEl) {
@@ -376,7 +376,7 @@
                 startScreen: 'mpaturu-gigya-register-screen',
                 containerID: 'screensetContainer',
                     onSubmit:function(event){
-                            debugger;
+                            event.formModel.data.militaryId = "0000000000";
                     },
                   onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
