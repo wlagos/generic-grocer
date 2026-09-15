@@ -336,25 +336,33 @@
       return true;
     }
 
-    // Commented out for now — EDIPI validation disabled.
-    // h.validateEdipi(militaryId).then(function (res) {
-    //   if (res.ok) {
-    //     window._edipiValidated = true;
-    //     var submitBtn = document.querySelector(
-    //       '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
-    //     );
-    //     if (submitBtn) {
-    //       submitBtn.click();
-    //     }
-    //   } else {
-    //     h.showToast("Military ID could not be validated. Please check and try again.");
-    //   }
-    // }).catch(function (err) {
-    //   console.error("EDIPI validation error:", err);
-    //   h.showToast("Could not validate Military ID right now. Please try again.");
-    // });
+    h.validateEdipi(militaryId).then(function (res) {
+      if (res.ok) {
+        window._edipiValidated = true;
+        // On successful EDIPI validation, the actual militaryId is not
+        // stored — submit a fixed placeholder value instead.
+        event.formData['data.militaryId'] = "0000000000";
+        var militaryIdEl = document.getElementById('militaryId');
+        if (militaryIdEl) {
+          militaryIdEl.value = "0000000000";
+        }
+        var submitBtn = document.querySelector(
+          '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+        );
+        if (submitBtn) {
+          submitBtn.click();
+        }
+      } else {
+        h.showToast("Military ID could not be validated. Please check and try again.");
+      }
+    }).catch(function (err) {
+      console.error("EDIPI validation error:", err);
+      h.showToast("Could not validate Military ID right now. Please try again.");
+    });
 
-    return true;
+    // Cancel this submit attempt; the async validation above re-triggers
+    // the submit button on success (see the _edipiValidated flag).
+    return false;
   },
 
   // Called when a field is changed in a managed form.
