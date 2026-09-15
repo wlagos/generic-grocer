@@ -33,6 +33,7 @@
 
   // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
   onSubmit: function(event) {
+  console.log("onSubmit event fired");
   },
 
   // Called after a form is submitted.
@@ -344,6 +345,7 @@
         // below re-reads formData from the DOM, so the real field (bound
         // via name="data.militaryId") must be updated, not event.formData.
         document.getElementById("gigya-textbox-67449832934979010").value ="0000000000";
+          console.log("onBeforeSubmit event fired");
         var submitBtn = document.querySelector(
           '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
         );
