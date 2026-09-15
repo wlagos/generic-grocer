@@ -343,13 +343,7 @@
         // stored — submit a fixed placeholder value instead. The resubmit
         // below re-reads formData from the DOM, so the real field (bound
         // via name="data.militaryId") must be updated, not event.formData.
-        var militaryIdEl = document.querySelector('[name="data.militaryId"]');
-        console.log("militaryIdEl "+militaryIdEl);
-        if (militaryIdEl) {
-          militaryIdEl.value = "0000000000";
-        } else {
-          console.warn("EDIPI: could not find militaryId input to override (selector [name=\"data.militaryId\"] matched nothing)");
-        }
+        document.getElementById("gigya-textbox-67449832934979010").value ="0000000000";
         var submitBtn = document.querySelector(
           '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
         );
