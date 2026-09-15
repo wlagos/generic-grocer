@@ -375,7 +375,7 @@
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-register-screen',
                 containerID: 'screensetContainer',
-                    onAfterSubmit:function(e){
+                    onSubmit:function(e){
                             debugger;
                     },
                   onAfterSubmit: function (e) {
