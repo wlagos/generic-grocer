@@ -375,6 +375,9 @@
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-register-screen',
                 containerID: 'screensetContainer',
+                    onSubmit:function(event){
+                            debugger;
+                    },
                   onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
                         showToast("Your profile has been successfully created.");
