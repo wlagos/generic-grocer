@@ -339,31 +339,30 @@
       return true;
     }
 
-    h.validateEdipi(militaryId).then(function (res) {
-      if (res.ok) {
-        window._edipiValidated = true;
-        // The actual militaryId is not stored on success; onSubmit sets the
-        // field to a fixed placeholder value once this resubmit goes through.
-        // The resubmit re-reads formData from the DOM, so the real field
-        // (bound via name="data.militaryId") must be updated, not event.formData.
-        window._pendingMilitaryIdZero = true;
-        var submitBtn = document.querySelector(
-          '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
-        );
-        if (submitBtn) {
-          submitBtn.click();
-        }
-      } else {
-        h.showToast("Military ID could not be validated. Please check and try again.");
-      }
-    }).catch(function (err) {
-      console.error("EDIPI validation error:", err);
-      h.showToast("Could not validate Military ID right now. Please try again.");
-    });
+    // h.validateEdipi(militaryId).then(function (res) {
+    //   if (res.ok) {
+    //     window._edipiValidated = true;
+    //     // The actual militaryId is not stored on success; onSubmit sets the
+    //     // field to a fixed placeholder value once this resubmit goes through.
+    //     // The resubmit re-reads formData from the DOM, so the real field
+    //     // (bound via name="data.militaryId") must be updated, not event.formData.
+    //     window._pendingMilitaryIdZero = true;
+    //     var submitBtn = document.querySelector(
+    //       '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+    //     );
+    //     if (submitBtn) {
+    //       submitBtn.click();
+    //     }
+    //   } else {
+    //     h.showToast("Military ID could not be validated. Please check and try again.");
+    //   }
+    // }).catch(function (err) {
+    //   console.error("EDIPI validation error:", err);
+    //   h.showToast("Could not validate Military ID right now. Please try again.");
+    // });
 
-    // Cancel this submit attempt; the async validation above re-triggers
-    // the submit button on success (see the _edipiValidated flag).
-    return false;
+    // EDIPI validation temporarily disabled; allow submit through unchecked.
+    return true;
   },
 
   // Called when a field is changed in a managed form.
