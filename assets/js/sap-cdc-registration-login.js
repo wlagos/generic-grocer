@@ -314,12 +314,25 @@
   onBeforeSubmit: function (event) {
     // This Global Config applies to every screen in the screen-set, so only
     // run the Registration-screen EDIPI/rewards-ID logic on that screen.
+    console.log('[onBeforeSubmit] fired. event.screen =', event && event.screen);
+    console.log('[onBeforeSubmit] full event:', event);
 
     if (event.screen !== 'mpaturu-gigya-register-screen') {
+      console.log('[onBeforeSubmit] not the register screen, skipping. returning true.');
       return true;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
+    console.log('[onBeforeSubmit] document.__cdcNs =', document.__cdcNs, ' h =', h);
+    if (!h) {
+      console.error('[onBeforeSubmit] helpers (document.__cdcNs.helpers) are missing! ' +
+        'This means onBeforeScreenLoad never ran (or ran after this), so any h.xxx() call below ' +
+        'will throw and silently cancel the submit. Returning true to allow submit through.');
+      return true;
+    }
     var militaryId = event.formData['data.militaryId'];
+    console.log('[onBeforeSubmit] formData:', event.formData);
+    console.log('[onBeforeSubmit] militaryId =', militaryId);
+    console.log('[onBeforeSubmit] window._edipiValidated =', window._edipiValidated);
 
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
     // call. So: cancel this submit attempt, run the async validation, and
@@ -327,15 +340,19 @@
     // the rewards-ID check below, so its toast isn't shown twice) the
     // second time around via the _edipiValidated flag.
     if (window._edipiValidated) {
+      console.log('[onBeforeSubmit] _edipiValidated flag was set; resetting it and allowing submit through (skipping checks below).');
       window._edipiValidated = false;
       return true;
     }
 
     var rewardsId = event.formData['data.rewardsId'];
+    console.log('[onBeforeSubmit] rewardsId =', rewardsId);
     if (!rewardsId) {
+      console.log('[onBeforeSubmit] rewardsId is blank, showing toast.');
       h.showToast("Rewards ID is blank. Continuing…");
     }
     if (!militaryId) {
+      console.log('[onBeforeSubmit] militaryId is blank, returning true (allow submit).');
       return true;
     }
 
@@ -362,6 +379,7 @@
     // });
 
     // EDIPI validation temporarily disabled; allow submit through unchecked.
+    console.log('[onBeforeSubmit] EDIPI validation disabled, allowing submit through. returning true.');
     return true;
   },
 
