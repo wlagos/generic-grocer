@@ -33,13 +33,10 @@
 
   // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
   onSubmit: function(event) {
-    console.log("onSubmit event fired");
-    // On the resubmit that follows a successful EDIPI validation in
-    // onBeforeSubmit, the actual militaryId is not stored — submit a fixed
-    // placeholder value instead.
+
     if (window._pendingMilitaryIdZero) {
       window._pendingMilitaryIdZero = false;
-      document.getElementById("gigya-textbox-67449832934979010").value = "0000000000";
+  event.formModel.data.militaryId="0000000000";
     }
   },
 
@@ -96,13 +93,10 @@
           // given field. Works for CDC's field-level validation errors that
           // render in the DOM.
           normalizeFieldErrorLabel: function (fieldName, labelText) {
-            console.log("normalizeFieldErrorLabel called with:", { fieldName: fieldName, labelText: labelText });
             var errEl = document.getElementById("gigya-error-msg-gigya-register-form-username");
-            console.log("normalizeFieldErrorLabel errEl found:", !!errEl, errEl ? errEl.textContent : null);
             if (errEl) {
               var before = errEl.textContent;
               errEl.textContent = errEl.textContent.replace(/username/gi, labelText);
-              console.log("normalizeFieldErrorLabel replaced text:", { before: before, after: errEl.textContent });
             }
           },
 
@@ -177,6 +171,7 @@
           // First fetches an access token from the validate-edipi/token endpoint,
           // then uses it as the Bearer token for the validate-edipi call.
           validateEdipi: async function (militaryId) {
+          
             const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi";
             const payload = {
               edipi: militaryId
@@ -352,7 +347,6 @@
         // The resubmit re-reads formData from the DOM, so the real field
         // (bound via name="data.militaryId") must be updated, not event.formData.
         window._pendingMilitaryIdZero = true;
-        console.log("onBeforeSubmit event fired");
         var submitBtn = document.querySelector(
           '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
         );
@@ -379,22 +373,17 @@
   // validation label) here. Lite Registration and Profile Update have
   // their own Global Config / local onFieldChanged elsewhere.
   onFieldChanged: function (event) {
-    console.log("onFieldChanged fired:", { screen: event.screen, field: event.field });
     if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-login-screen') {
-      console.log("onFieldChanged skipped, wrong screen:", event.screen);
       return;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
-    console.log("onFieldChanged helpers available:", !!h);
 
     if (event.field === 'profile.phones.number') {
       var ccInput = document.getElementById('gigya-countryCodeLabel-167363755631131230');
       var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230');
       var isUSA = ccInput && ccInput.value === '+1';
-      console.log("onFieldChanged phone check:", { isUSA: isUSA, phoneValue: phoneInput && phoneInput.value });
       if (isUSA && phoneInput && phoneInput.value.length > 10) {
         phoneInput.value = phoneInput.value.slice(0, 10);
-        console.log("onFieldChanged phone truncated to:", phoneInput.value);
       }
     }
 
@@ -410,7 +399,6 @@
     // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
     // Handle both to be safe:
     if (event.field === 'username' || event.field === 'loginID') {
-      console.log("onFieldChanged scheduling normalizeFieldErrorLabel");
       // Slight delay to let CDC render the error into the DOM first
       setTimeout(function () {
         h.normalizeFieldErrorLabel('username', 'Alternate ID');
