@@ -48,10 +48,11 @@ async function callCustomerProfile(jwtToken) {
 async function freshShopRegVerification() {
   window._freshShopRegPromise = (async () => {
     try {
-      const jwt = await getJwtToken();       // Step 2
-      await callCustomerProfile(jwt);        // Step 3
+      const jwt = await getJwtToken();               // Step 2
+      return await callCustomerProfile(jwt);          // Step 3 — { id_token, patron_validation }
     } catch (err) {
       console.error("Error:", err);
+      return null;
     }
   })();
   return window._freshShopRegPromise;
