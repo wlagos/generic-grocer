@@ -24,22 +24,16 @@ async function getJwtToken() {
 // STEP 2 — Use returned token to call the SAP API
 //
 async function callCustomerProfile(jwtToken) {
-  //const url = "https://deca-dev.apim.fc.scp.sapns2.us/v1/customer-profile";
-  const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/registration";
-  const payload = {
-    edipi: "2111704251",
-    mobile: "5551234567"
-  };
 
+  //const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/registration";
+  const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/login" ;
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${jwtToken}`
-    },
-    body: JSON.stringify(payload)
+    }
   });
-
   const result = await response.json();
   console.log("API Response:", result);
   return result;
