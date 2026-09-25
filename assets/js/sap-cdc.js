@@ -19,6 +19,22 @@
             return './';
         })();
 
+        // Builds the post-login/registration redirect URL, appending the
+        // id_token and patron_validation fields returned by the
+        // customer-profile API so the target page can pick them up. Falls
+        // back to the bare CDC_HOME_URL when freshShopRegVerification didn't
+        // produce a result (e.g. it failed).
+        function buildHomeUrlWithAuth(regResult) {
+            if (!regResult || !regResult.id_token || !regResult.patron_validation) {
+                return CDC_HOME_URL;
+            }
+            var params = new URLSearchParams();
+            params.set('id_token', regResult.id_token);
+            params.set('patron_validation', regResult.patron_validation);
+            var separator = CDC_HOME_URL.indexOf('?') === -1 ? '?' : '&';
+            return CDC_HOME_URL + separator + params.toString();
+        }
+
         // Utility: hide caption/title if it matches certain words
         function hideCaptionIfMatches(root, words) {
             const selectors = [
@@ -357,9 +373,9 @@
                             // if onLogin hasn't fired yet the redirect would navigate away
                             // before the verification call ever starts.
                             Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification() : null)
-                                .catch(() => {})
-                                .then(() => {
-                                    window.location.href = CDC_HOME_URL;
+                                .catch(() => null)
+                                .then((regData) => {
+                                    window.location.href = buildHomeUrlWithAuth(regData);
                                 });
                         }, 100);
                         return;
@@ -395,9 +411,9 @@
                         // and then leave the auth page.
                         setTimeout(() => {
                             Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification() : null)
-                                .catch(() => {})
-                                .then(() => {
-                                    window.location.href = CDC_HOME_URL;
+                                .catch(() => null)
+                                .then((regData) => {
+                                    window.location.href = buildHomeUrlWithAuth(regData);
                                 });
                         }, 100);
                         return;
