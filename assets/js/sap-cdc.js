@@ -1,67 +1,787 @@
-//https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi
-//  "edipi": "2111704251"
-//https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/registration
-//  "edipi": "1234567890",
+        // Resolve the site's home URL from wherever this script was actually
+        // loaded from, so redirects work whether the including page lives at
+        // the site root (index.html) or one level down (pages/*.html) —
+        // without hardcoding a domain or repo path.f
+        var CDC_HOME_URL = (function () {
+            var scriptEl = document.currentScript;
+            if (!scriptEl) {
+                var scripts = document.getElementsByTagName('script');
+                for (var i = scripts.length - 1; i >= 0; i--) {
+                    if (/assets\/js\/sap-cdc\.js(\?.*)?$/.test(scripts[i].src)) {
+                        scriptEl = scripts[i];
+                        break;
+                    }
+                }
+            }
+            if (scriptEl && scriptEl.src) {
+                return scriptEl.src.replace(/assets\/js\/sap-cdc\.js(\?.*)?$/, '');
+            }
+            return './';
+        })();
 
-
-async function getJwtToken() {
-  return new Promise((resolve, reject) => {
-    gigya.accounts.getJWT({
-      expiration: 3600,
-      callback: function (res) {
-        if (res.errorCode === 0 && res.id_token) {
-          console.log("JWT Token Retrieved:", res.id_token);
-          resolve(res.id_token);
-        } else {
-          reject(new Error("JWT token not returned: " + JSON.stringify(res)));
+        // Builds the post-login/registration redirect URL, appending the
+        // id_token and patron_validation fields returned by the
+        // customer-profile API so the target page can pick them up. Falls
+        // back to the bare CDC_HOME_URL when freshShopRegVerification didn't
+        // produce a result (e.g. it failed).
+        function buildHomeUrlWithAuth(regResult) {
+            if (!regResult || !regResult.id_token || !regResult.patron_validation) {
+                return CDC_HOME_URL;
+            }
+            var params = new URLSearchParams();
+            params.set('id_token', regResult.id_token);
+            params.set('patron_validation', regResult.patron_validation);
+            var separator = CDC_HOME_URL.indexOf('?') === -1 ? '?' : '&';
+            return CDC_HOME_URL + separator + params.toString();
         }
-      }
-    });
-  });
-}
 
-//
-// STEP 2 — Use returned token to call the SAP API
-//
-async function callCustomerProfile(jwtToken, type = "login") {
+        // Utility: hide caption/title if it matches certain words
+        function hideCaptionIfMatches(root, words) {
+            const selectors = [
+                '#screensetContainer_content_caption',
+                '.gigya-header',
+                '.gigya-screen-title',
+                'h2.gigya-screen-title'
+            ];
+            const nodes = root.querySelectorAll(selectors.join(','));
+            const pattern = new RegExp(words.join('|'), 'i'); // case-insensitive
 
-  const endpoint = type === "registration" ? "registration" : "login";
-  const url = `https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/${endpoint}`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwtToken}`
-    }
-  });
-  const result = await response.json();
-  console.log("API Response:", result);
-  return result;
-}
+            nodes.forEach(el => {
+                const text = (el.textContent || '').trim();
+                if (pattern.test(text)) {
+                    el.style.display = 'none';
+                    el.style.margin = '0';
+                    el.style.padding = '0';
+                }
+            });
+        }
+        function showToast(msg) {
+            var toast = document.createElement('div');
+            toast.textContent = msg;
 
-//
-// STEP 3 — Run both steps
-//
-// Tracks the in-flight promise on window so callers elsewhere (e.g. the
-// post-login redirect in sap-cdc.js) can wait for this to actually finish
-// instead of racing a navigation against the fetch and losing the result.
-// Login fires this from two places (the login screen's onAfterSubmit and
-// the global gigya onLogin handler) as a safety net for handler ordering,
-// so an in-flight call is reused rather than firing getJWT/login twice.
-async function freshShopRegVerification(type = "login") {
-  if (window._freshShopRegPromise) {
-    return window._freshShopRegPromise;
-  }
-  window._freshShopRegPromise = (async () => {
-    try {
-      const jwt = await getJwtToken();               // Step 2
-      return await callCustomerProfile(jwt, type);    // Step 3 — { id_token, patron_validation }
-    } catch (err) {
-      console.error("Error:", err);
-      return null;
-    } finally {
-      window._freshShopRegPromise = null;
-    }
-  })();
-  return window._freshShopRegPromise;
-}
+            toast.style.position = 'fixed';
+            toast.style.top = '50%';
+            toast.style.left = '50%';
+            toast.style.transform = 'translate(-50%, -50%)';
+
+            /* Bigger size */
+            toast.style.minWidth = '350px';
+            toast.style.maxWidth = '500px';
+            toast.style.padding = '30px 40px';   // bigger height + width
+            toast.style.fontSize = '20px';       // larger font
+            toast.style.lineHeight = '28px';
+
+            /* Style */
+            toast.style.background = 'rgba(40, 40, 40, 0.95)';
+            toast.style.color = 'white';
+            toast.style.textAlign = 'center';
+            toast.style.borderRadius = '12px';
+            toast.style.boxShadow = '0 8px 30px rgba(0,0,0,0.35)';
+
+            /* Animation */
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.4s ease';
+
+            toast.style.zIndex = '99999';
+
+            document.body.appendChild(toast);
+
+            // Fade in
+            setTimeout(() => { toast.style.opacity = '1'; }, 20);
+
+            // Fade out
+            setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+
+            // Remove
+            setTimeout(() => { toast.remove(); }, 2000);
+        }
+        /**
+ * Replace "username" with your label in any inline error below a given field.
+ * Works for CDC’s field-level validation errors that render in the DOM.
+ */
+        function normalizeFieldErrorLabel(fieldName, labelText) {
+            document.getElementById("gigya-error-msg-gigya-register-form-username").textContent = document.getElementById("gigya-error-msg-gigya-register-form-username").textContent.replace(/username/gi, labelText);
+            // Find the input bound to the field (CDC binds name=data path; login field is often 'loginID')
+
+        }
+        function updateRewardsEmailSubscription(optsOrBool, cb) {
+            let subsPayload = {};
+
+            if (typeof optsOrBool === 'boolean') {
+                // Backward compatible: single boolean → rewards_card only
+                subsPayload = {
+                    rewards_card: { email: { isSubscribed: optsOrBool } }
+                };
+            } else if (optsOrBool && typeof optsOrBool === 'object') {
+                const opts = optsOrBool;
+
+                // Only include keys that are explicitly boolean to avoid overwriting others
+                if (typeof opts.sales_promotions === 'boolean') {
+                    subsPayload.sales_promotions = { email: { isSubscribed: opts.sales_promotions } };
+                }
+                if (typeof opts.healthy_living === 'boolean') {
+                    subsPayload.healthy_living = { email: { isSubscribed: opts.healthy_living } };
+                }
+                if (typeof opts.food_safety === 'boolean') {
+                    subsPayload.food_safety = { email: { isSubscribed: opts.food_safety } };
+                }
+                if (typeof opts.rewards_card === 'boolean') {
+                    subsPayload.rewards_card = { email: { isSubscribed: opts.rewards_card } };
+                }
+            } else {
+                // Nothing valid provided
+                if (typeof cb === 'function') {
+                    cb({ errorCode: 0, status: 'noop', message: 'No subscription flags provided.' });
+                }
+                return;
+            }
+
+            // If the payload is empty (object mode with no boolean keys), short‑circuit
+            if (Object.keys(subsPayload).length === 0) {
+                if (typeof cb === 'function') {
+                    cb({ errorCode: 0, status: 'noop', message: 'No subscription flags provided.' });
+                }
+                return;
+            }
+
+            gigya.accounts.setAccountInfo({
+                subscriptions: subsPayload,
+                callback: function (res) {
+                    if (typeof cb === 'function') cb(res);
+                }
+            });
+        }
+        // Field-change handler for the Lite Registration screenset (phone
+        // digit limiting, and normalizing the inline "username" validation
+        // label). The Registration/Login screens' version of this logic now
+        // lives in sap-cdc-base.js's Global Config, and the Profile Update
+        // screen's version lives in sap-cdc-base-update.js's Global Config.
+        function handleScreenSetFieldChanged(e) {
+            if (e.field === "profile.phones.number") {
+                var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
+                var isUSA = (ccDigits === '+1');
+                var phoneInputValue = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                if (isUSA && phoneInputValue.length > 10) {
+                    document.getElementById('gigya-phoneInputLabel-167363755631131230').value = phoneInputValue.slice(0, 10);
+                }
+            }
+            if (e.field === "profile.lastName") {
+                // Clamp via the onFieldChanged callback (not raw DOM 'input'/'focusout'
+                // listeners) because the iOS app's WKWebView/native-keyboard bridge sets
+                // field values programmatically, which never fires DOM input events.
+                var root = document.getElementById(e.containerID) || document.body;
+                var lastNameInput = root.querySelector('[name="profile.lastName"]');
+                if (lastNameInput && lastNameInput.value.length > 1) {
+                    lastNameInput.value = lastNameInput.value.slice(0, 1);
+                }
+            }
+            const ALT_ID = 'Alternate ID';
+
+            // Your field binding name:
+            // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
+            // Handle both to be safe:
+            if (e.field === 'username' || e.field === 'loginID') {
+                // Slight delay to let CDC render the error into the DOM first
+                setTimeout(() => {
+                    normalizeFieldErrorLabel('username', ALT_ID);
+                    //normalizeFieldErrorLabel('loginID', ALT_ID);
+                }, 50);
+            }
+        }
+
+        // Shared onError handler for the Lite Registration and Profile Update
+        // screensets: surfaces screen-set-level errors (e.g. network/
+        // communication failures) to the user instead of silently swallowing
+        // them, and logs the full event for debugging.   MounicaMeghana@2026
+        // The Registration and Login screens' onError now lives in
+        // cdc-base.js's Global Config.
+        function handleScreenSetError(event) {
+            console.error('Screen-set error:', event);
+            var message = (event && (event.errorMessage || event.errorDetails)) ||
+                'Something went wrong. Please try again.';
+            showToast(message);
+        }
+
+        // Normalize the inline "username" validation error on a failed submit.
+        // Shared across Login, Registration, and Lite Registration.
+        function normalizeFailedSubmitFieldError(e) {
+            const failed = e && e.response && e.response.errorCode !== 0;
+            if (failed) {
+                const ALT_ID = 'Alternate ID';
+
+                // Normalize inline field error for both possible bindings
+                setTimeout(() => {
+                    normalizeFieldErrorLabel('username', ALT_ID);
+                    // normalizeFieldErrorLabel('loginID', ALT_ID);
+                }, 50);
+            }
+        }
+
+        // After-screen-load handler for the Lite Registration screenset: define
+        // inline-error helpers, hide screen captions, and wire phone/lastName
+        // field feedback. The Registration/Login screens' version of this now
+        // lives in sap-cdc-base.js's Global Config, and the Profile Update
+        // screen's version lives in sap-cdc-base-update.js's Global Config.
+        function handleScreenSetAfterLoad(event) {
+                    // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
+                    // if (!screensWithLoginID.includes(event.currentScreen)) return;
+                    const root = document.getElementById(event.containerID) || document.body;
+
+                    // Hide captions based on current screen
+                    if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                        hideCaptionIfMatches(root, ['login']);
+                    } if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                        hideCaptionIfMatches(root, ['register', 'registration']);
+                    }
+                    if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                        hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
+                    }
+
+                    // Re-apply hiding if CDC re-renders parts of the DOM
+                    const mo = new MutationObserver(() => {
+                        if (event.currentScreen === 'mpaturu-gigya-login-screen') {
+                            hideCaptionIfMatches(root, ['login']);
+                        }
+                        if (event.currentScreen === 'mpaturu-gigya-register-screen') {
+                            hideCaptionIfMatches(root, ['register', 'registration']);
+                        }
+                        if (event.currentScreen === 'mpaturu-gigya-subscribe-with-email-screen') {
+                            hideCaptionIfMatches(root, ['lite', 'Subscribe with email']);
+                        }
+
+                    });
+                    mo.observe(root, { childList: true, subtree: true });
+                    // Single source of truth for messages
+
+
+                    window.setInlineError = function (inputEl, spanEl, message, code) {
+                        spanEl.textContent = message || '';
+                        spanEl.style.display = message ? 'inline' : 'none';
+                        inputEl.setAttribute('aria-invalid', message ? 'true' : 'false');
+                        inputEl.classList.toggle('gigya-invalid', !!message);
+                        inputEl.classList.toggle('gigya-valid', !message);
+                        if (code) inputEl.setAttribute('data-invalid-error-code', String(code));
+                        else inputEl.removeAttribute('data-invalid-error-code');
+                    };
+
+                    window.clearInlineError = function (inputEl, spanEl) {
+                        spanEl.textContent = '';
+                        spanEl.style.display = 'none';
+                        inputEl.setAttribute('aria-invalid', 'false');
+                        inputEl.classList.remove('gigya-invalid');
+                        inputEl.classList.add('gigya-valid');
+                        inputEl.removeAttribute('data-invalid-error-code');
+                    };
+                    // --- Phone field validation on blur ---
+                    // country code control
+                    var phoneInput = document.getElementById('gigya-phoneInputLabel-167363755631131230'); // phone input
+
+
+                    // Helpers to show/clear errors using Gigya API if available
+                    function setFieldError(fieldName, message) {
+                        if (gigya?.accounts?.setFieldError) {
+                            gigya.accounts.setFieldError({
+                                screenSet: "Default-Registration",
+                                fieldName: fieldName,
+                                message: message
+                            });
+                        } else {
+                            // Fallback inline message
+                            var el = phoneInput;
+                            var id = fieldName.replace(/\W+/g, '_') + '_error';
+                            var msg = document.getElementById(id);
+                            if (!msg) {
+                                msg = document.createElement('div');
+                                msg.id = id;
+                                msg.style.color = '#d32f2f';
+                                msg.style.fontSize = '12px';
+                                msg.style.marginTop = '4px';
+                                el.insertAdjacentElement('afterend', msg);
+                            }
+                            msg.textContent = message;
+                        }
+                    }
+
+                    function clearFieldError(fieldName) {
+                        if (gigya?.accounts?.clearFieldError) {
+                            gigya.accounts.clearFieldError({
+                                screenSet: "Default-Registration",
+                                fieldName: fieldName
+                            });
+                        } else if (gigya?.accounts?.setFieldError) {
+                            gigya.accounts.setFieldError({
+                                screenSet: "Default-Registration",
+                                fieldName: fieldName,
+                                message: ""
+                            });
+                        } else {
+                            var id = fieldName.replace(/\W+/g, '_') + '_error';
+                            var msg = document.getElementById(id);
+                            if (msg) msg.remove();
+                        }
+                    }
+
+                    // Validate on blur
+                    if (phoneInput !== null) {
+                        phoneInput.addEventListener('blur', function () {
+
+                            var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
+                            var isUSA = (ccDigits === '+1');
+                            var raw = (phoneInput.value || '').trim();
+
+                            // Normalize to digits only
+                            var digits = raw.replace(/\D+/g, '');
+                            phoneInput.value = digits;
+
+                            if (isUSA) {
+                                // US must be exactly 10 digits
+                                if (!/^\d{10}$/.test(digits)) {
+                                    setFieldError('profile.phones.number', 'US phone numbers must be exactly 10 digits.');
+                                    return;
+                                }
+                            } else {
+                                // Non-US: digits-only (any length)
+                                if (!/^\d+$/.test(digits)) {
+                                    setFieldError('profile.phones.number', 'Phone number must contain digits only.');
+                                    return;
+                                }
+                            }
+
+                            // Clear error if valid
+                            clearFieldError('profile.phones.number');
+                            document.getElementById('loginID').value = document.getElementById('gigya-phoneInputLabel-167363755631131230').value;
+                        });
+                    }
+                    // Note: lastName is clamped to 1 char in handleScreenSetFieldChanged
+                    // (via Gigya's onFieldChanged callback), not with DOM 'input'/'focusout'
+                    // listeners here — those never fire when a field's value is set
+                    // programmatically, which is how the iOS app's webview bridge does it.
+                }
+
+        // Render the Login screen
+        function renderLoginScreen() {
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-RegistrationLogin',
+                startScreen: 'mpaturu-gigya-login-screen',
+                containerID: 'screensetContainer',
+                onAfterSubmit: function (e) {
+                    if (e.screen === 'mpaturu-gigya-login-screen' && e.response.status === 'OK') {
+                        setTimeout(() => {
+                            // Call freshShopRegVerification and wait for it here directly,
+                            // rather than relying on the separate global onLogin handler
+                            // having already started it — that timing isn't guaranteed, and
+                            // if onLogin hasn't fired yet the redirect would navigate away
+                            // before the verification call ever starts.
+                            Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification() : null)
+                                .catch(() => null)
+                                .then((regData) => {
+                                    window.location.href = buildHomeUrlWithAuth(regData);
+                                });
+                        }, 100);
+                        return;
+                    }
+                    normalizeFailedSubmitFieldError(e);
+                }
+            });
+        }
+
+        // Render the Registration screen
+        function renderRegistrationScreen() {
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-RegistrationLogin',
+                startScreen: 'mpaturu-gigya-register-screen',
+                containerID: 'screensetContainer',
+                    onSubmit:function(event){
+                            event.formModel.data.militaryId = "0000000000";
+                    },
+                  onAfterSubmit: function (e) {
+                    if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
+                        showToast("Your profile has been successfully created.");
+                        gigya.accounts.showScreenSet({
+                            screenSet: 'mpaturu-RegistrationLogin',
+                            startScreen: 'mpaturu-gigya-login-screen',
+                            containerID: 'screensetContainer'
+                        });
+                        return;
+                    }
+                    if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 0) {
+                        // Full registration success (no pending email verification) —
+                        // the account is already logged in, so close the screen the
+                        // same way the login screen does: kick off freshShopRegVerification
+                        // and then leave the auth page.
+                        setTimeout(() => {
+                            Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration') : null)
+                                .catch(() => null)
+                                .then((regData) => {
+                                    window.location.href = buildHomeUrlWithAuth(regData);
+                                });
+                        }, 100);
+                        return;
+                    }
+                    normalizeFailedSubmitFieldError(e);
+                }
+            });
+        }
+
+        // Render the Lite Registration ("Subscribe with email") screen
+        function renderLiteRegistrationScreen() {
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-LiteRegistration',
+                startScreen: 'mpaturu-gigya-subscribe-with-email-screen',
+                containerID: 'screensetContainer',
+                onLogin: function (eventObj) {
+                    console.log("Authentication successful user details:");
+                },
+                onBeforeSubmit: function (e) {
+                    // Lite does NOT submit subscriptions.* as a form field.
+                    // This prevents error 400024 (dynamic fields not allowed)
+                  //  delete e.formData['subscriptions.rewards_card.email.isSubscribed'];
+                  //  delete e.formData['subscriptions.food_safety.email.isSubscribed'];
+                  //  delete e.formData['subscriptions.healthy_living.email.isSubscribed'];
+                 //   delete e.formData['subscriptions.sales_promotions.email.isSubscribed'];
+                    return true;
+                },
+                onError: handleScreenSetError,
+                // The "OK" button on the thank-you screen closes/hides the
+                // screen-set rather than submitting a form, so onHide (not
+                // onAfterSubmit) is what actually fires when it's clicked.
+                onHide: function (e) {
+                    console.log("[Lite Registration] onHide:", e);
+                    window.location.href = CDC_HOME_URL;
+                },
+                onAfterSubmit: function (e) {
+                    if (e && e.response && e.response.errorCode === 0) {
+                        // Default behavior for the "Subscribe with email" screen:
+                        // subscribe the user to rewards_card email
+                        // Commented out for now.
+                        // updateRewardsEmailSubscription(true, function (upd) {
+                        //     if (upd.errorCode === 0) {
+                        //         showToast('Subscribed to Rewards Card emails.');
+                        //     } else {
+                        //         console.warn('Subscription update failed:', upd);
+                        //         showToast('Could not update subscription. Please try later.');
+                        //     }
+                        // });
+                        return true;
+                    }
+                    normalizeFailedSubmitFieldError(e);
+                },
+                onFieldChanged: handleScreenSetFieldChanged,
+                onAfterScreenLoad: handleScreenSetAfterLoad
+            });
+        }
+
+        // Render the Profile Update screen
+        function renderProfileUpdateScreen() {
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-ProfileUpdate',
+                startScreen: 'mpaturu-gigya-update-profile-screen',
+                containerID: 'screensetContainer',
+                onError: handleScreenSetError,
+                onAfterSubmit: function (e) {
+                    if (e.screen === 'mpaturu-gigya-update-profile-screen' && e.response.status === 'OK') {
+                        showToast('Your profile has been successfully updated.');
+                        // Delay the redirect long enough for the toast to actually be
+                        // seen before the page unloads (showToast fades out at 1500ms).
+                        setTimeout(() => {
+                            window.location.href = CDC_HOME_URL;
+                        }, 1500);
+                        return;
+                    }
+                    normalizeFailedSubmitFieldError(e);
+                }
+            });
+        }
+
+        // Dispatch to the right screen renderer based on the URL hash.
+        // Only relevant on pages that actually host the auth screenset
+        // (pages/my-account.html). On pages without it (e.g. the home page),
+        // there's nothing to render, and skipping avoids an already-logged-in
+        // user being redirected "home" while already on the home page —
+        // which would just reload the page and re-trigger this on every load,
+        // looping forever.
+        function renderAuthScreen() {
+            if (!document.getElementById('screensetContainer')) return;
+            const hash = (window.location.hash || '').toLowerCase();
+            if (['#register', '#signup', '#create', '#create-account'].includes(hash)) {
+                renderRegistrationScreen();
+            } else if (hash === '#lite') {
+                renderLiteRegistrationScreen();
+            } else {
+                // Default (My Account) destination: show the profile update
+                // screen for an already-authenticated user, otherwise fall
+                // back to the login screen.
+                gigya.accounts.getAccountInfo({
+                    callback: function (res) {
+                        if (res.errorCode === 0) {
+                            renderProfileUpdateScreen();
+                        } else {
+                            renderLoginScreen();
+                        }
+                    }
+                });
+            }
+        }
+
+        // Expose separate methods for external use: Login, Registration, Lite Registration
+        // Accessible as `window.sapCds.showLogin()`, `window.sapCds.showRegistration()`, etc.
+        window.sapCds = window.sapCds || {};
+        window.sapCds.showLogin = function () { return renderLoginScreen(); };
+        window.sapCds.showRegistration = function () { return renderRegistrationScreen(); };
+        window.sapCds.showLiteRegistration = function () { return renderLiteRegistrationScreen(); };
+        window.sapCds.showProfileUpdate = function () { return renderProfileUpdateScreen(); };
+        // Additional helpers
+        window.sapCds.renderAuthScreen = renderAuthScreen;
+        window.sapCds.setLoggedInUI = setLoggedInUI;
+        window.sapCds.setLoggedOutUI = setLoggedOutUI;
+        function setLoggedInUI(account) {
+            // Hide the auth links
+            const notLoggedIn = document.querySelector(".fp-not-logged-in");
+            if (notLoggedIn) notLoggedIn.style.display = "none";
+
+/*             document.getElementById("nav-login").style.display = "none";
+            document.getElementById("nav-register").style.display = "none";
+
+            // Show the authenticated links
+            document.getElementById("nav-myaccount").style.display = "";
+            document.getElementById("nav-logout").style.display = "";
+
+            // Show welcome strip with the user's first name (or email fallback)
+            var name = (account.profile && account.profile.firstName)
+                ? account.profile.firstName
+                : (account.profile && account.profile.email)
+                    ? account.profile.email
+                    : "User";
+
+            document.getElementById("welcome-name").textContent = name;
+
+            var strip = document.getElementById("welcome-strip");
+            strip.style.display = "flex";
+
+            // Clear any screenset still rendered in the container
+            document.getElementById(CDC_CONFIG.containerId).innerHTML = ""; */
+        }
+
+        /**
+         * Switch the header nav into the LOGGED-OUT state.
+         * Restores Login/Register; hides My Account/Logout.
+         */
+        function setLoggedOutUI() {
+
+/*             document.getElementById("nav-login").style.display = "";
+            document.getElementById("nav-register").style.display = "";
+
+            document.getElementById("nav-myaccount").style.display = "none";
+            document.getElementById("nav-logout").style.display = "none";
+
+            document.getElementById("welcome-strip").style.display = "none";
+
+            // Clear the screenset container
+            document.getElementById(CDC_CONFIG.containerId).innerHTML = ""; */
+        }
+
+        // Bootstrap with hashchange (debounced to avoid double render)
+        // NOTE: the CDC Web SDK calls this global function automatically once
+        // it has finished initializing — it must be a plain global function
+        // named exactly onGigyaServiceReady, not a property on another object.
+        function onGigyaServiceReady() {
+            renderAuthScreen();
+
+            window.addEventListener('hashchange', (() => {
+                let timer;
+                return function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => renderAuthScreen(), 50);
+                };
+            })());
+
+
+            // Session events: as a fallback, update subscription right after login if Lite was used
+            gigya.accounts.addEventHandlers({
+                onLogin: function (event) {
+                    console.log("[CDC] Global onLogin — UID:", event.UID);
+                    const sHash = (window.location.hash || '').toLowerCase();
+                    if (sHash === '#lite') {
+                        // In case onAfterSubmit didn't fire (some flows), ensure subscription is set
+                        // Commented out for now.
+                        // updateRewardsEmailSubscription(true);
+                    }
+
+                    freshShopRegVerification(); // Session now exists — safe to call gigya.accounts.getJWT
+
+                   setLoggedInUI(event);
+                },
+                onLogout: function (event) { /* optional */
+                    // Fired after any logout, including session expiry.
+                    console.log("[CDC] Global onLogout.");
+                 //   setLoggedOutUI();
+                }
+            });
+
+            gigya.accounts.session.verify({
+                callback: function (response) {
+                    // optional: nothing to change here for validation
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            gigya.accounts.getAccountInfo({
+                callback: function (res) {
+
+                    if (res.errorCode === 0) {
+                        // Logged in
+
+                        const profile = res.profile || {};
+
+                        // -------------------------------------------------------------
+                        // Emarsys Scarab (scarab-v2.js) — identify the logged-in CDC user
+                        // -------------------------------------------------------------
+                        // scarab-v2.js is injected asynchronously in index.html, so
+                        // `ScarabQueue` may not exist yet by the time this callback runs.
+                        // Wait for it instead of assuming it's already loaded.
+                        (function runEmarsysTracking(retries) {
+                            retries = retries || 0;
+                            if (!window.ScarabQueue) {
+                                if (retries >= 50) {
+                                    console.warn("[CDC] ScarabQueue not available after waiting; skipping Scarab tracking.");
+                                    return;
+                                }
+                                setTimeout(function () { runEmarsysTracking(retries + 1); }, 200);
+                                return;
+                            }
+
+                            ScarabQueue.push(['setEmail', profile.email]);
+                            ScarabQueue.push(['setCustomerId', (res.data || {})['ARTS_CUST_KEY']]);
+
+                            // -------------------------------------------------------------
+                            // Hard-coded Scarab events
+                            // -------------------------------------------------------------
+                            ScarabQueue.push(['category', "account"]);
+
+                            ScarabQueue.push(['view', "SKU-001"]);
+
+                            ScarabQueue.push(['searchTerm', "running shoes"]);
+
+                            ScarabQueue.push(['cart', [
+                                { item: "SKU-001", price: 79.99, quantity: 1 }
+                            ]]);
+
+                            ScarabQueue.push(['purchase', {
+                                orderId: "ORDER-12345",
+                                items: [
+                                    { item: "SKU-001", price: 79.99, quantity: 2 }
+                                ]
+                            }]);
+
+                            // GO command — must be last
+                            ScarabQueue.push(['go']);
+                        })();
+
+                        const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
+                        const name =
+                            fullName ||
+                            profile.firstName ||
+                            profile.nickname ||
+                            "User";
+
+                        // Update user name
+                        const userNameEl = document.querySelector(".fp-user-name");
+                        if (userNameEl) userNameEl.textContent = name;
+
+                        // Reveal ALL welcome elements
+                        const welcome = document.querySelector(".fp-welcome");
+                        if (welcome) welcome.style.display = "inline-flex";
+
+                        const account = document.querySelector(".fp-welcome-account");
+                        if (account) account.style.display = "inline";
+
+                        const separator = document.querySelector(".fp-welcome-separator");
+                        if (separator) separator.style.display = "inline";
+
+                        const arrow = document.querySelector(".fp-welcome-angle-down");
+                        if (arrow) arrow.style.display = "inline-block";
+
+                        // Hide login/create block
+                        const notLoggedIn = document.querySelector(".fp-not-logged-in");
+                        if (notLoggedIn) notLoggedIn.style.display = "none";
+
+
+                    } else {
+                        // Logged out
+                        const welcome = document.querySelector(".fp-welcome");
+                        if (welcome) welcome.style.display = "none";
+
+                        const notLoggedIn = document.querySelector(".fp-not-logged-in");
+                        if (notLoggedIn) notLoggedIn.style.display = "inline-block";
+                    }
+                }
+            });
+            const trigger = document.querySelector('.fp-your-account');
+            const arrow = document.querySelector('.fp-welcome-angle-down');
+            const menu = document.querySelector('.fp-user-session-menu');
+
+            if (trigger && menu) {
+
+                // CLICK ON ARROW → TOGGLE DROPDOWN (NO NAVIGATION)
+                if (arrow) {
+                    arrow.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const isOpen = menu.style.display === "block";
+                        menu.style.display = isOpen ? "none" : "block";
+                    });
+                }
+
+                // CLICK ON "My Account" TEXT LINK → NORMAL NAVIGATION
+                // (do not override link behavior)
+
+                // CLICK ON WRAPPER (div) → TOGGLE DROPDOWN, DO NOT NAVIGATE
+                trigger.addEventListener('click', function (e) {
+                    // block only when clicking the wrapper, not the link
+                    if (!e.target.classList.contains('fp-your-account-link')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const isOpen = menu.style.display === "block";
+                        menu.style.display = isOpen ? "none" : "block";
+                    }
+                });
+
+                // CLICK OUTSIDE → CLOSE DROPDOWN
+                document.addEventListener('click', function (e) {
+                    if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+                        menu.style.display = "none";
+                    }
+                });
+
+                // CLICK ON "Logout" → actually end the CDC session first.
+                // The link's href just points at my-account.html, which (since the
+                // session was still active) re-rendered the Profile Update screen
+                // instead of logging out. Intercept it, call gigya.accounts.logout,
+                // and only then navigate home.
+                const logoutLink = Array.from(menu.querySelectorAll('a')).find(function (a) {
+                    return a.textContent.trim() === 'Logout';
+                });
+                if (logoutLink) {
+                    logoutLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        gigya.accounts.logout({
+                            callback: function () {
+                                showToast('You have been successfully logged out.');
+                                // Delay the redirect long enough for the toast to actually
+                                // be seen before the page unloads (showToast fades out at
+                                // 1500ms — see showToast above).
+                                setTimeout(() => {
+                                    window.location.href = CDC_HOME_URL;
+                                }, 1500);
+                            }
+                        });
+                    });
+                }
+
+            }
+        });
