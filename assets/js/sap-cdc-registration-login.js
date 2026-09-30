@@ -15,7 +15,7 @@
     if (h) h.showToast(message);
   },
 
-  // Called before validation of the form.
+  // Called before validation of the form. Unused.
   onBeforeValidation: function(event) {
   },
 
@@ -31,18 +31,21 @@
 
 
 
-  // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
+  // On the EDIPI-validated resubmit (see onBeforeSubmit), overwrite the real
+  // militaryId with a placeholder so the validated ID itself isn't stored.
   onSubmit: function(event) {
-
     if (window._pendingMilitaryIdZero) {
       window._pendingMilitaryIdZero = false;
-  event.formModel.data.militaryId="0000000000";
+      event.formModel.data.militaryId = "0000000000";
     }
   },
 
-  // Called after a form is submitted.
+  // Called after a form is submitted. Unused.
   onAfterSubmit: function(event) {
   },
+
+  // Defines document.__cdcNs.helpers (shared toast/error/EDIPI helpers used
+  // by the other handlers below) once, the first time any screen loads.
   onBeforeScreenLoad: function (event) {
     var doc = document;
     if (!doc.__cdcNs) {
@@ -57,21 +60,18 @@
             toast.style.left = '50%';
             toast.style.transform = 'translate(-50%, -50%)';
 
-            /* Bigger size */
             toast.style.minWidth = '350px';
             toast.style.maxWidth = '500px';
-            toast.style.padding = '30px 40px';   // bigger height + width
-            toast.style.fontSize = '20px';       // larger font
+            toast.style.padding = '30px 40px';
+            toast.style.fontSize = '20px';
             toast.style.lineHeight = '28px';
 
-            /* Style */
             toast.style.background = 'rgba(40, 40, 40, 0.95)';
             toast.style.color = 'white';
             toast.style.textAlign = 'center';
             toast.style.borderRadius = '12px';
             toast.style.boxShadow = '0 8px 30px rgba(0,0,0,0.35)';
 
-            /* Animation */
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.4s ease';
 
@@ -79,13 +79,8 @@
 
             document.body.appendChild(toast);
 
-            // Fade in
             setTimeout(() => { toast.style.opacity = '1'; }, 20);
-
-            // Fade out
             setTimeout(() => { toast.style.opacity = '0'; }, 1500);
-
-            // Remove
             setTimeout(() => { toast.remove(); }, 2000);
           },
 
@@ -111,7 +106,7 @@
               'h2.gigya-screen-title'
             ];
             var nodes = root.querySelectorAll(selectors.join(','));
-            var pattern = new RegExp(words.join('|'), 'i'); // case-insensitive
+            var pattern = new RegExp(words.join('|'), 'i');
 
             nodes.forEach(function (el) {
               var text = (el.textContent || '').trim();
@@ -146,24 +141,40 @@
           // Fetch an OAuth access token for the validate-edipi API via the
           // client_credentials token endpoint (Basic auth with client id/secret).
           getEdipiAccessToken: async function () {
+            console.log('[getEdipiAccessToken] called');
             const tokenUrl = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi/token";
             const clientId = "6sr10dNf0N11HBapfXAUDRAcAtzA6P12";
             const clientSecret = "wHRsalGMvQJISkeI";
             const basicAuth = btoa(`${clientId}:${clientSecret}`);
+            console.log('[getEdipiAccessToken] requesting token from', tokenUrl);
 
-            const response = await fetch(tokenUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Authorization": `Basic ${basicAuth}`
-              },
-              body: "grant_type=client_credentials"
+            let response;
+            try {
+              response = await fetch(tokenUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "Authorization": `Basic ${basicAuth}`
+                },
+                body: "grant_type=client_credentials"
+              });
+            } catch (fetchErr) {
+              console.error('[getEdipiAccessToken] fetch threw (network/CORS error):', fetchErr && fetchErr.name, fetchErr && fetchErr.message, fetchErr);
+              throw fetchErr;
+            }
+            console.log('[getEdipiAccessToken] token response received. status =', response.status, 'ok =', response.ok);
+
+            const result = await response.json().catch(function (parseErr) {
+              console.error('[getEdipiAccessToken] failed to parse token response JSON:', parseErr);
+              return null;
             });
+            console.log('[getEdipiAccessToken] parsed token response body:', result);
 
-            const result = await response.json().catch(() => null);
             if (!response.ok || !result || !result.access_token) {
+              console.error('[getEdipiAccessToken] token request failed. status =', response.status, 'body =', result);
               throw new Error("EDIPI token request failed: " + response.status);
             }
+            console.log('[getEdipiAccessToken] got access token, length =', result.access_token.length);
             return result.access_token;
           },
 
@@ -171,26 +182,40 @@
           // First fetches an access token from the validate-edipi/token endpoint,
           // then uses it as the Bearer token for the validate-edipi call.
           validateEdipi: async function (militaryId) {
-          
+            console.log('[validateEdipi] called with militaryId =', militaryId);
+
             const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi";
             const payload = {
               edipi: militaryId
             };
 
+            console.log('[validateEdipi] fetching access token...');
             const accessToken = await this.getEdipiAccessToken();
+            console.log('[validateEdipi] access token obtained, calling validate-edipi at', url);
 
-            const response = await fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`
-              },
-              body: JSON.stringify(payload)
+            let response;
+            try {
+              response = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${accessToken}`
+                },
+                body: JSON.stringify(payload)
+              });
+            } catch (fetchErr) {
+              console.error('[validateEdipi] fetch threw (network/CORS error):', fetchErr && fetchErr.name, fetchErr && fetchErr.message, fetchErr);
+              throw fetchErr;
+            }
+            console.log('[validateEdipi] validate-edipi response received. status =', response.status, 'ok =', response.ok);
+
+            const result = await response.json().catch(function (parseErr) {
+              console.error('[validateEdipi] failed to parse validate-edipi response JSON:', parseErr);
+              return null;
             });
-
-            const result = await response.json().catch(() => null);
-            console.log("EDIPI validation response:", response.status, result);
+            console.log("[validateEdipi] response body:", response.status, result);
             const isValid = response.ok && !!result && result.result === "continue_registration";
+            console.log('[validateEdipi] isValid =', isValid, '(response.ok =', response.ok, ', result.result =', result && result.result, ')');
             return { ok: isValid, status: response.status, result: result };
           }
         }
@@ -310,10 +335,10 @@
     // how the iOS app's webview bridge sets it, so the clamp silently never ran there.
   },
 
-  // Use the helpers in other handlers
+  // Gates registration submit on Military ID (EDIPI) validation. This Global
+  // Config applies to every screen in the screen-set, so only run the
+  // Registration-screen EDIPI/rewards-ID logic on that screen.
   onBeforeSubmit: function (event) {
-    // This Global Config applies to every screen in the screen-set, so only
-    // run the Registration-screen EDIPI/rewards-ID logic on that screen.
     console.log('[onBeforeSubmit] fired. event.screen =', event && event.screen);
     console.log('[onBeforeSubmit] full event:', event);
 
@@ -356,31 +381,32 @@
       return true;
     }
 
-    // h.validateEdipi(militaryId).then(function (res) {
-    //   if (res.ok) {
-    //     window._edipiValidated = true;
-    //     // The actual militaryId is not stored on success; onSubmit sets the
-    //     // field to a fixed placeholder value once this resubmit goes through.
-    //     // The resubmit re-reads formData from the DOM, so the real field
-    //     // (bound via name="data.militaryId") must be updated, not event.formData.
-    //     window._pendingMilitaryIdZero = true;
-    //     var submitBtn = document.querySelector(
-    //       '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
-    //     );
-    //     if (submitBtn) {
-    //       submitBtn.click();
-    //     }
-    //   } else {
-    //     h.showToast("Military ID could not be validated. Please check and try again.");
-    //   }
-    // }).catch(function (err) {
-    //   console.error("EDIPI validation error:", err);
-    //   h.showToast("Could not validate Military ID right now. Please try again.");
-    // });
+    console.log('[onBeforeSubmit] calling h.validateEdipi with militaryId =', militaryId);
+    h.validateEdipi(militaryId).then(function (res) {
+      console.log('[onBeforeSubmit] validateEdipi resolved:', res);
+      if (res.ok) {
+        window._edipiValidated = true;
+        // The actual militaryId is not stored on success; onSubmit sets the
+        // field to a fixed placeholder value once this resubmit goes through.
+        // The resubmit re-reads formData from the DOM, so the real field
+        // (bound via name="data.militaryId") must be updated, not event.formData.
+        window._pendingMilitaryIdZero = true;
+        var submitBtn = document.querySelector(
+          '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+        );
+        if (submitBtn) {
+          submitBtn.click();
+        }
+      } else {
+        h.showToast("Military ID could not be validated. Please check and try again.");
+      }
+    }).catch(function (err) {
+      console.error("[onBeforeSubmit] EDIPI validation error:", err && err.name, err && err.message, err);
+      h.showToast("Could not validate Military ID right now. Please try again.");
+    });
 
-    // EDIPI validation temporarily disabled; allow submit through unchecked.
-    console.log('[onBeforeSubmit] EDIPI validation disabled, allowing submit through. returning true.');
-    return true;
+    console.log('[onBeforeSubmit] EDIPI validation started, canceling this submit. returning false.');
+    return false;
   },
 
   // Called when a field is changed in a managed form.
@@ -412,9 +438,8 @@
       }
     }
 
-    // Your field binding name:
-    // If you use username-as-login, CDC usually binds the input to 'loginID' but validationErrors may reference 'username'.
-    // Handle both to be safe:
+    // CDC binds this input to 'loginID', but its validation error references
+    // 'username' — handle both field names to catch it either way.
     if (event.field === 'username' || event.field === 'loginID') {
       // Slight delay to let CDC render the error into the DOM first
       setTimeout(function () {
@@ -423,15 +448,17 @@
     }
   },
 
-  // Called when a user clicks the "X" (close) button or the screen is hidden following the end of the flow.
+  // Called when the "X" (close) button is clicked or the screen is hidden
+  // after the flow ends. Unused.
   onHide: function(event) {
   },
 
-  // Called when a user clicks a custom button.
+  // Called when a custom button is clicked. Unused.
   onButtonClicked: function(event) {
   },
 
-  // Called when a screen is automatically skipped because the "Skip if data exists" option is enabled and the user already has data for all fields on that screen.
+  // Called when a screen is auto-skipped ("Skip if data exists" already
+  // satisfied). Unused.
   onAutoSkip: function(event) {
   }
 }
