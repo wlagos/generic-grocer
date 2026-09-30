@@ -23,10 +23,10 @@ async function getJwtToken() {
 //
 // STEP 2 — Use returned token to call the SAP API
 //
-async function callCustomerProfile(jwtToken) {
+async function callCustomerProfile(jwtToken, type = "login") {
 
-  //const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/registration";
-  const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/login" ;
+  const endpoint = type === "registration" ? "registration" : "login";
+  const url = `https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/${endpoint}`;
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -48,14 +48,14 @@ async function callCustomerProfile(jwtToken) {
 // Login fires this from two places (the login screen's onAfterSubmit and
 // the global gigya onLogin handler) as a safety net for handler ordering,
 // so an in-flight call is reused rather than firing getJWT/login twice.
-async function freshShopRegVerification() {
+async function freshShopRegVerification(type = "login") {
   if (window._freshShopRegPromise) {
     return window._freshShopRegPromise;
   }
   window._freshShopRegPromise = (async () => {
     try {
       const jwt = await getJwtToken();               // Step 2
-      return await callCustomerProfile(jwt);          // Step 3 — { id_token, patron_validation }
+      return await callCustomerProfile(jwt, type);    // Step 3 — { id_token, patron_validation }
     } catch (err) {
       console.error("Error:", err);
       return null;
