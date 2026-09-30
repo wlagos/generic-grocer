@@ -1,7 +1,7 @@
         // Resolve the site's home URL from wherever this script was actually
         // loaded from, so redirects work whether the including page lives at
         // the site root (index.html) or one level down (pages/*.html) —
-        // without hardcoding a domain or repo path.f
+        // without hardcoding a domain or repo path.
         var CDC_HOME_URL = (function () {
             var scriptEl = document.currentScript;
             if (!scriptEl) {
@@ -20,23 +20,17 @@
         })();
 
         // Builds the post-login/registration redirect URL, appending the
-        // id_token plus whichever verification field the customer-profile API
-        // returned — patron_validation for login, redirectUrl for registration —
+        // id_token plus patron_validation returned by the customer-profile API
         // so the target page can pick them up. Falls back to the bare
         // CDC_HOME_URL when freshShopRegVerification didn't produce a result
         // (e.g. it failed).
         function buildHomeUrlWithAuth(regResult) {
-            if (!regResult || !regResult.id_token || (!regResult.patron_validation && !regResult.redirectUrl)) {
+            if (!regResult || !regResult.id_token || !regResult.patron_validation) {
                 return CDC_HOME_URL;
             }
             var params = new URLSearchParams();
             params.set('id_token', regResult.id_token);
-            if (regResult.patron_validation) {
-                params.set('patron_validation', regResult.patron_validation);
-            }
-            if (regResult.redirectUrl) {
-                params.set('redirectUrl', regResult.redirectUrl);
-            }
+            params.set('patron_validation', regResult.patron_validation);
             var separator = CDC_HOME_URL.indexOf('?') === -1 ? '?' : '&';
             return CDC_HOME_URL + separator + params.toString();
         }
@@ -50,7 +44,7 @@
                 'h2.gigya-screen-title'
             ];
             const nodes = root.querySelectorAll(selectors.join(','));
-            const pattern = new RegExp(words.join('|'), 'i'); // case-insensitive
+            const pattern = new RegExp(words.join('|'), 'i');
 
             nodes.forEach(el => {
                 const text = (el.textContent || '').trim();
@@ -70,21 +64,18 @@
             toast.style.left = '50%';
             toast.style.transform = 'translate(-50%, -50%)';
 
-            /* Bigger size */
             toast.style.minWidth = '350px';
             toast.style.maxWidth = '500px';
-            toast.style.padding = '30px 40px';   // bigger height + width
-            toast.style.fontSize = '20px';       // larger font
+            toast.style.padding = '30px 40px';
+            toast.style.fontSize = '20px';
             toast.style.lineHeight = '28px';
 
-            /* Style */
             toast.style.background = 'rgba(40, 40, 40, 0.95)';
             toast.style.color = 'white';
             toast.style.textAlign = 'center';
             toast.style.borderRadius = '12px';
             toast.style.boxShadow = '0 8px 30px rgba(0,0,0,0.35)';
 
-            /* Animation */
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.4s ease';
 
@@ -92,13 +83,8 @@
 
             document.body.appendChild(toast);
 
-            // Fade in
             setTimeout(() => { toast.style.opacity = '1'; }, 20);
-
-            // Fade out
             setTimeout(() => { toast.style.opacity = '0'; }, 1500);
-
-            // Remove
             setTimeout(() => { toast.remove(); }, 2000);
         }
         /**
@@ -198,7 +184,7 @@
         // Shared onError handler for the Lite Registration and Profile Update
         // screensets: surfaces screen-set-level errors (e.g. network/
         // communication failures) to the user instead of silently swallowing
-        // them, and logs the full event for debugging.   MounicaMeghana@2026
+        // them, and logs the full event for debugging.
         // The Registration and Login screens' onError now lives in
         // cdc-base.js's Global Config.
         function handleScreenSetError(event) {
