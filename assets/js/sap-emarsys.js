@@ -49,10 +49,11 @@ async function callCustomerProfile(jwtToken, type = "login") {
 // the global gigya onLogin handler) as a safety net for handler ordering,
 // so an in-flight call is reused rather than firing getJWT/login twice.
 async function freshShopRegVerification(type = "login") {
-  if (window._freshShopRegPromise) {
-    return window._freshShopRegPromise;
+  window._freshShopRegPromises = window._freshShopRegPromises || {};
+  if (window._freshShopRegPromises[type]) {
+    return window._freshShopRegPromises[type];
   }
-  window._freshShopRegPromise = (async () => {
+  window._freshShopRegPromises[type] = (async () => {
     try {
       const jwt = await getJwtToken();               // Step 2
       return await callCustomerProfile(jwt, type);    // Step 3 — { id_token, patron_validation }
@@ -60,8 +61,8 @@ async function freshShopRegVerification(type = "login") {
       console.error("Error:", err);
       return null;
     } finally {
-      window._freshShopRegPromise = null;
+      window._freshShopRegPromises[type] = null;
     }
   })();
-  return window._freshShopRegPromise;
+  return window._freshShopRegPromises[type];
 }
