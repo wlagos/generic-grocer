@@ -45,7 +45,13 @@ async function callCustomerProfile(jwtToken) {
 // Tracks the in-flight promise on window so callers elsewhere (e.g. the
 // post-login redirect in sap-cdc.js) can wait for this to actually finish
 // instead of racing a navigation against the fetch and losing the result.
+// Login fires this from two places (the login screen's onAfterSubmit and
+// the global gigya onLogin handler) as a safety net for handler ordering,
+// so an in-flight call is reused rather than firing getJWT/login twice.
 async function freshShopRegVerification() {
+  if (window._freshShopRegPromise) {
+    return window._freshShopRegPromise;
+  }
   window._freshShopRegPromise = (async () => {
     try {
       const jwt = await getJwtToken();               // Step 2
@@ -53,6 +59,8 @@ async function freshShopRegVerification() {
     } catch (err) {
       console.error("Error:", err);
       return null;
+    } finally {
+      window._freshShopRegPromise = null;
     }
   })();
   return window._freshShopRegPromise;
