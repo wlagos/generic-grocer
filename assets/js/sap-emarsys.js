@@ -27,13 +27,21 @@ async function callCustomerProfile(jwtToken, type = "login") {
 
   const endpoint = type === "registration" ? "registration" : "login";
   const url = `https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/${endpoint}`;
-  const response = await fetch(url, {
+  const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${jwtToken}`
     }
-  });
+  };
+  if (type === "registration") {
+    const payload = {
+      edipi: "2111704251",
+      mobile: "5551234567"
+    };
+    options.body = JSON.stringify(payload);
+  }
+  const response = await fetch(url, options);
   const result = await response.json();
   console.log("API Response:", result);
   return result;
