@@ -20,17 +20,23 @@
         })();
 
         // Builds the post-login/registration redirect URL, appending the
-        // id_token and patron_validation fields returned by the
-        // customer-profile API so the target page can pick them up. Falls
-        // back to the bare CDC_HOME_URL when freshShopRegVerification didn't
-        // produce a result (e.g. it failed).
+        // id_token plus whichever verification field the customer-profile API
+        // returned — patron_validation for login, redirectUrl for registration —
+        // so the target page can pick them up. Falls back to the bare
+        // CDC_HOME_URL when freshShopRegVerification didn't produce a result
+        // (e.g. it failed).
         function buildHomeUrlWithAuth(regResult) {
-            if (!regResult || !regResult.id_token || !regResult.patron_validation) {
+            if (!regResult || !regResult.id_token || (!regResult.patron_validation && !regResult.redirectUrl)) {
                 return CDC_HOME_URL;
             }
             var params = new URLSearchParams();
             params.set('id_token', regResult.id_token);
-            params.set('patron_validation', regResult.patron_validation);
+            if (regResult.patron_validation) {
+                params.set('patron_validation', regResult.patron_validation);
+            }
+            if (regResult.redirectUrl) {
+                params.set('redirectUrl', regResult.redirectUrl);
+            }
             var separator = CDC_HOME_URL.indexOf('?') === -1 ? '?' : '&';
             return CDC_HOME_URL + separator + params.toString();
         }
