@@ -6,7 +6,7 @@
   onError: function(event) {
   },
 
-  // Called before validation of the form.
+  // Called before validation of the form. Unused.
   onBeforeValidation: function(event) {
   },
 
@@ -15,11 +15,11 @@
   onLogin: function (event) {
   },
 
-  // Called when a form is submitted, can return a value or a promise. This event gives you an opportunity to modify the form data when it is submitted.
+  // Called when a form is submitted. Unused.
   onSubmit: function(event) {
   },
 
-  // Called after a form is submitted.
+  // Called after a form is submitted. Unused.
   onAfterSubmit: function(event) {
   },
   onBeforeScreenLoad: function (event) {
@@ -36,21 +36,18 @@
             toast.style.left = '50%';
             toast.style.transform = 'translate(-50%, -50%)';
 
-            /* Bigger size */
             toast.style.minWidth = '350px';
             toast.style.maxWidth = '500px';
-            toast.style.padding = '30px 40px';   // bigger height + width
-            toast.style.fontSize = '20px';       // larger font
+            toast.style.padding = '30px 40px';
+            toast.style.fontSize = '20px';
             toast.style.lineHeight = '28px';
 
-            /* Style */
             toast.style.background = 'rgba(40, 40, 40, 0.95)';
             toast.style.color = 'white';
             toast.style.textAlign = 'center';
             toast.style.borderRadius = '12px';
             toast.style.boxShadow = '0 8px 30px rgba(0,0,0,0.35)';
 
-            /* Animation */
             toast.style.opacity = '0';
             toast.style.transition = 'opacity 0.4s ease';
 
@@ -58,13 +55,8 @@
 
             document.body.appendChild(toast);
 
-            // Fade in
             setTimeout(() => { toast.style.opacity = '1'; }, 20);
-
-            // Fade out
             setTimeout(() => { toast.style.opacity = '0'; }, 1500);
-
-            // Remove
             setTimeout(() => { toast.remove(); }, 2000);
           },
 
@@ -256,15 +248,17 @@
     }
   },
 
-  // Called when a user clicks the "X" (close) button or the screen is hidden following the end of the flow.
+  // Called when the "X" (close) button is clicked or the screen is hidden
+  // after the flow ends. Unused.
   onHide: function(event) {
   },
 
-  // Called when a user clicks a custom button.
+  // Called when a custom button is clicked. Unused.
   onButtonClicked: function(event) {
   },
 
-  // Called when a screen is automatically skipped because the "Skip if data exists" option is enabled and the user already has data for all fields on that screen.
+  // Called when a screen is auto-skipped ("Skip if data exists" already
+  // satisfied). Unused.
   onAutoSkip: function(event) {
   }
 }
