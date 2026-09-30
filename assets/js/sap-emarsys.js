@@ -1,3 +1,4 @@
+
 async function getJwtToken() {
   return new Promise((resolve, reject) => {
     gigya.accounts.getJWT({
@@ -14,9 +15,6 @@ async function getJwtToken() {
   });
 }
 
-//
-// STEP 2 — Use returned token to call the SAP API
-//
 async function callCustomerProfile(jwtToken, type = "login") {
 
   const endpoint = type === "registration" ? "registration" : "login";
@@ -41,9 +39,6 @@ async function callCustomerProfile(jwtToken, type = "login") {
   return result;
 }
 
-//
-// STEP 3 — Run both steps
-//
 // Tracks the in-flight promise on window so callers elsewhere (e.g. the
 // post-login redirect in sap-cdc.js) can wait for this to actually finish
 // instead of racing a navigation against the fetch and losing the result.
@@ -57,8 +52,8 @@ async function freshShopRegVerification(type = "login") {
   }
   window._freshShopRegPromises[type] = (async () => {
     try {
-      const jwt = await getJwtToken();               // Step 2
-      return await callCustomerProfile(jwt, type);    // Step 3 — { id_token, patron_validation }
+      const jwt = await getJwtToken();
+      return await callCustomerProfile(jwt, type);
     } catch (err) {
       console.error("Error:", err);
       return null;
