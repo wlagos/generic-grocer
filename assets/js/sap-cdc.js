@@ -350,8 +350,19 @@
                     // programmatically, which is how the iOS app's webview bridge does it.
                 }
 
+        // True while a registration form submission is in flight (or just
+        // completed). Gigya's global onLogin session event also fires for
+        // the implicit auto-login that follows a successful registration
+        // (when no email verification is pending), and without this flag
+        // that handler would additionally call freshShopRegVerification()
+        // with no type — defaulting to "login" — producing a spurious
+        // extra request to the login endpoint alongside the registration
+        // screen's own correct freshShopRegVerification('registration') call.
+        var _cdcRegistrationSubmitPending = false;
+
         // Render the Login screen
         function renderLoginScreen() {
+            _cdcRegistrationSubmitPending = false;
             gigya.accounts.showScreenSet({
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-login-screen',
@@ -385,9 +396,14 @@
                 containerID: 'screensetContainer',
                     onSubmit:function(event){
                             event.formModel.data.militaryId = "0000000000";
+                            _cdcRegistrationSubmitPending = true;
                     },
                   onAfterSubmit: function (e) {
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
+                        // No session was created (pending email verification) —
+                        // the next onLogin event will be a real login, not one
+                        // triggered by this registration.
+                        _cdcRegistrationSubmitPending = false;
                         showToast("Your profile has been successfully created.");
                         gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
@@ -599,7 +615,17 @@
                         // updateRewardsEmailSubscription(true);
                     }
 
-                    freshShopRegVerification(); // Session now exists — safe to call gigya.accounts.getJWT
+                    if (_cdcRegistrationSubmitPending) {
+                        // This session was just created by a registration
+                        // submit, not a real login — the registration
+                        // screen's own onAfterSubmit already calls
+                        // freshShopRegVerification('registration'). Skip the
+                        // no-arg (i.e. "login"-typed) call here to avoid an
+                        // extra, incorrectly-typed request to the backend.
+                        _cdcRegistrationSubmitPending = false;
+                    } else {
+                        freshShopRegVerification(); // Session now exists — safe to call gigya.accounts.getJWT
+                    }
 
                    setLoggedInUI(event);
                 },
