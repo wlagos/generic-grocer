@@ -1,5 +1,5 @@
         // Resolve the site's home URL from wherever this script was actually
-        // loaded from, so redirects work whether the including page lives at
+        // loaded from, so redirects work whether the including page lives at 
         // the site root (index.html) or one level down (pages/*.html) —
         // without hardcoding a domain or repo path.
         var CDC_HOME_URL = (function () {
