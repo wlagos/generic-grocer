@@ -33,7 +33,20 @@
 
   // On the EDIPI-validated resubmit (see onBeforeSubmit), overwrite the real
   // militaryId with a placeholder so the validated ID itself isn't stored.
+  // Also copies Login ID into profile.email on the register screen: CDC's
+  // verification policy reads from profile.email, not Login ID, and the
+  // registration screen's "Email" field is bound to Login ID — so without
+  // this, the account always comes back missing profile.email even though
+  // the user already typed an email. Duplicated here (not just in the local
+  // onSubmit passed to showScreenSet in sap-cdc.js) in case this Global
+  // Config's onSubmit is what actually runs instead.
   onSubmit: function(event) {
+    if (event.screen !== 'mpaturu-gigya-register-screen') {
+      return;
+    }
+    if (event.formModel.data.loginID && !event.formModel.data['profile.email']) {
+      event.formModel.data['profile.email'] = event.formModel.data.loginID;
+    }
     if (window._pendingMilitaryIdZero) {
       window._pendingMilitaryIdZero = false;
       event.formModel.data.militaryId = "0000000000";
@@ -141,12 +154,10 @@
           // Fetch an OAuth access token for the validate-edipi API via the
           // client_credentials token endpoint (Basic auth with client id/secret).
           getEdipiAccessToken: async function () {
-            console.log('[getEdipiAccessToken] called');
             const tokenUrl = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi/token";
             const clientId = "6sr10dNf0N11HBapfXAUDRAcAtzA6P12";
             const clientSecret = "wHRsalGMvQJISkeI";
             const basicAuth = btoa(`${clientId}:${clientSecret}`);
-            console.log('[getEdipiAccessToken] requesting token from', tokenUrl);
 
             let response;
             try {
@@ -162,19 +173,16 @@
               console.error('[getEdipiAccessToken] fetch threw (network/CORS error):', fetchErr && fetchErr.name, fetchErr && fetchErr.message, fetchErr);
               throw fetchErr;
             }
-            console.log('[getEdipiAccessToken] token response received. status =', response.status, 'ok =', response.ok);
 
             const result = await response.json().catch(function (parseErr) {
               console.error('[getEdipiAccessToken] failed to parse token response JSON:', parseErr);
               return null;
             });
-            console.log('[getEdipiAccessToken] parsed token response body:', result);
 
             if (!response.ok || !result || !result.access_token) {
               console.error('[getEdipiAccessToken] token request failed. status =', response.status, 'body =', result);
               throw new Error("EDIPI token request failed: " + response.status);
             }
-            console.log('[getEdipiAccessToken] got access token, length =', result.access_token.length);
             return result.access_token;
           },
 
@@ -182,16 +190,12 @@
           // First fetches an access token from the validate-edipi/token endpoint,
           // then uses it as the Bearer token for the validate-edipi call.
           validateEdipi: async function (militaryId) {
-            console.log('[validateEdipi] called with militaryId =', militaryId);
-
             const url = "https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/validate-edipi";
             const payload = {
               edipi: militaryId
             };
 
-            console.log('[validateEdipi] fetching access token...');
             const accessToken = await this.getEdipiAccessToken();
-            console.log('[validateEdipi] access token obtained, calling validate-edipi at', url);
 
             let response;
             try {
@@ -207,7 +211,6 @@
               console.error('[validateEdipi] fetch threw (network/CORS error):', fetchErr && fetchErr.name, fetchErr && fetchErr.message, fetchErr);
               throw fetchErr;
             }
-            console.log('[validateEdipi] validate-edipi response received. status =', response.status, 'ok =', response.ok);
 
             const result = await response.json().catch(function (parseErr) {
               console.error('[validateEdipi] failed to parse validate-edipi response JSON:', parseErr);
@@ -215,7 +218,6 @@
             });
             console.log("[validateEdipi] response body:", response.status, result);
             const isValid = response.ok && !!result && result.result === "continue_registration";
-            console.log('[validateEdipi] isValid =', isValid, '(response.ok =', response.ok, ', result.result =', result && result.result, ')');
             return { ok: isValid, status: response.status, result: result };
           }
         }
@@ -339,25 +341,14 @@
   // Config applies to every screen in the screen-set, so only run the
   // Registration-screen EDIPI/rewards-ID logic on that screen.
   onBeforeSubmit: function (event) {
-    console.log('[onBeforeSubmit] fired. event.screen =', event && event.screen);
-    console.log('[onBeforeSubmit] full event:', event);
-
     if (event.screen !== 'mpaturu-gigya-register-screen') {
-      console.log('[onBeforeSubmit] not the register screen, skipping. returning true.');
       return true;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
-    console.log('[onBeforeSubmit] document.__cdcNs =', document.__cdcNs, ' h =', h);
     if (!h) {
-      console.error('[onBeforeSubmit] helpers (document.__cdcNs.helpers) are missing! ' +
-        'This means onBeforeScreenLoad never ran (or ran after this), so any h.xxx() call below ' +
-        'will throw and silently cancel the submit. Returning true to allow submit through.');
       return true;
     }
     var militaryId = event.formData['data.militaryId'];
-    console.log('[onBeforeSubmit] formData:', event.formData);
-    console.log('[onBeforeSubmit] militaryId =', militaryId);
-    console.log('[onBeforeSubmit] window._edipiValidated =', window._edipiValidated);
 
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
     // call. So: cancel this submit attempt, run the async validation, and
@@ -365,25 +356,19 @@
     // the rewards-ID check below, so its toast isn't shown twice) the
     // second time around via the _edipiValidated flag.
     if (window._edipiValidated) {
-      console.log('[onBeforeSubmit] _edipiValidated flag was set; resetting it and allowing submit through (skipping checks below).');
       window._edipiValidated = false;
       return true;
     }
 
     var rewardsId = event.formData['data.rewardsId'];
-    console.log('[onBeforeSubmit] rewardsId =', rewardsId);
     if (!rewardsId) {
-      console.log('[onBeforeSubmit] rewardsId is blank, showing toast.');
       h.showToast("Rewards ID is blank. Continuing…");
     }
     if (!militaryId) {
-      console.log('[onBeforeSubmit] militaryId is blank, returning true (allow submit).');
       return true;
     }
 
-    console.log('[onBeforeSubmit] calling h.validateEdipi with militaryId =', militaryId);
     h.validateEdipi(militaryId).then(function (res) {
-      console.log('[onBeforeSubmit] validateEdipi resolved:', res);
       if (res.ok) {
         window._edipiValidated = true;
         // The actual militaryId is not stored on success; onSubmit sets the
@@ -405,7 +390,6 @@
       h.showToast("Could not validate Military ID right now. Please try again.");
     });
 
-    console.log('[onBeforeSubmit] EDIPI validation started, canceling this submit. returning false.');
     return false;
   },
 
