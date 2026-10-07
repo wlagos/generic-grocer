@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verifying your account…</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #0f1115;
+            font-family: Arial, sans-serif;
+        }
+        .ev-wrap {
+            min-height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .ev-card {
+            width: 100%;
+            max-width: 420px;
+            background: #1b1e23;
+            border-radius: 8px;
+            padding: 40px;
+            color: #ffffff;
+            text-align: center;
+        }
+        .ev-spinner {
+            width: 36px;
+            height: 36px;
+            margin: 0 auto 24px;
+            border: 3px solid #343842;
+            border-top-color: #2ea44f;
+            border-radius: 50%;
+            animation: ev-spin 0.8s linear infinite;
+        }
+        @keyframes ev-spin {
+            to { transform: rotate(360deg); }
+        }
+        #ev-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 10px;
+        }
+        #ev-subtext {
+            font-size: 14px;
+            line-height: 20px;
+            color: #c4c7cc;
+            margin: 0;
+        }
+        #ev-signin {
+            display: none;
+            margin-top: 24px;
+            background-color: #2ea44f;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ev-wrap">
+        <div class="ev-card">
+            <div id="ev-spinner" class="ev-spinner"></div>
+            <p id="ev-title">Verifying your account…</p>
+            <p id="ev-subtext">Hang on while we finish activating your account.</p>
+            <a id="ev-signin" href="./index.html">Go to Sign In</a>
+        </div>
+    </div>
+
+    <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
+    <script src="assets/js/sap-emarsys.js"></script>
+    <script>
+        // This page is the redirectURL target configured on $emailVerificationLink
+        // in EmailVerificationTemplate.html. By the time CDC's hosted verification
+        // endpoint lands the browser here, it has already verified the token
+        // and logged the user in — so this just confirms the session exists,
+        // then runs the same post-auth call the registration/login screens run
+        // (see onAfterSubmit in assets/js/sap-cdc.js) before leaving this page.
+        var HOME_URL = './index.html';
+
+        function buildHomeUrlWithAuth(regResult) {
+            if (!regResult || !regResult.id_token || !regResult.patron_validation) {
+                return HOME_URL;
+            }
+            var params = new URLSearchParams();
+            params.set('id_token', regResult.id_token);
+            params.set('patron_validation', regResult.patron_validation);
+            return HOME_URL + '?' + params.toString();
+        }
+
+        function setStatus(title, subtext, showSignIn) {
+            document.getElementById('ev-title').textContent = title;
+            document.getElementById('ev-subtext').textContent = subtext || '';
+            document.getElementById('ev-spinner').style.display = showSignIn ? 'none' : 'block';
+            document.getElementById('ev-signin').style.display = showSignIn ? 'inline-block' : 'none';
+        }
+
+        function completeVerification(attempt) {
+            attempt = attempt || 0;
+            gigya.accounts.getAccountInfo({
+                callback: function (res) {
+                    if (res.errorCode === 0) {
+                        setStatus('Account verified!', 'Redirecting you now…', false);
+                        Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration') : null)
+                            .catch(function () { return null; })
+                            .then(function (regData) {
+                                window.location.href = buildHomeUrlWithAuth(regData);
+                            });
+                        return;
+                    }
+
+                    // The session cookie set by CDC's verification redirect can take
+                    // a moment to propagate before the SDK sees it — retry briefly
+                    // before concluding verification didn't actually succeed.
+                    if (attempt < 5) {
+                        setTimeout(function () { completeVerification(attempt + 1); }, 400);
+                        return;
+                    }
+
+                    setStatus(
+                        "We couldn't verify your account automatically.",
+                        'This link may have expired. Please sign in, or register again to receive a new verification email.',
+                        true
+                    );
+                }
+            });
+        }
+
+        // The CDC Web SDK calls this global function automatically once it has
+        // finished initializing — must be a plain global function named exactly
+        // onGigyaServiceReady, not a property on another object.
+        function onGigyaServiceReady() {
+            completeVerification();
+        }
+    </script>
+
+</body>
+</html>
