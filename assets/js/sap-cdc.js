@@ -396,6 +396,14 @@
                 containerID: 'screensetContainer',
                     onSubmit:function(event){
                             event.formModel.data.militaryId = "0000000000";
+                            // The registration screen's "Email" field is bound to
+                            // Login ID, not profile.email — CDC's verification policy
+                            // reads from profile.email specifically, so without this
+                            // the account always comes back missing it (errorCode
+                            // 206002) even though the user already typed an email.
+                            if (event.formModel.data.loginID && !event.formModel.data['profile.email']) {
+                                event.formModel.data['profile.email'] = event.formModel.data.loginID;
+                            }
                             _cdcRegistrationSubmitPending = true;
                     },
                   onAfterSubmit: function (e) {
@@ -411,7 +419,24 @@
                             // Required to continue a pending registration — without it
                             // the screen has no session context to finalize against,
                             // and any submit on it fails with "Unauthorized user".
-                            regToken: e.response.regToken
+                            regToken: e.response.regToken,
+                            onAfterSubmit: function (e2) {
+                                // Submitting the missing email here still leaves the
+                                // account pending verification (no session) — same as
+                                // the original registration submit — so hand off to the
+                                // login screen instead of leaving this screen up with
+                                // no further feedback.
+                                if (e2.response && (e2.response.errorCode === 0 || e2.response.errorCode === 206002)) {
+                                    showToast('Thanks! Please check your email to verify your account.');
+                                    gigya.accounts.showScreenSet({
+                                        screenSet: 'mpaturu-RegistrationLogin',
+                                        startScreen: 'mpaturu-gigya-login-screen',
+                                        containerID: 'screensetContainer'
+                                    });
+                                    return;
+                                }
+                                normalizeFailedSubmitFieldError(e2);
+                            }
                         });
                         return;
                     }
