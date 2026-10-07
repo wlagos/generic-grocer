@@ -71,12 +71,12 @@
             <div id="ev-spinner" class="ev-spinner"></div>
             <p id="ev-title">Verifying your account…</p>
             <p id="ev-subtext">Hang on while we finish activating your account.</p>
-            <a id="ev-signin" href="./index.html">Go to Sign In</a>
+            <a id="ev-signin" href="../index.html">Go to Sign In</a>
         </div>
     </div>
 
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
-    <script src="assets/js/sap-emarsys.js"></script>
+    <script src="../assets/js/sap-emarsys.js"></script>
     <script>
         // This page is the redirectURL target configured on $emailVerificationLink
         // in EmailVerificationTemplate.html. By the time CDC's hosted verification
@@ -84,7 +84,7 @@
         // and logged the user in — so this just confirms the session exists,
         // then runs the same post-auth call the registration/login screens run
         // (see onAfterSubmit in assets/js/sap-cdc.js) before leaving this page.
-        var HOME_URL = './index.html';
+        var HOME_URL = '../index.html';
 
         function buildHomeUrlWithAuth(regResult) {
             if (!regResult || !regResult.id_token || !regResult.patron_validation) {
