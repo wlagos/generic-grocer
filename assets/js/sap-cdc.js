@@ -1,5 +1,5 @@
         // Resolve the site's home URL from wherever this script was actually
-        // loaded from, so redirects work whether the including page lives at 
+        // loaded from, so redirects work whether the including page lives at
         // the site root (index.html) or one level down (pages/*.html) —
         // without hardcoding a domain or repo path.
         var CDC_HOME_URL = (function () {
@@ -407,7 +407,11 @@
                         gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
                             startScreen: 'mpaturu-gigya-complete-registration-screen',
-                            containerID: 'screensetContainer'
+                            containerID: 'screensetContainer',
+                            // Required to continue a pending registration — without it
+                            // the screen has no session context to finalize against,
+                            // and any submit on it fails with "Unauthorized user".
+                            regToken: e.response.regToken
                         });
                         return;
                     }
