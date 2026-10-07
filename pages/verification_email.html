@@ -112,7 +112,8 @@
                         Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration') : null)
                             .catch(function () { return null; })
                             .then(function (regData) {
-                                window.location.href = buildHomeUrlWithAuth(regData);
+                                debugger;
+                               // window.location.href = buildHomeUrlWithAuth(regData);
                             });
                         return;
                     }
