@@ -399,6 +399,7 @@
                             _cdcRegistrationSubmitPending = true;
                     },
                   onAfterSubmit: function (e) {
+                    /*
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
                         // No session was created (pending email verification) —
                         // the next onLogin event will be a real login, not one
@@ -412,6 +413,7 @@
                         });
                         return;
                     }
+                    */
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 0) {
                         // Full registration success (no pending email verification) —
                         // the account is already logged in, so close the screen the
