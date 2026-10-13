@@ -15,7 +15,7 @@ async function getJwtToken() {
   });
 }
 
-async function callCustomerProfile(jwtToken, type = "login") {
+async function callCustomerProfile(jwtToken, type = "login", profileData = {}) {
 
   const endpoint = type === "registration" ? "registration" : "login";
   const url = `https://deca-dev.apim.fc.scp.sapns2.us:443/v1/customer-profile/${endpoint}`;
@@ -28,8 +28,8 @@ async function callCustomerProfile(jwtToken, type = "login") {
   };
   if (type === "registration") {
     const payload = {
-      edipi: "2111704251",
-      mobile: "5551234567"
+      edipi: profileData.edipi,
+      mobile: profileData.mobile
     };
     options.body = JSON.stringify(payload);
   }
@@ -45,7 +45,7 @@ async function callCustomerProfile(jwtToken, type = "login") {
 // Login fires this from two places (the login screen's onAfterSubmit and
 // the global gigya onLogin handler) as a safety net for handler ordering,
 // so an in-flight call is reused rather than firing getJWT/login twice.
-async function freshShopRegVerification(type = "login") {
+async function freshShopRegVerification(type = "login", profileData = {}) {
   window._freshShopRegPromises = window._freshShopRegPromises || {};
   if (window._freshShopRegPromises[type]) {
     return window._freshShopRegPromises[type];
@@ -53,7 +53,7 @@ async function freshShopRegVerification(type = "login") {
   window._freshShopRegPromises[type] = (async () => {
     try {
       const jwt = await getJwtToken();
-      return await callCustomerProfile(jwt, type);
+      return await callCustomerProfile(jwt, type, profileData);
     } catch (err) {
       console.error("Error:", err);
       return null;
