@@ -197,7 +197,7 @@
     // how the iOS app's webview bridge sets it, so the clamp silently never ran there.
   },
 
-  // EDIPI validation stays Registration-only (sap-cdc-base.js), but warn on
+  // EDIPI validation stays Registration-only (sap-cdc-registration-login.js), but warn on
   // a blank Rewards ID here too, same as the Registration screen. This
   // Global Config applies to every screen in the mpaturu-ProfileUpdate
   // screen-set (e.g. also mpaturu-gigya-change-email-screen), so only run
