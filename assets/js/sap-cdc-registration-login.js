@@ -350,6 +350,14 @@
     }
     var militaryId = event.formData['data.militaryId'];
 
+    // The real militaryId is scrubbed to a placeholder before it's saved
+    // (see onSubmit), so stash the real edipi/mobile here, before that
+    // happens, for sap-emarsys.js's customer-profile call to read later.
+    window._lastRegistrationContact = {
+      edipi: militaryId,
+      mobile: event.formData['profile.phones.number']
+    };
+
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
     // call. So: cancel this submit attempt, run the async validation, and
     // on success re-trigger the submit button — skipping validation (and
