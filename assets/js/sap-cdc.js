@@ -146,8 +146,9 @@
         // Field-change handler for the Lite Registration screenset (phone
         // digit limiting, and normalizing the inline "username" validation
         // label). The Registration/Login screens' version of this logic now
-        // lives in sap-cdc-base.js's Global Config, and the Profile Update
-        // screen's version lives in sap-cdc-base-update.js's Global Config.
+        // lives in sap-cdc-registration-login.js's Global Config, and the
+        // Profile Update screen's version lives in sap-cdc-profile-update.js's
+        // Global Config.
         function handleScreenSetFieldChanged(e) {
             if (e.field === "profile.phones.number") {
                 var ccDigits = document.getElementById('gigya-countryCodeLabel-167363755631131230').value; // "+1" for US
@@ -186,7 +187,7 @@
         // communication failures) to the user instead of silently swallowing
         // them, and logs the full event for debugging.
         // The Registration and Login screens' onError now lives in
-        // cdc-base.js's Global Config.
+        // sap-cdc-registration-login.js's Global Config.
         function handleScreenSetError(event) {
             console.error('Screen-set error:', event);
             var message = (event && (event.errorMessage || event.errorDetails)) ||
@@ -212,8 +213,9 @@
         // After-screen-load handler for the Lite Registration screenset: define
         // inline-error helpers, hide screen captions, and wire phone/lastName
         // field feedback. The Registration/Login screens' version of this now
-        // lives in sap-cdc-base.js's Global Config, and the Profile Update
-        // screen's version lives in sap-cdc-base-update.js's Global Config.
+        // lives in sap-cdc-registration-login.js's Global Config, and the
+        // Profile Update screen's version lives in sap-cdc-profile-update.js's
+        // Global Config.
         function handleScreenSetAfterLoad(event) {
                     // const screensWithLoginID = ['mpaturu-gigya-register-screen', 'mpaturu-gigya-login-screen'];
                     // if (!screensWithLoginID.includes(event.currentScreen)) return;
@@ -445,8 +447,13 @@
                         // the account is already logged in, so close the screen the
                         // same way the login screen does: kick off freshShopRegVerification
                         // and then leave the auth page.
+                        // Grab the real edipi/mobile stashed by the registration Global
+                        // Config's onBeforeSubmit, before the real militaryId gets
+                        // scrubbed to a placeholder for storage.
+                        var regContact = window._lastRegistrationContact || {};
+                        window._lastRegistrationContact = null;
                         setTimeout(() => {
-                            Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration') : null)
+                            Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration', regContact) : null)
                                 .catch(() => null)
                                 .then((regData) => {
                                     window.location.href = buildHomeUrlWithAuth(regData);
