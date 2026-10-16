@@ -28,12 +28,15 @@
     push('view', String(id));
   }
 
-  function cartSnapshot() {
-    if (!window.Cart) return;
-    var items = window.Cart.get().map(function (item) {
+  function cartItemsFor(items) {
+    return items.map(function (item) {
       return { item: String(item.id), price: item.price || 0, quantity: item.qty };
     });
-    push('cart', items);
+  }
+
+  function cartSnapshot() {
+    if (!window.Cart) return;
+    push('cart', cartItemsFor(window.Cart.get()));
   }
 
   function identify(email, customerId) {
@@ -45,11 +48,19 @@
   }
 
   function purchase(orderId, items) {
-    push('purchase', {
-      orderId: orderId,
-      items: items.map(function (item) {
-        return { item: String(item.id), price: item.price || 0, quantity: item.qty };
-      })
+    push('purchase', { orderId: orderId, items: cartItemsFor(items) });
+  }
+
+  // Checkout fires 'cart' + 'purchase' together — a single trailing 'go',
+  // not two (pushing them via separate searchTerm/cartSnapshot-style calls
+  // each append their own 'go', which Scarab rejects as "Multiple calls of
+  // go command" when two tracking calls land in the same tick).
+  function checkout(orderId, items) {
+    withScarabQueue(function (queue) {
+      var cartItems = cartItemsFor(items);
+      queue.push(['cart', cartItems]);
+      queue.push(['purchase', { orderId: orderId, items: cartItems }]);
+      queue.push(['go']);
     });
   }
 
@@ -58,6 +69,7 @@
     viewProduct: viewProduct,
     cartSnapshot: cartSnapshot,
     identify: identify,
-    purchase: purchase
+    purchase: purchase,
+    checkout: checkout
   };
 })();
