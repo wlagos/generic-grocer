@@ -74,7 +74,6 @@
   }
 
   function renderItem(product) {
-    var storeLink = resolveFromRoot('my-store_store-locator.html');
     var productLink = resolveFromRoot('product.html?id=' + encodeURIComponent(product.id));
     return (
       '<li class="fp-item" data-product-id="' + escapeHtml(product.id) + '">' +
@@ -89,7 +88,7 @@
               '<div class="fp-item-name notranslate">' +
                 '<span aria-level="2" role="heading"><a href="' + productLink + '">' + escapeHtml(product.name) + '</a></span>' +
               '</div>' +
-              '<div class="fp-item-price"><a class="fp-price-link fp-btn-link" href="' + storeLink + '">See Price</a></div>' +
+              '<div class="fp-item-price">$' + Number(product.price || 0).toFixed(2) + '</div>' +
             '</div>' +
             '<div class="fp-item-action-group">' +
               '<div class="fp-item-action" data-product-id="' + escapeHtml(product.id) + '">' +
