@@ -32,6 +32,8 @@
         '</div>' +
       '</div>';
 
+    if (window.EmarsysTrack) window.EmarsysTrack.viewProduct(product.id);
+
     function handleAddToCart() {
       var actionEl = detail.querySelector('.fp-item-action');
       var trigger = detail.querySelector('[data-action="add-to-cart"]');
