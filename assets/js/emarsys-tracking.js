@@ -44,10 +44,20 @@
     });
   }
 
+  function purchase(orderId, items) {
+    push('purchase', {
+      orderId: orderId,
+      items: items.map(function (item) {
+        return { item: String(item.id), price: item.price || 0, quantity: item.qty };
+      })
+    });
+  }
+
   window.EmarsysTrack = {
     searchTerm: searchTerm,
     viewProduct: viewProduct,
     cartSnapshot: cartSnapshot,
-    identify: identify
+    identify: identify,
+    purchase: purchase
   };
 })();
