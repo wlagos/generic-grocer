@@ -11,10 +11,27 @@
     callback(window.ScarabQueue);
   }
 
+  // Independent async flows (gigya session check, product-data fetch, cart
+  // actions, etc.) can each want to flush around the same time with no
+  // fixed ordering between them — every tracking call used to append its
+  // own 'go', and two landing close together makes Scarab reject the batch
+  // with "Multiple calls of go command". scheduleGo() coalesces any number
+  // of pushes that happen within one tick into a single trailing 'go',
+  // instead of patching specific pairs of calls one at a time.
+  var goScheduled = false;
+  function scheduleGo(queue) {
+    if (goScheduled) return;
+    goScheduled = true;
+    setTimeout(function () {
+      goScheduled = false;
+      queue.push(['go']);
+    }, 0);
+  }
+
   function push(command, payload) {
     withScarabQueue(function (queue) {
       queue.push([command, payload]);
-      queue.push(['go']);
+      scheduleGo(queue);
     });
   }
 
@@ -23,9 +40,6 @@
     push('searchTerm', term);
   }
 
-  // Batches 'category' + 'view' into one 'go' when a category id is known
-  // (same reason checkout() batches cart+purchase — two separate push()
-  // calls would each append their own 'go', which Scarab rejects).
   function viewProduct(id, categoryId) {
     if (!id) return;
     withScarabQueue(function (queue) {
@@ -33,7 +47,7 @@
         queue.push(['category', String(categoryId)]);
       }
       queue.push(['view', String(id)]);
-      queue.push(['go']);
+      scheduleGo(queue);
     });
   }
 
@@ -52,7 +66,7 @@
     withScarabQueue(function (queue) {
       queue.push(['setEmail', email]);
       queue.push(['setCustomerId', customerId]);
-      queue.push(['go']);
+      scheduleGo(queue);
     });
   }
 
@@ -60,10 +74,6 @@
     push('purchase', { orderId: orderId, items: cartItemsFor(items) });
   }
 
-  // Checkout fires 'cart' + 'purchase' together — a single trailing 'go',
-  // not two (pushing them via separate searchTerm/cartSnapshot-style calls
-  // each append their own 'go', which Scarab rejects as "Multiple calls of
-  // go command" when two tracking calls land in the same tick).
   // Per Emarsys docs: the 'cart' command on a purchase must report an EMPTY
   // cart ([]), not the items just purchased — "remember to empty the cart
   // on purchase." The real items/prices go in the 'purchase' payload only.
@@ -71,7 +81,7 @@
     withScarabQueue(function (queue) {
       queue.push(['cart', []]);
       queue.push(['purchase', { orderId: orderId, items: cartItemsFor(items) }]);
-      queue.push(['go']);
+      scheduleGo(queue);
     });
   }
 
