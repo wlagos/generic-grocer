@@ -61,6 +61,7 @@
   }
 
   function performCheckout() {
+    var items = get();
     function finish() {
       clearCart();
       showToast('Checkout is done! Your cart has been cleared.');
@@ -70,6 +71,9 @@
         callback: function (res) {
           if (res && res.errorCode === 0 && window.EmarsysTrack) {
             window.EmarsysTrack.cartSnapshot();
+            if (items.length > 0) {
+              window.EmarsysTrack.purchase('ORDER-' + Date.now(), items);
+            }
           }
           finish();
         }
