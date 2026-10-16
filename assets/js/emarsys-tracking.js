@@ -36,9 +36,18 @@
     push('cart', items);
   }
 
+  function identify(email, customerId) {
+    withScarabQueue(function (queue) {
+      queue.push(['setEmail', email]);
+      queue.push(['setCustomerId', customerId]);
+      queue.push(['go']);
+    });
+  }
+
   window.EmarsysTrack = {
     searchTerm: searchTerm,
     viewProduct: viewProduct,
-    cartSnapshot: cartSnapshot
+    cartSnapshot: cartSnapshot,
+    identify: identify
   };
 })();
