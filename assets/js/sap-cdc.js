@@ -708,26 +708,6 @@
                             ScarabQueue.push(['setEmail', profile.email]);
                             ScarabQueue.push(['setCustomerId', (res.data || {})['ARTS_CUST_KEY']]);
 
-                            // -------------------------------------------------------------
-                            // Hard-coded Scarab events
-                            // -------------------------------------------------------------
-                            ScarabQueue.push(['category', "account"]);
-
-                            ScarabQueue.push(['view', "SKU-001"]);
-
-                            ScarabQueue.push(['searchTerm', "running shoes"]);
-
-                            ScarabQueue.push(['cart', [
-                                { item: "SKU-001", price: 79.99, quantity: 1 }
-                            ]]);
-
-                            ScarabQueue.push(['purchase', {
-                                orderId: "ORDER-12345",
-                                items: [
-                                    { item: "SKU-001", price: 79.99, quantity: 2 }
-                                ]
-                            }]);
-
                             // GO command — must be last
                             ScarabQueue.push(['go']);
                         })();
