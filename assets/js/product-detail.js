@@ -32,7 +32,7 @@
         '</div>' +
       '</div>';
 
-    if (window.EmarsysTrack) window.EmarsysTrack.viewProduct(product.id, product.category);
+    if (window.EmarsysTrack) window.EmarsysTrack.viewProduct(product.id, product.categoryPath || product.categoryId);
 
     function handleAddToCart() {
       var actionEl = detail.querySelector('.fp-item-action');
