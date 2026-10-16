@@ -23,6 +23,7 @@
         var q = textInput.value.trim();
         if (!q) return;
         var mode = dropdownInput ? dropdownInput.value : 'product';
+        if (window.EmarsysTrack) window.EmarsysTrack.searchTerm(q);
         window.location.href = resolveFromRoot('search-results.html') +
           '#!/?q=' + encodeURIComponent(q) + '&search_option_id=' + encodeURIComponent(mode);
       }
