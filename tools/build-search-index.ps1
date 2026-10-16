@@ -3,9 +3,22 @@ Scans the scraped department pages (pages/shop_*_d_*.html) for embedded product
 cards and writes a flat product index to assets/data/search-index.json for the
 client-side search feature (assets/js/site-search.js) to fetch at runtime.
 
+The scraped site has no real pricing anywhere (price always requires selecting
+a store on the live site), so Get-PlaceholderPrice derives a deterministic
+placeholder price from each product id — stable across rebuilds, not real data.
+
 Run manually whenever the scraped pages/shop_*_d_*.html files change:
     powershell -File tools/build-search-index.ps1
 #>
+
+function Get-PlaceholderPrice([string]$id) {
+    $hash = 0
+    foreach ($ch in $id.ToCharArray()) {
+        $hash = ($hash * 31 + [int]$ch) % 2000003
+    }
+    $cents = 99 + ($hash % 1901)  # $0.99 - $19.99
+    return [math]::Round($cents / 100.0, 2)
+}
 
 $pagesDir = Join-Path $PSScriptRoot '..\pages'
 $outFile = Join-Path $PSScriptRoot '..\assets\data\search-index.json'
@@ -43,11 +56,14 @@ foreach ($file in $files) {
             name  = ($nameMatch.Groups['name'].Value.Trim() -replace '&amp;', '&')
             url   = $nameMatch.Groups['href'].Value
             image = if ($imgMatch.Success) { ($imgMatch.Groups['src'].Value -replace '&amp;', '&') } else { '' }
+            price = Get-PlaceholderPrice $id
         }
     }
 }
 
 $list = @($index.Values | Sort-Object { $_.name })
-$list | ConvertTo-Json -Depth 3 | Set-Content -Path $outFile -Encoding utf8
+$tempFile = "$outFile.tmp"
+$list | ConvertTo-Json -Depth 3 | Set-Content -Path $tempFile -Encoding utf8 -Force
+Move-Item -Path $tempFile -Destination $outFile -Force
 
 Write-Host "Wrote $($list.Count) products to $outFile"
