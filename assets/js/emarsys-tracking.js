@@ -11,19 +11,23 @@
     callback(window.ScarabQueue);
   }
 
-  // Independent async flows (gigya session check, product-data fetch, cart
-  // actions, etc.) can each want to flush around the same time with no
-  // fixed ordering between them — every tracking call used to append its
-  // own 'go', and two landing close together makes Scarab reject the batch
-  // with "Multiple calls of go command". scheduleGo() coalesces any number
-  // of pushes that happen within one tick into a single trailing 'go',
-  // instead of patching specific pairs of calls one at a time.
+  // Per Emarsys docs, 'go' should be "the last call on the page, called only
+  // once" — not once per batch of nearby events, but once ever for the
+  // page's whole lifetime. Once scarab-v2.js finishes loading, it takes
+  // over window.ScarabQueue and processes further pushes in real time, so
+  // every 'go' after the first is both unnecessary and actively rejected
+  // by Scarab ("Multiple calls of go command") — confirmed by it firing
+  // again several seconds after an earlier unrelated event's 'go', not just
+  // when two calls land in the same tick. goCalled latches permanently;
+  // goScheduled only coalesces calls arriving before that first 'go' fires.
+  var goCalled = false;
   var goScheduled = false;
   function scheduleGo(queue) {
-    if (goScheduled) return;
+    if (goCalled || goScheduled) return;
     goScheduled = true;
     setTimeout(function () {
       goScheduled = false;
+      goCalled = true;
       queue.push(['go']);
     }, 0);
   }
