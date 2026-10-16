@@ -70,9 +70,10 @@
       gigya.accounts.getAccountInfo({
         callback: function (res) {
           if (res && res.errorCode === 0 && window.EmarsysTrack) {
-            window.EmarsysTrack.cartSnapshot();
             if (items.length > 0) {
-              window.EmarsysTrack.purchase('ORDER-' + Date.now(), items);
+              window.EmarsysTrack.checkout('ORDER-' + Date.now(), items);
+            } else {
+              window.EmarsysTrack.cartSnapshot();
             }
           }
           finish();
