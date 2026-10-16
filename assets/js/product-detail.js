@@ -22,7 +22,7 @@
           '</div>' +
           '<div class="fp-item-detail">' +
             '<div class="fp-item-name notranslate" style="font-size:24px;margin-bottom:12px;">' + escapeHtml(product.name) + '</div>' +
-            '<div class="fp-item-price"><a class="fp-price-link fp-btn-link" href="my-store_store-locator.html">See Price</a></div>' +
+            '<div class="fp-item-price" style="font-size:20px;font-weight:bold;">$' + Number(product.price || 0).toFixed(2) + '</div>' +
           '</div>' +
           '<div class="fp-item-action-group">' +
             '<div class="fp-item-action" data-product-id="' + escapeHtml(product.id) + '">' +
