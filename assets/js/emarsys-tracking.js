@@ -31,7 +31,7 @@
   function cartSnapshot() {
     if (!window.Cart) return;
     var items = window.Cart.get().map(function (item) {
-      return { item: String(item.id), quantity: item.qty };
+      return { item: String(item.id), price: item.price || 0, quantity: item.qty };
     });
     push('cart', items);
   }
