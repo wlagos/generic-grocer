@@ -3,6 +3,11 @@ Scans the scraped department pages (pages/shop_*_d_*.html) for embedded product
 cards and writes a flat product index to assets/data/search-index.json for the
 client-side search feature (assets/js/site-search.js) to fetch at runtime.
 
+Each department page's own id (the "_d_<digits>" in its filename) is recorded
+per product as its category — whichever department page a product's id is
+first encountered on. A product can legitimately appear on more than one
+department page; only the first is kept, same as name/image/url already were.
+
 The scraped site has no real pricing anywhere (price always requires selecting
 a store on the live site), so Get-PlaceholderPrice derives a deterministic
 placeholder price from each product id — stable across rebuilds, not real data.
@@ -39,6 +44,9 @@ $imgSrcPattern = [regex]::new('<img[^>]*\ssrc="(?<src>[^"]+)"', $singleline)
 $index = [ordered]@{}
 
 foreach ($file in $files) {
+    $categoryMatch = [regex]::Match($file.Name, '_d_(?<catId>\d+)\.html$')
+    $categoryId = if ($categoryMatch.Success) { $categoryMatch.Groups['catId'].Value } else { '' }
+
     $content = Get-Content -Raw -Path $file.FullName
     foreach ($m in $itemPattern.Matches($content)) {
         $id = $m.Groups['id'].Value
@@ -52,11 +60,12 @@ foreach ($file in $files) {
         if (-not $imgMatch.Success) { $imgMatch = $imgSrcPattern.Match($block) }
 
         $index[$id] = [ordered]@{
-            id    = $id
-            name  = ($nameMatch.Groups['name'].Value.Trim() -replace '&amp;', '&')
-            url   = $nameMatch.Groups['href'].Value
-            image = if ($imgMatch.Success) { ($imgMatch.Groups['src'].Value -replace '&amp;', '&') } else { '' }
-            price = Get-PlaceholderPrice $id
+            id       = $id
+            name     = ($nameMatch.Groups['name'].Value.Trim() -replace '&amp;', '&')
+            url      = $nameMatch.Groups['href'].Value
+            image    = if ($imgMatch.Success) { ($imgMatch.Groups['src'].Value -replace '&amp;', '&') } else { '' }
+            price    = Get-PlaceholderPrice $id
+            category = $categoryId
         }
     }
 }
