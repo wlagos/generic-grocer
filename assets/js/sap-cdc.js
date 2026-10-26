@@ -406,6 +406,16 @@
                             if (event.formModel.data.loginID && !event.formModel.data['profile.email']) {
                                 event.formModel.data['profile.email'] = event.formModel.data.loginID;
                             }
+                            // Duplicated from the Global Config's onSubmit
+                            // (sap-cdc-registration-login.js) — same reason the
+                            // militaryId/profile.email handling above is duplicated
+                            // here: it's not certain which onSubmit actually runs,
+                            // and without this line here too, artsCustKey silently
+                            // never makes it into the created profile.
+                            if (window._pendingArtsCustKey) {
+                                event.formModel.data.artsCustKey = window._pendingArtsCustKey;
+                                window._pendingArtsCustKey = null;
+                            }
                             _cdcRegistrationSubmitPending = true;
                     },
                   onAfterSubmit: function (e) {
