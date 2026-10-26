@@ -140,18 +140,28 @@
         function showCompleteRegistrationScreen() {
             document.getElementById('ev-card').style.display = 'none';
             document.getElementById('screensetContainer').style.display = 'block';
+            var regContact = null;
             gigya.accounts.showScreenSet({
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-complete-registration-screen',
                 containerID: 'screensetContainer',
+                onBeforeSubmit: function (event) {
+                    // Capture the militaryId/mobile the user entered on this
+                    // screen directly, before the Global Config's own
+                    // onBeforeSubmit/onSubmit (sap-cdc-registration-login.js)
+                    // validates and scrubs the real militaryId to a placeholder
+                    // for storage — this page needs the real value for the
+                    // customer-profile/registration call below, which the
+                    // shared Global Config has no way to hand back to us.
+                    regContact = {
+                        edipi: event.formData['data.militaryId'],
+                        mobile: event.formData['profile.phones.number']
+                    };
+                    return true;
+                },
                 onAfterSubmit: function (e) {
                     if (e.response && e.response.errorCode === 0) {
-                        // Grab the real edipi/mobile stashed by the Global Config's
-                        // onBeforeSubmit (sap-cdc-registration-login.js), before the
-                        // real militaryId gets scrubbed to a placeholder for storage.
-                        var regContact = window._lastRegistrationContact || {};
-                        window._lastRegistrationContact = null;
-                        Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration', regContact) : null)
+                        Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration', regContact || {}) : null)
                             .catch(function () { return null; })
                             .then(function (regData) {
                                 window.location.href = buildHomeUrlWithAuth(regData);
