@@ -33,23 +33,30 @@
 
   // On the EDIPI-validated resubmit (see onBeforeSubmit), overwrite the real
   // militaryId with a placeholder so the validated ID itself isn't stored.
-  // Also copies Login ID into profile.email on the register screen: CDC's
-  // verification policy reads from profile.email, not Login ID, and the
-  // registration screen's "Email" field is bound to Login ID — so without
-  // this, the account always comes back missing profile.email even though
-  // the user already typed an email. Duplicated here (not just in the local
-  // onSubmit passed to showScreenSet in sap-cdc.js) in case this Global
-  // Config's onSubmit is what actually runs instead.
+  // Runs on both the register screen and the complete-registration screen
+  // (verification_email.html), since both can carry a Military ID field
+  // gated by the same EDIPI validation in onBeforeSubmit below. Also copies
+  // Login ID into profile.email on the register screen: CDC's verification
+  // policy reads from profile.email, not Login ID, and the registration
+  // screen's "Email" field is bound to Login ID — so without this, the
+  // account always comes back missing profile.email even though the user
+  // already typed an email. Duplicated here (not just in the local onSubmit
+  // passed to showScreenSet in sap-cdc.js) in case this Global Config's
+  // onSubmit is what actually runs instead.
   onSubmit: function(event) {
-    if (event.screen !== 'mpaturu-gigya-register-screen') {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-complete-registration-screen') {
       return;
     }
-    if (event.formModel.data.loginID && !event.formModel.data['profile.email']) {
+    if (event.screen === 'mpaturu-gigya-register-screen' && event.formModel.data.loginID && !event.formModel.data['profile.email']) {
       event.formModel.data['profile.email'] = event.formModel.data.loginID;
     }
     if (window._pendingMilitaryIdZero) {
       window._pendingMilitaryIdZero = false;
       event.formModel.data.militaryId = "0000000000";
+    }
+    if (window._pendingArtsCustKey) {
+      event.formModel.data.artsCustKey = window._pendingArtsCustKey;
+      window._pendingArtsCustKey = null;
     }
   },
 
@@ -338,10 +345,12 @@
   },
 
   // Gates registration submit on Military ID (EDIPI) validation. This Global
-  // Config applies to every screen in the screen-set, so only run the
-  // Registration-screen EDIPI/rewards-ID logic on that screen.
+  // Config applies to every screen in the screen-set, so only run this on
+  // the register screen and the complete-registration screen
+  // (verification_email.html) — the two screens that can carry a Military
+  // ID field.
   onBeforeSubmit: function (event) {
-    if (event.screen !== 'mpaturu-gigya-register-screen') {
+    if (event.screen !== 'mpaturu-gigya-register-screen' && event.screen !== 'mpaturu-gigya-complete-registration-screen') {
       return true;
     }
     var h = document.__cdcNs && document.__cdcNs.helpers;
@@ -368,9 +377,11 @@
       return true;
     }
 
-    var rewardsId = event.formData['data.rewardsId'];
-    if (!rewardsId) {
-      h.showToast("Rewards ID is blank. Continuing…");
+    if (event.screen === 'mpaturu-gigya-register-screen') {
+      var rewardsId = event.formData['data.rewardsId'];
+      if (!rewardsId) {
+        h.showToast("Rewards ID is blank. Continuing…");
+      }
     }
     if (!militaryId) {
       return true;
@@ -384,8 +395,18 @@
         // The resubmit re-reads formData from the DOM, so the real field
         // (bound via name="data.militaryId") must be updated, not event.formData.
         window._pendingMilitaryIdZero = true;
-        var submitBtn = document.querySelector(
-          '#gigya-register-form input[type="submit"], #gigya-register-form button[type="submit"], #gigya-register-form .gigya-input-submit'
+        // Same two-phase handoff for arts_cust_key from the validate-edipi
+        // response: onSubmit (synchronous, runs on the resubmit) is where
+        // it actually gets written into the profile being created.
+        if (res.result && res.result.arts_cust_key) {
+          window._pendingArtsCustKey = res.result.arts_cust_key;
+        }
+        // Scoped to this screen's own container rather than a hardcoded
+        // form id, since the register and complete-registration screens
+        // render different forms under the same containerID.
+        var container = document.getElementById(event.containerID) || document;
+        var submitBtn = container.querySelector(
+          'input[type="submit"], button[type="submit"], .gigya-input-submit'
         );
         if (submitBtn) {
           submitBtn.click();
