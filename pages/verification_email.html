@@ -67,12 +67,13 @@
 <body>
 
     <div class="ev-wrap">
-        <div class="ev-card">
+        <div class="ev-card" id="ev-card">
             <div id="ev-spinner" class="ev-spinner"></div>
             <p id="ev-title">Verifying your account…</p>
             <p id="ev-subtext">Hang on while we finish activating your account.</p>
             <a id="ev-signin" href="../index.html">Go to Sign In</a>
         </div>
+        <div id="screensetContainer" style="display:none;width:100%;max-width:480px;"></div>
     </div>
 
     <script src="https://cdns.gigya.com/js/gigya.js?apikey=4_eqwSIEzYKaq7MI871n2USw"></script>
@@ -104,18 +105,12 @@
         }
 
         function completeVerification(attempt) {
-            debugger;
             attempt = attempt || 0;
             gigya.accounts.getAccountInfo({
                 callback: function (res) {
                     if (res.errorCode === 0) {
-                        setStatus('Account verified!', 'Redirecting you now…', false);
-                        Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration') : null)
-                            .catch(function () { return null; })
-                            .then(function (regData) {
-                                debugger;
-                               window.location.href = buildHomeUrlWithAuth(regData);
-                            });
+                        setStatus('Account verified!', 'Finishing up your registration…', false);
+                        showCompleteRegistrationScreen();
                         return;
                     }
 
@@ -132,6 +127,38 @@
                         'This link may have expired. Please sign in, or register again to receive a new verification email.',
                         true
                     );
+                }
+            });
+        }
+
+        // The session now exists (email verified), so hand off to the
+        // complete-registration screen to collect any fields that aren't
+        // part of the pre-verification register form, instead of finishing
+        // the registration here. freshShopRegVerification only runs once that
+        // screen itself is submitted successfully — same post-auth call the
+        // login/registration screens run (see onAfterSubmit in sap-cdc.js).
+        function showCompleteRegistrationScreen() {
+            document.getElementById('ev-card').style.display = 'none';
+            document.getElementById('screensetContainer').style.display = 'block';
+            gigya.accounts.showScreenSet({
+                screenSet: 'mpaturu-RegistrationLogin',
+                startScreen: 'mpaturu-gigya-complete-registration-screen',
+                containerID: 'screensetContainer',
+                onAfterSubmit: function (e) {
+                    if (e.response && e.response.errorCode === 0) {
+                        // Grab the real edipi/mobile stashed by the Global Config's
+                        // onBeforeSubmit (sap-cdc-registration-login.js), before the
+                        // real militaryId gets scrubbed to a placeholder for storage.
+                        var regContact = window._lastRegistrationContact || {};
+                        window._lastRegistrationContact = null;
+                        Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration', regContact) : null)
+                            .catch(function () { return null; })
+                            .then(function (regData) {
+                                window.location.href = buildHomeUrlWithAuth(regData);
+                            });
+                    }
+                    // On failure, leave the screen up — CDC's own inline field
+                    // errors are already rendered by the SDK.
                 }
             });
         }
