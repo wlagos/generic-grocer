@@ -412,33 +412,17 @@
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
                         // No session was created (pending email verification) —
                         // the next onLogin event will be a real login, not one
-                        // triggered by this registration.
+                        // triggered by this registration. profile.email was already
+                        // set from loginID in onSubmit above, so there's nothing left
+                        // for the complete-registration screen to collect — skip
+                        // straight to the same toast + login handoff it would have
+                        // ended on.
                         _cdcRegistrationSubmitPending = false;
+                        showToast('Thanks! Please check your email to verify your account.');
                         gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
-                            startScreen: 'mpaturu-gigya-complete-registration-screen',
-                            containerID: 'screensetContainer',
-                            // Required to continue a pending registration — without it
-                            // the screen has no session context to finalize against,
-                            // and any submit on it fails with "Unauthorized user".
-                            regToken: e.response.regToken,
-                            onAfterSubmit: function (e2) {
-                                // Submitting the missing email here still leaves the
-                                // account pending verification (no session) — same as
-                                // the original registration submit — so hand off to the
-                                // login screen instead of leaving this screen up with
-                                // no further feedback.
-                                if (e2.response && (e2.response.errorCode === 0 || e2.response.errorCode === 206002)) {
-                                    showToast('Thanks! Please check your email to verify your account.');
-                                    gigya.accounts.showScreenSet({
-                                        screenSet: 'mpaturu-RegistrationLogin',
-                                        startScreen: 'mpaturu-gigya-login-screen',
-                                        containerID: 'screensetContainer'
-                                    });
-                                    return;
-                                }
-                                normalizeFailedSubmitFieldError(e2);
-                            }
+                            startScreen: 'mpaturu-gigya-login-screen',
+                            containerID: 'screensetContainer'
                         });
                         return;
                     }
