@@ -145,6 +145,19 @@
                 screenSet: 'mpaturu-RegistrationLogin',
                 startScreen: 'mpaturu-gigya-complete-registration-screen',
                 containerID: 'screensetContainer',
+                onAfterScreenLoad: function (event) {
+                    // The militaryId field is bound to the account's stored
+                    // data.militaryId, which is always "0000000000" (the
+                    // placeholder written at registration — see onSubmit in
+                    // sap-cdc-registration-login.js). Blank it out so the
+                    // user sees an empty field to enter their real ID into,
+                    // not a confusing string of zeros.
+                    var container = document.getElementById(event.containerID) || document;
+                    var militaryIdInput = container.querySelector('input[name="data.militaryId"]');
+                    if (militaryIdInput && militaryIdInput.value === '0000000000') {
+                        militaryIdInput.value = '';
+                    }
+                },
                 onBeforeSubmit: function (event) {
                     // Capture the militaryId/mobile the user entered on this
                     // screen directly, before the Global Config's own
