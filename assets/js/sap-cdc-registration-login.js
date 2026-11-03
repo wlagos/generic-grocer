@@ -392,7 +392,6 @@
         // response: onSubmit (synchronous, runs on the resubmit) is where
         // it actually gets written into the profile being created.
         if (res.result && res.result.arts_cust_key) {
-           h.showToast("res.result.arts_cust_key" + res.result.arts_cust_key);
           window._pendingArtsCustKey = res.result.arts_cust_key;
         }
         // Scoped to this screen's own container rather than a hardcoded
