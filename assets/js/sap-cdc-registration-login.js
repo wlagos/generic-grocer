@@ -369,20 +369,13 @@
 
     // onBeforeSubmit is synchronous and can't await the EDIPI validation
     // call. So: cancel this submit attempt, run the async validation, and
-    // on success re-trigger the submit button — skipping validation (and
-    // the rewards-ID check below, so its toast isn't shown twice) the
+    // on success re-trigger the submit button — skipping validation the
     // second time around via the _edipiValidated flag.
     if (window._edipiValidated) {
       window._edipiValidated = false;
       return true;
     }
 
-    if (event.screen === 'mpaturu-gigya-register-screen') {
-      var rewardsId = event.formData['data.rewardsId'];
-      if (!rewardsId) {
-        h.showToast("Rewards ID is blank. Continuing…");
-      }
-    }
     if (!militaryId) {
       return true;
     }
@@ -399,6 +392,7 @@
         // response: onSubmit (synchronous, runs on the resubmit) is where
         // it actually gets written into the profile being created.
         if (res.result && res.result.arts_cust_key) {
+           h.showToast("res.result.arts_cust_key" + res.result.arts_cust_key);
           window._pendingArtsCustKey = res.result.arts_cust_key;
         }
         // Scoped to this screen's own container rather than a hardcoded
