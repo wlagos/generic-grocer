@@ -422,17 +422,20 @@
                     if (e.screen === 'mpaturu-gigya-register-screen' && e.response.errorCode === 206002) {
                         // No session was created (pending email verification) —
                         // the next onLogin event will be a real login, not one
-                        // triggered by this registration. profile.email was already
-                        // set from loginID in onSubmit above, so there's nothing left
-                        // for the complete-registration screen to collect — skip
-                        // straight to the same toast + login handoff it would have
-                        // ended on.
+                        // triggered by this registration. Show the "registration
+                        // initiated" success screen telling the user to check their
+                        // email; the complete-registration step now happens after
+                        // verification, on pages/verification_email.html.
                         _cdcRegistrationSubmitPending = false;
-                        showToast('Thanks! Please check your email to verify your account.');
                         gigya.accounts.showScreenSet({
                             screenSet: 'mpaturu-RegistrationLogin',
-                            startScreen: 'mpaturu-gigya-login-screen',
-                            containerID: 'screensetContainer'
+                            startScreen: 'mpaturu-gigya-register-init-screen-success',
+                            containerID: 'screensetContainer',
+                            // "Done" on this Information screen finishes the
+                            // screen-set, which fires onHide — send the user home.
+                            onHide: function () {
+                                window.location.href = CDC_HOME_URL;
+                            }
                         });
                         return;
                     }
