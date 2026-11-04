@@ -411,12 +411,15 @@
         if (res.result && res.result.arts_cust_key) {
           window._pendingArtsCustKey = res.result.arts_cust_key;
         }
-        // Scoped to this screen's own container rather than a hardcoded
-        // form id, since the register and complete-registration screens
-        // render different forms under the same containerID.
-        var container = document.getElementById(event.containerID) || document;
-        var submitBtn = container.querySelector(
-          'input[type="submit"], button[type="submit"], .gigya-input-submit'
+        // Look up the submit button inside the CDC screen itself (rendered
+        // with id === screen id), never page-wide: onBeforeSubmit has no
+        // containerID, and a page-wide match hits the scraped site's own
+        // hidden login form's submit button on my-account.html instead.
+        var screenEl = document.getElementById(event.screen) ||
+          (typeof event.form === 'string' ? document.getElementById(event.form) : event.form) ||
+          document.getElementById('screensetContainer');
+        var submitBtn = screenEl && screenEl.querySelector(
+          '.gigya-input-submit, input[type="submit"], button[type="submit"]'
         );
         if (submitBtn) {
           submitBtn.click();
