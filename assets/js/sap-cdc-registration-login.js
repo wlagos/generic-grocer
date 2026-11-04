@@ -252,6 +252,23 @@
     }
     applyCaptionHiding();
 
+    // The complete-registration screen's Military ID field is bound to the
+    // stored data.militaryId, which is always the "0000000000" placeholder
+    // written at registration (see onSubmit) — show it blank instead. Re-run
+    // after a tick since CDC can populate field values after this fires.
+    if (event.currentScreen === 'mpaturu-gigya-complete-registration-screen') {
+      var blankMilitaryId = function () {
+        root.querySelectorAll('input[name$="militaryId" i]').forEach(function (el) {
+          if (/^0+$/.test(el.value)) {
+            el.value = '';
+          }
+        });
+      };
+      blankMilitaryId();
+      setTimeout(blankMilitaryId, 50);
+      setTimeout(blankMilitaryId, 300);
+    }
+
     // Re-apply hiding if CDC re-renders parts of the DOM
     var mo = new MutationObserver(applyCaptionHiding);
     mo.observe(root, { childList: true, subtree: true });
