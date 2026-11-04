@@ -6670,6 +6670,18 @@ var ScarabQueue = ScarabQueue || [];
                     };
                     return true;
                 },
+                onSubmit: function (event) {
+                    // Never store the real Military ID — same unconditional
+                    // scrub the register screen's local onSubmit does in
+                    // sap-cdc.js. The real value was already captured into
+                    // regContact in onBeforeSubmit above.
+                    event.formModel.data = event.formModel.data || {};
+                    event.formModel.data.militaryId = "0000000000";
+                    if (window._pendingArtsCustKey) {
+                        event.formModel.data.artsCustKey = window._pendingArtsCustKey;
+                        window._pendingArtsCustKey = null;
+                    }
+                },
                 onAfterSubmit: function (e) {
                     if (e.response && e.response.errorCode === 0) {
                         Promise.resolve(typeof freshShopRegVerification === 'function' ? freshShopRegVerification('registration', regContact || {}) : null)
